@@ -1767,9 +1767,18 @@ async function editEstimate(containerNo) {
     if (ni) ni.classList.add('active');
     document.getElementById('screen-estimate').classList.add('active');
     document.getElementById('tb-title').textContent = 'Chỉnh sửa — ' + containerNo;
-    document.getElementById('tb-actions').innerHTML =
-      '<button class="btn btn-sm" onclick="cancelEditEstimate()">Huỷ</button>' +
-      '<button class="btn btn-sm btn-blue" onclick="saveEditEstimate(\'' + containerNo + '\')">Lưu chỉnh sửa</button>';
+    var tbEl = document.getElementById('tb-actions');
+    tbEl.innerHTML = '';
+    var btnCancel = document.createElement('button');
+    btnCancel.className = 'btn btn-sm';
+    btnCancel.textContent = 'Hu\u1ef7';
+    btnCancel.onclick = function() { cancelEditEstimate(); };
+    var btnSave = document.createElement('button');
+    btnSave.className = 'btn btn-sm btn-blue';
+    btnSave.textContent = 'L\u01b0u ch\u1ec9nh s\u1eeda';
+    btnSave.onclick = function() { saveEditEstimate(containerNo); };
+    tbEl.appendChild(btnCancel);
+    tbEl.appendChild(btnSave);
     document.getElementById('eq-no').value       = containerNo;
     document.getElementById('size-type').value   = first.size_type || '';
     document.getElementById('carrier').value     = first.carrier   || '';
