@@ -1600,7 +1600,109 @@ function loadBulk() {
   toast('Đã tải ' + data.length + ' containers', 2000);
 }
 
-function exportBulkTemplate() { toast('Đang phát triển tính năng Export Bulk Template', 2000); }
+async function exportBulkTemplate() {
+  toast('Đang tải dữ liệu estimates...');
+  try {
+    // Load SheetJS
+    if (typeof XLSX === 'undefined') {
+      await new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    // Lấy danh sách container từ tracking
+    var containers = state.tracking.map(function(r) { return r.container_no; });
+    if (!containers.length) { toast('Không có estimate nào!', 3000); return; }
+
+    // Load estimates từ API cho từng container - hoặc lấy thẳng từ Sheets
+    var res = await apiGet({ action: 'getAllEstimates' });
+    if (!res.success || !res.data || !res.data.length) {
+      toast('Không có dữ liệu estimates!', 3000);
+      return;
+    }
+
+    // Build rows theo format Bulk List
+    var header = [
+      'Equipment Number', 'Estimate Date & Time (DD/MM/YYYY HH:MM:SS)',
+      'Repair Sequence', 'Damage Location', 'Component', 'Damage Type',
+      'Repair Type', 'Length', 'Width', 'Unit', 'Part Number', 'Quantity',
+      'Currency', 'Labour Hours', 'Labour Cost', 'Material Cost', 'Tax',
+      'Responsible Party', 'Upgrade Code', 'Material Type', 'Repair Remarks',
+      'Header Remarks', 'Grade Code', 'Associate Container', 'Lumpsum Code',
+      'Old Part Serial No', 'New Part Serial No', 'Damage Level', 'Old Part No'
+    ];
+
+    var rows = [header];
+    res.data.forEach(function(r) {
+      // Format date: lấy phần dd/MM/yyyy từ estimate_datetime
+      var dt = r.estimate_datetime || '';
+      if (dt && dt.length > 10) dt = dt.substring(0, 10);
+
+      rows.push([
+        r.equipment_number  || '',  // A
+        dt,                          // B - Estimate Date
+        r.repair_seq        || '',  // C
+        r.damage_location   || '',  // D
+        r.component         || '',  // E
+        r.damage_type       || '',  // F
+        r.repair_type       || '',  // G
+        r.length            || '',  // H
+        r.width             || '',  // I
+        r.unit              || '',  // J
+        r.part_number       || '',  // K
+        r.quantity          || 1,   // L
+        r.currency          || 'USD', // M
+        r.labour_hours      || 0,   // N
+        r.labour_cost       || 0,   // O
+        r.material_cost     || 0,   // P
+        r.tax               || '',  // Q
+        r.responsible_party || '',  // R
+        r.upgrade_code      || '',  // S
+        r.material_type     || 'SK',// T
+        r.repair_remarks    || '',  // U
+        '',                          // V - Header Remarks (bỏ)
+        '',                          // W - Grade Code (bỏ)
+        r.associate_container || '', // X
+        r.lumpsum_code      || '',  // Y
+        '',                          // Z - Old Part Serial
+        '',                          // AA - New Part Serial
+        '',                          // AB - Damage Level
+        ''                           // AC - Old Part No
+      ]);
+    });
+
+    // Tạo workbook
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Set column widths
+    ws['!cols'] = [
+      {wch:14},{wch:22},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},
+      {wch:8},{wch:8},{wch:6},{wch:10},{wch:8},{wch:8},{wch:10},
+      {wch:10},{wch:10},{wch:6},{wch:10},{wch:10},{wch:10},{wch:12},
+      {wch:12},{wch:10},{wch:12},{wch:10},{wch:14},{wch:14},{wch:10},{wch:10}
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+    // Download
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2,'0');
+    var mm = String(today.getMonth()+1).padStart(2,'0');
+    var yyyy = today.getFullYear();
+    var filename = 'Estimated_Bulk_List_' + dd + mm + yyyy + '.xlsx';
+
+    XLSX.writeFile(wb, filename);
+    toast('Đã xuất ' + (rows.length-1) + ' dòng vào ' + filename, 3000);
+
+  } catch(err) {
+    toast('Lỗi: ' + err.message, 4000);
+    console.error(err);
+  }
+}
 function exportEstList() { exportTableToCSV('bulk-rows','estimated_list.csv'); toast('Đã export!', 2000); }
 function exportAppList() { exportTableToCSV('bulk-rows','approved_list.csv'); toast('Đã export!', 2000); }
 
