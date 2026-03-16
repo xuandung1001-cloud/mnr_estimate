@@ -1668,13 +1668,23 @@ async function exportBulkTemplate() {
       : res.data;
 
     exportData.forEach(function(r) {
-      // Format date: lấy phần dd/MM/yyyy từ estimate_datetime
+      // Format date dạng text dd/MM/yyyy
       var dt = r.estimate_datetime || '';
-      if (dt && dt.length > 10) dt = dt.substring(0, 10);
+      if (dt) {
+        // Lấy dd/MM/yyyy từ chuỗi datetime
+        var parts = dt.split(' ')[0]; // lấy phần ngày trước dấu space
+        if (parts && parts.includes('/')) {
+          dt = parts; // đã đúng định dạng dd/MM/yyyy
+        } else if (parts && parts.includes('-')) {
+          // yyyy-MM-dd -> dd/MM/yyyy
+          var p = parts.split('-');
+          if (p.length === 3) dt = p[2] + '/' + p[1] + '/' + p[0];
+        }
+      }
 
       rows.push([
         r.equipment_number  || '',  // A
-        dt,                          // B - Estimate Date
+        { t: 's', v: dt },          // B - Estimate Date dạng text
         r.repair_seq        || '',  // C
         r.damage_location   || '',  // D
         r.component         || '',  // E
@@ -1705,8 +1715,13 @@ async function exportBulkTemplate() {
       ]);
     });
 
-    // Tạo workbook
+    // Tạo workbook - set props để tránh Protected View
     var wb = XLSX.utils.book_new();
+    wb.Props = {
+      Title: 'Estimated Bulk List',
+      Author: 'MNR Estimate',
+      CreatedDate: new Date()
+    };
     var ws = XLSX.utils.aoa_to_sheet(rows);
 
     // Set column widths
