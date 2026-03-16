@@ -1571,21 +1571,43 @@ function setBulkMode(mode, el) {
   el.classList.add('active');
 }
 
+// Lưu danh sách cont đang filter để dùng khi export
+var bulkFilteredConts = [];
+
 function loadBulk() {
-  const q = document.getElementById('bulk-search').value.toLowerCase();
-  let data = state.tracking;
+  var searchVal = document.getElementById('bulk-search').value.trim();
+
+  // Tách danh sách cont từ ô tìm kiếm (space, comma, newline)
+  var searchList = [];
+  if (searchVal) {
+    searchList = searchVal.toUpperCase().split(/[\s,;]+/).filter(function(s) { return s.length > 3; });
+  }
+
+  var data = state.tracking;
+
+  // Filter theo mode A/B
   if (state.bulkMode === 'B') {
-    data = data.filter(r => r.approval_status === 'Approved' || r.approval_status === 'Partially Approved');
+    data = data.filter(function(r) {
+      return r.approval_status === 'Approved' || r.approval_status === 'Partially Approved';
+    });
   }
-  if (q) {
-    data = data.filter(r => (r.container_no||'').toLowerCase().includes(q));
+
+  // Filter theo danh sách cont nếu có
+  if (searchList.length > 0) {
+    data = data.filter(function(r) {
+      return searchList.includes((r.container_no || '').toUpperCase().trim());
+    });
   }
-  const tbody = document.getElementById('bulk-rows');
+
+  // Lưu lại để export
+  bulkFilteredConts = data.map(function(r) { return r.container_no; });
+
+  var tbody = document.getElementById('bulk-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy container nào — kiểm tra lại số cont</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map((r, i) => `
+  tbody.innerHTML = data.map(function(r, i) { return `
     <tr>
       <td>${i+1}</td>
       <td>${r.container_no||''}</td>
@@ -1596,7 +1618,7 @@ function loadBulk() {
       <td style="text-align:right;color:var(--green)">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
     </tr>
-  `).join('');
+  `; }).join('');
   toast('Đã tải ' + data.length + ' containers', 2000);
 }
 
@@ -1613,11 +1635,16 @@ async function exportBulkTemplate() {
       });
     }
 
-    // Lấy danh sách container từ tracking
-    var containers = state.tracking.map(function(r) { return r.container_no; });
-    if (!containers.length) { toast('Không có estimate nào!', 3000); return; }
+    // Dùng danh sách đang filter (nếu có), không thì lấy hết
+    var filterConts = (typeof bulkFilteredConts !== 'undefined' && bulkFilteredConts.length > 0)
+      ? bulkFilteredConts : null;
 
-    // Load estimates từ API cho từng container - hoặc lấy thẳng từ Sheets
+    if (filterConts && filterConts.length === 0) {
+      toast('Chưa tải danh sách! Nhấn "Tải danh sách" trước.', 3000);
+      return;
+    }
+
+    // Load estimates
     var res = await apiGet({ action: 'getAllEstimates' });
     if (!res.success || !res.data || !res.data.length) {
       toast('Không có dữ liệu estimates!', 3000);
@@ -1636,7 +1663,11 @@ async function exportBulkTemplate() {
     ];
 
     var rows = [header];
-    res.data.forEach(function(r) {
+    var exportData = filterConts
+      ? res.data.filter(function(r) { return filterConts.indexOf(r.equipment_number) !== -1; })
+      : res.data;
+
+    exportData.forEach(function(r) {
       // Format date: lấy phần dd/MM/yyyy từ estimate_datetime
       var dt = r.estimate_datetime || '';
       if (dt && dt.length > 10) dt = dt.substring(0, 10);
