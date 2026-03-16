@@ -1167,23 +1167,25 @@ async function saveEstimate() {
   const lines = [];
   document.querySelectorAll('#est-rows tr').forEach((row, idx) => {
     const inputs = row.querySelectorAll('input');
-    const dmgLoc = inputs[1]?.value.trim();
+    // inputs[0]=DmgLoc,[1]=Component,[2]=DmgType,[3]=RepType,
+    // [4]=Length,[5]=Width,[6]=Unit,[7]=Qty,[8]=RespParty
+    const dmgLoc = inputs[0]?.value.trim();
     if (!dmgLoc) return;
     lines.push({
       repair_seq: idx + 1,
       damage_location: dmgLoc,
-      component: inputs[2]?.value.trim() || '',
-      damage_type: inputs[3]?.value.trim() || '',
-      repair_type: inputs[4]?.value.trim() || '',
-      length: inputs[5]?.value || '',
-      width: inputs[6]?.value || '',
-      unit: inputs[7]?.value.trim() || '',
-      quantity: parseFloat(inputs[8]?.value) || 1,
+      component: inputs[1]?.value.trim() || '',
+      damage_type: inputs[2]?.value.trim() || '',
+      repair_type: inputs[3]?.value.trim() || '',
+      length: inputs[4]?.value || '',
+      width: inputs[5]?.value || '',
+      unit: inputs[6]?.value.trim() || '',
+      quantity: parseFloat(inputs[7]?.value) || 1,
       labour_hours: parseFloat(row.querySelector('.h-val')?.textContent) || 0,
       material_cost: parseFloat(row.querySelector('.m-val')?.textContent) || 0,
       labour_cost: parseFloat(row.querySelector('.l-val')?.textContent) || 0,
       total_cost: parseFloat(row.querySelector('.t-val')?.textContent) || 0,
-      responsible_party: inputs[9]?.value.trim() || ''
+      responsible_party: inputs[8]?.value.trim() || ''
     });
   });
 
