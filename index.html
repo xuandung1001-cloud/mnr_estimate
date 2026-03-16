@@ -424,7 +424,7 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:120px">Status</th>
                   <th style="width:85px">Repair Date</th>
                   <th style="width:85px">PO Number</th>
-                  <th style="width:70px"></th>
+                  <th style="width:80px"></th>
                 </tr>
               </thead>
               <tbody id="trk-rows">
@@ -711,25 +711,30 @@ const API = 'https://script.google.com/macros/s/AKfycbzZQ22ErS32LJV8dS0dVKGG3d6f
 
 // Auto restore session khi F5
 window.addEventListener('load', function() {
-  const saved = localStorage.getItem('mnr_session');
-  if (saved) {
-    try {
-      const session = JSON.parse(saved);
-      // Kiểm tra expiry
-      const expiry = new Date(session.expiry.split('/').reverse().join('-'));
-      expiry.setHours(23,59,59,0);
-      if (new Date() <= expiry) {
-        state.user = session;
-        document.getElementById('sb-username').textContent = session.fullname || session.username;
-        document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + session.expiry;
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        loadInitialData();
-        return;
+  try {
+    var saved = localStorage.getItem('mnr_session');
+    if (saved && saved.length > 10) {
+      var session = null;
+      try { session = JSON.parse(saved); } catch(e) { localStorage.removeItem('mnr_session'); return; }
+      if (session && session.expiry && session.fullname) {
+        var parts = session.expiry.split('/');
+        if (parts.length === 3) {
+          var expiry = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+          expiry.setHours(23,59,59,0);
+          if (new Date() <= expiry) {
+            state.user = session;
+            document.getElementById('sb-username').textContent = session.fullname || session.username;
+            document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + session.expiry;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            loadInitialData();
+            return;
+          }
+        }
       }
-    } catch(e) {}
-    localStorage.removeItem('mnr_session');
-  }
+    }
+  } catch(e) {}
+  localStorage.removeItem('mnr_session');
 });
 
 // STATE
@@ -754,23 +759,22 @@ async function apiGet(params) {
   try {
     return JSON.parse(text);
   } catch(e) {
-    console.error('apiGet parse error:', e, 'Response:', text.substring(0, 200));
-    return { error: 'Parse error: ' + e.message };
+    console.error('apiGet error:', e.message, 'url:', url, 'response:', text.substring(0,100));
+    return { success: false, error: 'Parse error: ' + e.message, data: [] };
   }
 }
 
 async function apiPost(data) {
   const res = await fetch(API, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(data)
   });
   const text = await res.text();
   try {
     return JSON.parse(text);
   } catch(e) {
-    console.error('apiPost parse error:', e, 'Response:', text.substring(0, 200));
-    return { error: 'Parse error: ' + e.message };
+    console.error('apiPost error:', e.message, 'response:', text.substring(0,100));
+    return { success: false, error: 'Parse error: ' + e.message };
   }
 }
 
@@ -833,32 +837,26 @@ async function loadInitialData() {
   const m = new Date().getMonth();
   document.getElementById('rpt-month').selectedIndex = m;
 
-  // Load all data in parallel
+  // Load từng API riêng — lỗi 1 cái không ảnh hưởng cái khác
   toast('Đang tải dữ liệu...');
-  try {
-    const [tariffRes, stockRes, trkRes, sumRes] = await Promise.all([
-      apiGet({ action: 'getTariff' }),
-      apiGet({ action: 'getEmtyStock' }),
-      apiGet({ action: 'getTracking' }),
-      apiGet({ action: 'getSummary' })
-    ]);
-    if (tariffRes.success) {
-      state.tariff = tariffRes.data;
-      console.log('Tariff loaded:', state.tariff.length, 'rows');
-      if (state.tariff.length > 0) console.log('Tariff sample:', JSON.stringify(state.tariff[0]));
-    }
-    if (stockRes.success) {
-      state.stock = stockRes.data;
-      console.log('Stock loaded:', state.stock.length, 'containers');
-      if (state.stock.length > 0) console.log('Stock sample:', JSON.stringify(state.stock[0]));
-    }
-    if (trkRes.success) state.tracking = trkRes.data;
-    if (sumRes.success) state.summary = sumRes.data;
-    toast('Đã tải xong: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
-  } catch(e) {
-    toast('Lỗi tải dữ liệu: ' + e.message, 4000);
-    console.error('Load error:', e);
-  }
+
+  try { var tariffRes = await apiGet({ action: 'getTariff' });
+    if (tariffRes && tariffRes.success) { state.tariff = tariffRes.data; console.log('Tariff loaded:', state.tariff.length); }
+  } catch(e) { console.error('Tariff load error:', e); }
+
+  try { var stockRes = await apiGet({ action: 'getEmtyStock' });
+    if (stockRes && stockRes.success) { state.stock = stockRes.data; console.log('Stock loaded:', state.stock.length); }
+  } catch(e) { console.error('Stock load error:', e); }
+
+  try { var trkRes = await apiGet({ action: 'getTracking' });
+    if (trkRes && trkRes.success) { state.tracking = trkRes.data; }
+  } catch(e) { console.error('Tracking load error:', e); }
+
+  try { var sumRes = await apiGet({ action: 'getSummary' });
+    if (sumRes && sumRes.success) { state.summary = sumRes.data; }
+  } catch(e) { console.error('Summary load error:', e); }
+
+  toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
 
   // Add first estimate row
   addEstRow();
@@ -1169,25 +1167,23 @@ async function saveEstimate() {
   const lines = [];
   document.querySelectorAll('#est-rows tr').forEach((row, idx) => {
     const inputs = row.querySelectorAll('input');
-    // inputs[0]=DmgLoc, [1]=Component, [2]=DmgType, [3]=RepType,
-    // [4]=Length, [5]=Width, [6]=Unit, [7]=Qty, [8]=RespParty
-    const dmgLoc = inputs[0]?.value.trim();
+    const dmgLoc = inputs[1]?.value.trim();
     if (!dmgLoc) return;
     lines.push({
       repair_seq: idx + 1,
       damage_location: dmgLoc,
-      component: inputs[1]?.value.trim() || '',
-      damage_type: inputs[2]?.value.trim() || '',
-      repair_type: inputs[3]?.value.trim() || '',
-      length: inputs[4]?.value || '',
-      width: inputs[5]?.value || '',
-      unit: inputs[6]?.value.trim() || '',
-      quantity: parseFloat(inputs[7]?.value) || 1,
+      component: inputs[2]?.value.trim() || '',
+      damage_type: inputs[3]?.value.trim() || '',
+      repair_type: inputs[4]?.value.trim() || '',
+      length: inputs[5]?.value || '',
+      width: inputs[6]?.value || '',
+      unit: inputs[7]?.value.trim() || '',
+      quantity: parseFloat(inputs[8]?.value) || 1,
       labour_hours: parseFloat(row.querySelector('.h-val')?.textContent) || 0,
       material_cost: parseFloat(row.querySelector('.m-val')?.textContent) || 0,
       labour_cost: parseFloat(row.querySelector('.l-val')?.textContent) || 0,
       total_cost: parseFloat(row.querySelector('.t-val')?.textContent) || 0,
-      responsible_party: inputs[8]?.value.trim() || ''
+      responsible_party: inputs[9]?.value.trim() || ''
     });
   });
 
@@ -1389,10 +1385,7 @@ function renderTrackingTable(data) {
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
-      <td style="white-space:nowrap;padding:3px 4px">
-        <button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:3px">Sửa</button>
-        <button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button>
-      </td>
+      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
@@ -1757,80 +1750,71 @@ function setPicMode(mode, el) {
   el.classList.add('active');
 }
 
-// ===================== EDIT ESTIMATE =====================
+// EDIT
 async function editEstimate(containerNo) {
-  toast('Đang tải dữ liệu ' + containerNo + '...');
+  toast('Đang tải ' + containerNo + '...');
   try {
-    const res = await apiGet({ action: 'getEstimates', container_no: containerNo });
-    if (!res.success || !res.data.length) {
-      toast('Không tìm thấy dữ liệu estimate!', 3000);
+    var res = await apiGet({ action: 'getEstimates', container_no: containerNo });
+    if (!res.success || !res.data || !res.data.length) {
+      toast('Không tìm thấy dữ liệu!', 3000);
       return;
     }
-    const lines = res.data;
-    const first = lines[0];
-
-    // Chuyển sang màn hình Nhập Estimate
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.querySelector('.nav-item[onclick*="estimate"]').classList.add('active');
+    var lines = res.data;
+    var first = lines[0];
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    var ni = document.querySelector('.nav-item[onclick*="estimate"]');
+    if (ni) ni.classList.add('active');
     document.getElementById('screen-estimate').classList.add('active');
-    setTopbar('Chỉnh sửa — ' + containerNo, [
-      { label: 'Huỷ', fn: 'cancelEditEstimate()' },
-      { label: 'Lưu chỉnh sửa', cls: 'btn-blue', fn: 'saveEditEstimate("' + containerNo + '")' }
-    ]);
-
-    // Điền header
-    document.getElementById('eq-no').value      = containerNo;
-    document.getElementById('size-type').value  = first.size_type || '';
-    document.getElementById('carrier').value    = first.carrier   || '';
-    document.getElementById('est-date').value   = formatDate(first.estimate_date) || todayStr();
-    document.getElementById('currency').value   = first.currency  || 'USD';
-    document.getElementById('est-remarks').value= first.header_remarks || '';
-    document.getElementById('grade').value      = first.grade_code || '';
-    document.getElementById('cont-status').value= '';
-    document.getElementById('mfg-date').value   = '';
-
-    // Điền từ stock nếu có
-    const stockItem = state.stock.find(r =>
-      (r.equipment_no || '').toUpperCase() === containerNo.toUpperCase()
-    );
-    if (stockItem) {
-      let mfgStr = '';
-      if (stockItem.manufactured_date) {
-        const d = new Date(stockItem.manufactured_date);
-        if (!isNaN(d)) mfgStr = String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    document.getElementById('tb-title').textContent = 'Chỉnh sửa — ' + containerNo;
+    document.getElementById('tb-actions').innerHTML =
+      '<button class="btn btn-sm" onclick="cancelEditEstimate()">Huỷ</button>' +
+      '<button class="btn btn-sm btn-blue" onclick="saveEditEstimate(\'' + containerNo + '\')">Lưu chỉnh sửa</button>';
+    document.getElementById('eq-no').value       = containerNo;
+    document.getElementById('size-type').value   = first.size_type || '';
+    document.getElementById('carrier').value     = first.carrier   || '';
+    document.getElementById('est-date').value    = formatDate(first.estimate_datetime) || todayStr();
+    document.getElementById('currency').value    = first.currency  || 'USD';
+    document.getElementById('est-remarks').value = '';
+    document.getElementById('grade').value       = '';
+    document.getElementById('cont-status').value = '';
+    document.getElementById('mfg-date').value    = '';
+    var si = state.stock.find(function(r) {
+      return (r.equipment_no || '').toUpperCase() === containerNo.toUpperCase();
+    });
+    if (si) {
+      var ms = '';
+      if (si.manufactured_date) {
+        var d = new Date(si.manufactured_date);
+        if (!isNaN(d)) ms = String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
       }
-      document.getElementById('mfg-date').value       = mfgStr;
-      document.getElementById('grade').value           = stockItem.grade || first.grade_code || '';
-      document.getElementById('cont-status').value     = stockItem.container_status || '';
+      document.getElementById('mfg-date').value       = ms;
+      document.getElementById('grade').value           = si.grade || '';
+      document.getElementById('cont-status').value     = si.container_status || '';
     }
-
-    // Điền các dòng hạng mục
     document.getElementById('est-rows').innerHTML = '';
-    lines.forEach((line, idx) => {
+    lines.forEach(function(line, idx) {
       addEstRow();
-      const rows   = document.querySelectorAll('#est-rows tr');
-      const tr     = rows[rows.length - 1];
-      const inputs = tr.querySelectorAll('input');
-      inputs[0].value = line.damage_location   || '';
-      inputs[1].value = line.component         || '';
-      inputs[2].value = line.damage_type       || '';
-      inputs[3].value = line.repair_type       || '';
-      inputs[4].value = line.length            || '';
-      inputs[5].value = line.width             || '';
-      inputs[6].value = line.unit              || '';
-      inputs[7].value = line.quantity          || 1;
-      inputs[8].value = line.responsible_party || first.carrier || '';
-      tr.querySelector('.h-val').textContent = parseFloat(line.labour_hours  || 0).toFixed(2);
-      tr.querySelector('.m-val').textContent = parseFloat(line.material_cost || 0).toFixed(2);
-      tr.querySelector('.l-val').textContent = parseFloat(line.labour_cost   || 0).toFixed(2);
-      tr.querySelector('.t-val').textContent = parseFloat(line.total_cost    || 0).toFixed(2);
+      var trs = document.querySelectorAll('#est-rows tr');
+      var tr  = trs[trs.length - 1];
+      var inp = tr.querySelectorAll('input');
+      if (inp[0]) inp[0].value = line.damage_location   || '';
+      if (inp[1]) inp[1].value = line.component         || '';
+      if (inp[2]) inp[2].value = line.damage_type       || '';
+      if (inp[3]) inp[3].value = line.repair_type       || '';
+      if (inp[4]) inp[4].value = line.length            || '';
+      if (inp[5]) inp[5].value = line.width             || '';
+      if (inp[6]) inp[6].value = line.unit              || '';
+      if (inp[7]) inp[7].value = line.quantity          || 1;
+      if (inp[8]) inp[8].value = line.responsible_party || '';
+      var hv = tr.querySelector('.h-val'); if (hv) hv.textContent = parseFloat(line.labour_hours  || 0).toFixed(2);
+      var mv = tr.querySelector('.m-val'); if (mv) mv.textContent = parseFloat(line.material_cost || 0).toFixed(2);
+      var lv = tr.querySelector('.l-val'); if (lv) lv.textContent = parseFloat(line.labour_cost   || 0).toFixed(2);
+      var tv = tr.querySelector('.t-val'); if (tv) tv.textContent = parseFloat(line.total_cost    || 0).toFixed(2);
     });
     calcEstTotal();
-    toast('Đã tải ' + lines.length + ' hạng mục — chỉnh sửa rồi nhấn Lưu', 3000);
-  } catch(err) {
-    toast('Lỗi: ' + err.message, 4000);
-  }
+    toast('Đã tải ' + lines.length + ' hạng mục', 2000);
+  } catch(err) { toast('Lỗi: ' + err.message, 4000); }
 }
 
 function cancelEditEstimate() {
@@ -1842,34 +1826,39 @@ function cancelEditEstimate() {
 }
 
 async function saveEditEstimate(containerNo) {
-  const eqNo = document.getElementById('eq-no').value.trim();
+  var eqNo = document.getElementById('eq-no').value.trim();
   if (!eqNo) { toast('Không có Equipment No!'); return; }
-  const lines = [];
-  document.querySelectorAll('#est-rows tr').forEach((row, idx) => {
-    const inputs = row.querySelectorAll('input');
-    const dmgLoc = inputs[0] && inputs[0].value.trim();
-    if (!dmgLoc) return;
+  var lines = [];
+  document.querySelectorAll('#est-rows tr').forEach(function(row, idx) {
+    var inp = row.querySelectorAll('input');
+    if (!inp[0]) return;
+    var dl = inp[0].value.trim();
+    if (!dl) return;
+    var hv = row.querySelector('.h-val');
+    var mv = row.querySelector('.m-val');
+    var lv = row.querySelector('.l-val');
+    var tv = row.querySelector('.t-val');
     lines.push({
       repair_seq:        idx + 1,
-      damage_location:   dmgLoc,
-      component:         inputs[1] ? inputs[1].value.trim() : '',
-      damage_type:       inputs[2] ? inputs[2].value.trim() : '',
-      repair_type:       inputs[3] ? inputs[3].value.trim() : '',
-      length:            inputs[4] ? inputs[4].value : '',
-      width:             inputs[5] ? inputs[5].value : '',
-      unit:              inputs[6] ? inputs[6].value.trim() : '',
-      quantity:          inputs[7] ? parseFloat(inputs[7].value) || 1 : 1,
-      responsible_party: inputs[8] ? inputs[8].value.trim() : '',
-      labour_hours:  parseFloat(row.querySelector('.h-val') ? row.querySelector('.h-val').textContent : 0) || 0,
-      material_cost: parseFloat(row.querySelector('.m-val') ? row.querySelector('.m-val').textContent : 0) || 0,
-      labour_cost:   parseFloat(row.querySelector('.l-val') ? row.querySelector('.l-val').textContent : 0) || 0,
-      total_cost:    parseFloat(row.querySelector('.t-val') ? row.querySelector('.t-val').textContent : 0) || 0,
+      damage_location:   dl,
+      component:         inp[1] ? inp[1].value.trim() : '',
+      damage_type:       inp[2] ? inp[2].value.trim() : '',
+      repair_type:       inp[3] ? inp[3].value.trim() : '',
+      length:            inp[4] ? inp[4].value : '',
+      width:             inp[5] ? inp[5].value : '',
+      unit:              inp[6] ? inp[6].value.trim() : '',
+      quantity:          inp[7] ? (parseFloat(inp[7].value) || 1) : 1,
+      responsible_party: inp[8] ? inp[8].value.trim() : '',
+      labour_hours:  hv ? (parseFloat(hv.textContent) || 0) : 0,
+      material_cost: mv ? (parseFloat(mv.textContent) || 0) : 0,
+      labour_cost:   lv ? (parseFloat(lv.textContent) || 0) : 0,
+      total_cost:    tv ? (parseFloat(tv.textContent) || 0) : 0
     });
   });
   if (!lines.length) { toast('Chưa có hạng mục!'); return; }
-  toast('Đang lưu chỉnh sửa...');
+  toast('Đang lưu...');
   try {
-    const payload = {
+    var res = await apiPost({
       action:       'updateEstimate',
       container_no: eqNo,
       carrier:      document.getElementById('carrier').value,
@@ -1877,43 +1866,33 @@ async function saveEditEstimate(containerNo) {
       currency:     document.getElementById('currency').value || 'USD',
       grade:        document.getElementById('grade').value,
       remarks:      document.getElementById('est-remarks').value,
-      lines
-    };
-    console.log('Sending updateEstimate:', eqNo, lines.length, 'lines');
-    const res = await apiPost(payload);
-    console.log('updateEstimate response:', res);
-    if (res.success) {
-      const trkRes = await apiGet({ action: 'getTracking' });
-      if (trkRes.success) state.tracking = trkRes.data;
-      toast('Đã lưu! ' + res.lines_saved + ' hạng mục', 3000);
+      lines:        lines
+    });
+    if (res && res.success) {
+      var tr2 = await apiGet({ action: 'getTracking' });
+      if (tr2 && tr2.success) state.tracking = tr2.data;
+      toast('Đã lưu! ' + (res.lines_saved || lines.length) + ' hạng mục', 3000);
       cancelEditEstimate();
     } else {
-      toast('Lỗi: ' + (res.error || JSON.stringify(res)), 4000);
+      toast('Lỗi: ' + (res ? (res.error || JSON.stringify(res)) : 'No response'), 4000);
     }
-  } catch(err) {
-    console.error('saveEditEstimate error:', err);
-    toast('Lỗi: ' + err.message, 4000);
-  }
+  } catch(err) { toast('Lỗi: ' + err.message, 4000); }
 }
 
-// ===================== DELETE ESTIMATE =====================
 async function deleteEstimate(containerNo) {
-  if (!confirm('Xoá toàn bộ estimate của ' + containerNo + '?\n\nKhông thể hoàn tác!')) return;
-  toast('Đang xoá ' + containerNo + '...');
+  if (!confirm('Xoá estimate của ' + containerNo + '?\nKhông thể hoàn tác!')) return;
+  toast('Đang xoá...');
   try {
-    const res = await apiPost({ action: 'deleteEstimate', container_no: containerNo });
-    if (res.success) {
-      state.tracking = state.tracking.filter(r => r.container_no !== containerNo);
-      state.summary  = state.summary.filter(r => r.container_no !== containerNo);
+    var res = await apiPost({ action: 'deleteEstimate', container_no: containerNo });
+    if (res && res.success) {
+      state.tracking = state.tracking.filter(function(r) { return r.container_no !== containerNo; });
+      state.summary  = state.summary.filter(function(r) { return r.container_no !== containerNo; });
       renderTracking();
       toast(res.message, 3000);
-    } else {
-      toast('Lỗi: ' + (res.error || 'Unknown'), 4000);
-    }
-  } catch(err) {
-    toast('Lỗi kết nối: ' + err.message, 4000);
-  }
+    } else { toast('Lỗi: ' + (res ? res.error : 'No response'), 4000); }
+  } catch(err) { toast('Lỗi: ' + err.message, 4000); }
 }
+
 
 // ===================== LOGOUT =====================
 function doLogout() {
