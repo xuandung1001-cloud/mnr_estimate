@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNR Estimate — Cảng Thạnh Phước</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c;font-size:13px}
+:root{--blue:#185FA5;--blue-light:#E6F1FB;--blue-mid:#B5D4F4;--green:#3B6D11;--green-light:#EAF3DE;--green-mid:#C0DD97;--amber:#633806;--amber-light:#FAEEDA;--red:#791F1F;--red-light:#FCEBEB;--border:#e2e8f0;--bg:#f0f4f8;--white:#fff;--gray:#718096;--gray-light:#f7fafc}
+
+/* LAYOUT */
+#app{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:210px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#content{flex:1;overflow-y:auto;padding:16px 20px}
+
+/* SIDEBAR */
+.sb-header{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:13px;font-weight:600;color:#1a202c}
+.sb-sub{font-size:11px;color:var(--gray);margin-top:2px}
+.nav-section{padding:6px 0}
+.nav-label{font-size:10px;font-weight:600;color:#a0aec0;padding:4px 16px;text-transform:uppercase;letter-spacing:.06em}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:12px;color:var(--gray);cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--gray-light);color:#2d3748}
+.nav-item.active{background:var(--blue-light);color:var(--blue);border-left-color:var(--blue);font-weight:500}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0}
+.nav-item.active .nav-dot{opacity:1}
+.sb-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)}
+.sb-user{font-size:11px;font-weight:500;color:#2d3748}
+.sb-expiry{font-size:10px;color:var(--gray);margin-top:2px}
+
+/* TOPBAR */
+.tb-title{font-size:14px;font-weight:600;color:#1a202c}
+.tb-actions{display:flex;gap:8px}
+
+/* BUTTONS */
+.btn{padding:5px 12px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:#2d3748;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn:hover{background:var(--gray-light)}
+.btn-blue{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-blue:hover{background:#0d4a8a}
+.btn-red{border-color:#fc8181;color:var(--red)}
+.btn-red:hover{background:var(--red-light)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:600;color:#2d3748;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+
+/* FORM */
+.form-grid{display:grid;gap:10px;margin-bottom:10px}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fl{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.04em}
+.fl-blue{color:var(--blue)}
+.fi{padding:6px 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:#1a202c;font-family:inherit;transition:border .15s}
+.fi:focus{outline:none;border-color:var(--blue)}
+.fi-auto{background:var(--blue-light);border-color:var(--blue-mid);color:#0C447C}
+.fi-auto:focus{border-color:var(--blue)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.stat-card{background:var(--gray-light);border-radius:8px;padding:10px 12px}
+.stat-label{font-size:10px;color:var(--gray);margin-bottom:4px}
+.stat-value{font-size:20px;font-weight:600;color:#1a202c}
+.stat-sub{font-size:10px;color:var(--gray);margin-top:2px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+th{background:var(--gray-light);padding:6px 7px;text-align:left;font-weight:600;color:var(--gray);border:1px solid var(--border);font-size:10px;white-space:nowrap;overflow:hidden;text-transform:uppercase;letter-spacing:.03em}
+td{padding:5px 7px;border:1px solid var(--border);color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tr:hover td{background:#f7fafc}
+td input,td select{border:none;background:transparent;font-size:11px;width:100%;color:#1a202c;outline:none;font-family:inherit}
+td input:focus,td select:focus{background:#fffbeb}
+.td-auto{background:var(--green-light);color:var(--green);text-align:right}
+.td-auto-warn{background:var(--amber-light);color:var(--amber);text-align:right}
+.td-total{background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right}
+.td-total-green{background:var(--green-mid);color:#27500A;font-weight:600;text-align:right}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.b-ok{background:var(--green-light);color:var(--green)}
+.b-wa{background:var(--amber-light);color:var(--amber)}
+.b-ng{background:var(--red-light);color:var(--red)}
+.b-gr{background:var(--gray-light);color:var(--gray)}
+.b-blue{background:var(--blue-light);color:var(--blue)}
+
+/* ALERT */
+.alert{padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:10px}
+.alert-warn{background:var(--amber-light);color:var(--amber);border:1px solid #FAC775}
+.alert-info{background:var(--blue-light);color:#0C447C;border:1px solid var(--blue-mid)}
+.alert-ok{background:var(--green-light);color:var(--green);border:1px solid var(--green-mid)}
+.alert-err{background:var(--red-light);color:var(--red);border:1px solid #F09595}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.filter-bar .fi{padding:5px 8px}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:#f0f4f8;display:flex;align-items:center;justify-content:center;z-index:100}
+.login-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:32px;width:320px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-logo{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--gray);margin-bottom:24px}
+.login-field{margin-bottom:12px}
+.login-label{font-size:11px;font-weight:600;color:var(--gray);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.04em}
+.login-input{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:6px;font-family:inherit}
+.login-input:focus{outline:none;border-color:var(--blue)}
+.login-btn{width:100%;padding:9px;font-size:13px;font-weight:600;background:var(--blue);border:none;border-radius:6px;color:#fff;cursor:pointer;margin-top:8px;font-family:inherit}
+.login-btn:hover{background:#0d4a8a}
+.login-hint{font-size:10px;color:var(--gray);text-align:center;margin-top:12px}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:#2d3748;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--gray)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* SECTION DIVIDER */
+.sec-div{font-size:11px;font-weight:600;color:var(--gray);padding:5px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+
+/* UPLOAD */
+.upload-area{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
+.upload-area:hover{border-color:var(--blue);background:var(--blue-light)}
+.upload-title{font-size:12px;font-weight:600;color:#2d3748;margin-bottom:4px}
+.upload-sub{font-size:11px;color:var(--gray)}
+
+/* MODE TABS */
+.mode-tabs{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:6px;overflow:hidden;width:fit-content}
+.mode-tab{padding:5px 14px;font-size:12px;cursor:pointer;background:var(--white);color:var(--gray);border:none;font-family:inherit;transition:all .15s}
+.mode-tab:hover{background:var(--gray-light)}
+.mode-tab.active{background:var(--blue);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">MNR Estimate</div>
+    <div class="login-sub">Cảng Thạnh Phước — Bộ phận MNR</div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" id="login-user" placeholder="Nhập username" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Key</label>
+      <input class="login-input" id="login-key" type="password" placeholder="Nhập key" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-error" class="alert alert-err" style="display:none;margin-top:8px"></div>
+    <button class="login-btn" onclick="doLogin()" id="login-btn">Đăng nhập</button>
+    <div class="login-hint">Liên hệ admin nếu quên key đăng nhập</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <div id="sidebar">
+    <div class="sb-header">
+      <div class="sb-title">MNR Estimate</div>
+      <div class="sb-sub">Cảng Thạnh Phước</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Nhập liệu</div>
+      <div class="nav-item active" onclick="nav('estimate',this)"><div class="nav-dot"></div>Nhập Estimate</div>
+      <div class="nav-item" onclick="nav('revise',this)"><div class="nav-dot"></div>Revise Estimate</div>
+      <div class="nav-item" onclick="nav('ovm',this)"><div class="nav-dot"></div>Update OVM/OVD</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Dữ liệu</div>
+      <div class="nav-item" onclick="nav('tracking',this)"><div class="nav-dot"></div>Est. Tracking</div>
+      <div class="nav-item" onclick="nav('summary',this)"><div class="nav-dot"></div>Summary</div>
+      <div class="nav-item" onclick="nav('bulk',this)"><div class="nav-dot"></div>Bulk List</div>
+      <div class="nav-item" onclick="nav('stock',this)"><div class="nav-dot"></div>Emty Stock</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Cài đặt</div>
+      <div class="nav-item" onclick="nav('tariff',this)"><div class="nav-dot"></div>Quản lý Tariff</div>
+      <div class="nav-label">Xuất liệu</div>
+      <div class="nav-item" onclick="nav('report',this)"><div class="nav-dot"></div>Report tháng</div>
+      <div class="nav-item" onclick="nav('pictures',this)"><div class="nav-dot"></div>Export Pictures</div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-user" id="sb-username">—</div>
+      <div class="sb-expiry" id="sb-expiry">—</div>
+      <div style="margin-top:6px">
+        <button onclick="doLogout()" style="font-size:10px;padding:2px 8px;border:0.5px solid #e2e8f0;border-radius:4px;background:transparent;color:#718096;cursor:pointer">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-title" id="tb-title">Nhập Estimate mới</div>
+      <div class="tb-actions" id="tb-actions"></div>
+    </div>
+    <div id="content">
+
+      <!-- ESTIMATE -->
+      <div class="screen active" id="screen-estimate">
+        <div class="card">
+          <div class="form-grid grid-3">
+            <div class="fg">
+              <div class="fl">Equipment No *</div>
+              <input class="fi" id="eq-no" placeholder="MSMU1234567" oninput="onEquipmentInput(this.value)">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Size Type</div>
+              <input class="fi fi-auto" id="size-type" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Carrier</div>
+              <input class="fi fi-auto" id="carrier" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Estimate Date</div>
+              <input class="fi fi-auto" id="est-date" readonly>
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Manufacture Date</div>
+              <input class="fi fi-auto" id="mfg-date" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Currency</div>
+              <input class="fi fi-auto" id="currency" readonly value="USD">
+            </div>
+          </div>
+          <div class="form-grid grid-2">
+            <div class="fg">
+              <div class="fl fl-blue">Grade</div>
+              <input class="fi fi-auto" id="grade" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Container Status</div>
+              <input class="fi fi-auto" id="cont-status" readonly placeholder="—">
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:10px">
+            <div class="fl">Remarks</div>
+            <input class="fi" id="est-remarks" placeholder="Ghi chú nếu có...">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec-div">
+            Chi tiết hạng mục sửa chữa
+            <span style="font-size:10px;color:var(--gray);font-weight:400">Ô xanh lá = giá tự lookup từ Tariff</span>
+          </div>
+          <div class="tbl-wrap">
+            <table id="est-table">
+              <thead>
+                <tr>
+                  <th style="width:32px">STT</th>
+                  <th style="width:70px">Dmg Loc</th>
+                  <th style="width:75px">Component</th>
+                  <th style="width:62px">Dmg Type</th>
+                  <th style="width:62px">Rep Type</th>
+                  <th style="width:48px">Length</th>
+                  <th style="width:48px">Width</th>
+                  <th style="width:50px">Unit</th>
+                  <th style="width:40px">Qty</th>
+                  <th style="width:52px" class="td-auto">Hours</th>
+                  <th style="width:60px" class="td-auto">Material</th>
+                  <th style="width:58px" class="td-auto">Labour</th>
+                  <th style="width:62px" class="td-auto">Total</th>
+                  <th style="width:70px">Resp. Party</th>
+                  <th style="width:28px"></th>
+                </tr>
+              </thead>
+              <tbody id="est-rows"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-sm" onclick="addEstRow()">+ Thêm dòng</button>
+            <div id="est-notfound" style="display:none" class="alert alert-warn" style="margin:0;padding:4px 8px">Không tìm thấy giá trong Tariff — nhập tay hoặc kiểm tra lại</div>
+          </div>
+          <div id="est-total-row" style="display:none;margin-top:8px;padding:8px 12px;background:var(--blue-light);border-radius:6px;display:flex;justify-content:flex-end;gap:20px">
+            <span style="font-size:11px;color:var(--gray)">Total Hours: <strong id="tot-hours" style="color:var(--blue)">0.00</strong></span>
+            <span style="font-size:11px;color:var(--gray)">Material: <strong id="tot-mat" style="color:var(--blue)">0.00</strong></span>
+            <span style="font-size:11px;color:var(--gray)">Labour: <strong id="tot-lab" style="color:var(--blue)">0.00</strong></span>
+            <span style="font-size:11px;color:var(--gray)">Total: <strong id="tot-total" style="color:var(--green);font-size:13px">0.00</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- REVISE -->
+      <div class="screen" id="screen-revise">
+        <div class="alert alert-warn">Chỉnh sửa estimate sau khi Carrier đã Approved — các thay đổi sẽ ghi lại vào Data_Estimate</div>
+        <div class="card">
+          <div class="form-grid grid-3">
+            <div class="fg">
+              <div class="fl">Equipment No * (nhập để load)</div>
+              <input class="fi" id="rev-eq" placeholder="Nhập số cont..." oninput="onReviseInput(this.value)">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Approved Date</div>
+              <input class="fi fi-auto" id="rev-app-date" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl">Approval Status</div>
+              <select class="fi" id="rev-status">
+                <option>Partially Approved</option>
+                <option>Approved</option>
+                <option>Rejected</option>
+                <option>Canceled</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg">
+            <div class="fl">Remarks sau Approved</div>
+            <input class="fi" id="rev-remarks" placeholder="Ghi chú sau approved...">
+          </div>
+        </div>
+        <div class="card">
+          <div class="sec-div">Chi tiết hạng mục</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px">STT</th>
+                  <th style="width:70px">Dmg Loc</th>
+                  <th style="width:75px">Component</th>
+                  <th style="width:62px">Dmg Type</th>
+                  <th style="width:62px">Rep Type</th>
+                  <th style="width:40px">Qty</th>
+                  <th style="width:52px">Hours</th>
+                  <th style="width:60px">Material</th>
+                  <th style="width:58px">Labour</th>
+                  <th style="width:70px" class="td-auto">Total App.</th>
+                  <th style="width:110px">Status</th>
+                  <th style="width:100px">Remark</th>
+                </tr>
+              </thead>
+              <tbody id="rev-rows">
+                <tr><td colspan="12" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OVM -->
+      <div class="screen" id="screen-ovm">
+        <div class="mode-tabs">
+          <div class="mode-tab active" onclick="setOvmMode('A',this)">A — Approval từ OVM</div>
+          <div class="mode-tab" onclick="setOvmMode('B',this)">B — Ref No từ OVD</div>
+          <div class="mode-tab" onclick="setOvmMode('C',this)">C — Post Repair</div>
+          <div class="mode-tab" onclick="setOvmMode('D',this)">D — Complete Repair</div>
+        </div>
+        <div class="card">
+          <div class="upload-area" onclick="document.getElementById('ovm-file').click()">
+            <div class="upload-title">Upload file OVM/OVD (.xlsx)</div>
+            <div class="upload-sub">Kéo thả hoặc click để chọn file</div>
+            <input type="file" id="ovm-file" accept=".xlsx,.xls" style="display:none" onchange="handleOvmFile(this)">
+          </div>
+          <div id="ovm-preview" style="display:none">
+            <div class="sec-div">Preview — kiểm tra trước khi lưu <span id="ovm-count" style="background:var(--green-light);color:var(--green);padding:1px 8px;border-radius:4px;font-size:10px"></span></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Equipment No</th>
+                    <th style="text-align:right">Total Est.</th>
+                    <th style="text-align:right">Total Approved</th>
+                    <th style="text-align:right">Chênh lệch</th>
+                    <th>Status mới</th>
+                    <th>App. Date</th>
+                  </tr>
+                </thead>
+                <tbody id="ovm-rows"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <button class="btn btn-blue" onclick="confirmOvm()">Xác nhận cập nhật</button>
+              <button class="btn" onclick="cancelOvm()">Huỷ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACKING -->
+      <div class="screen" id="screen-tracking">
+        <div class="stats-row" id="tracking-stats"></div>
+        <div class="card">
+          <div class="filter-bar">
+            <input class="fi" id="trk-search" placeholder="Tìm Equipment No, Ref No..." oninput="filterTracking()" style="flex:1;min-width:160px">
+            <select class="fi" id="trk-status" onchange="filterTracking()" style="width:160px">
+              <option value="">Tất cả trạng thái</option>
+              <option>Approved</option>
+              <option>Partially Approved</option>
+              <option>Pending</option>
+              <option>Rejected</option>
+              <option>Canceled</option>
+            </select>
+            <select class="fi" id="trk-carrier" onchange="filterTracking()" style="width:120px">
+              <option value="">Tất cả Carrier</option>
+            </select>
+            <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px">STT</th>
+                  <th style="width:105px">Equipment No</th>
+                  <th style="width:48px">Carrier</th>
+                  <th style="width:48px">Size</th>
+                  <th style="width:78px">Est Date</th>
+                  <th style="width:110px">Ref No</th>
+                  <th style="width:70px;text-align:right">Total Est.</th>
+                  <th style="width:70px;text-align:right">Total App.</th>
+                  <th style="width:80px">App. Date</th>
+                  <th style="width:120px">Status</th>
+                  <th style="width:85px">Repair Date</th>
+                  <th style="width:85px">PO Number</th>
+                  <th style="width:70px"></th>
+                </tr>
+              </thead>
+              <tbody id="trk-rows">
+                <tr><td colspan="12" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="screen" id="screen-summary">
+        <div class="stats-row" id="sum-stats"></div>
+        <div class="card">
+          <div class="filter-bar">
+            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No..." oninput="filterSummary()" style="flex:1;min-width:160px">
+            <select class="fi" id="sum-status" onchange="filterSummary()" style="width:160px">
+              <option value="">Tất cả trạng thái</option>
+              <option>Approved</option>
+              <option>Partially Approved</option>
+              <option>Pending</option>
+              <option>Rejected</option>
+            </select>
+            <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
+              <option value="">Tất cả Carrier</option>
+            </select>
+            <button class="btn btn-sm" onclick="syncSummary()">Sync Summary</button>
+            <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px">STT</th>
+                  <th style="width:105px">Equipment No</th>
+                  <th style="width:48px">Carrier</th>
+                  <th style="width:48px">Size</th>
+                  <th style="width:78px">Est Date</th>
+                  <th style="width:110px">Ref No</th>
+                  <th style="width:80px">App. Date</th>
+                  <th style="width:80px">Repair Date</th>
+                  <th style="width:80px">PO Number</th>
+                  <th style="width:65px;text-align:right">Labour H.</th>
+                  <th style="width:70px;text-align:right">Labour $</th>
+                  <th style="width:70px;text-align:right">Material</th>
+                  <th style="width:70px;text-align:right">Total Cost</th>
+                  <th style="width:72px;text-align:right" class="td-auto">Total App.</th>
+                  <th style="width:120px">Status</th>
+                  <th style="width:130px">Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="sum-rows">
+                <tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="sum-totals" style="display:none;margin-top:8px;padding:8px 12px;background:var(--gray-light);border-radius:6px;display:flex;justify-content:flex-end;gap:20px"></div>
+        </div>
+      </div>
+
+      <!-- BULK -->
+      <div class="screen" id="screen-bulk">
+        <div class="card">
+          <div class="mode-tabs">
+            <div class="mode-tab active" onclick="setBulkMode('A',this)">A — Tất cả Estimate</div>
+            <div class="mode-tab" onclick="setBulkMode('B',this)">B — Chỉ Approved/Partially</div>
+          </div>
+          <div class="filter-bar">
+            <input class="fi" id="bulk-search" placeholder="Tìm Equipment No..." style="flex:1">
+            <button class="btn btn-blue btn-sm" onclick="loadBulk()">Tải danh sách</button>
+            <button class="btn btn-sm" onclick="exportBulkTemplate()">Export Bulk Template</button>
+            <button class="btn btn-sm" onclick="exportEstList()">Export Est. List</button>
+            <button class="btn btn-sm" onclick="exportAppList()">Export Approved List</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px">STT</th>
+                  <th style="width:105px">Equipment No</th>
+                  <th style="width:78px">Est. Date</th>
+                  <th style="width:50px">Carrier</th>
+                  <th style="width:65px">Dmg Loc</th>
+                  <th style="width:70px">Component</th>
+                  <th style="width:55px">Rep Type</th>
+                  <th style="width:38px">Qty</th>
+                  <th style="width:62px;text-align:right">Total</th>
+                  <th style="width:70px;text-align:right">Total App.</th>
+                  <th style="width:115px">Status</th>
+                </tr>
+              </thead>
+              <tbody id="bulk-rows">
+                <tr><td colspan="11" class="loading">Nhấn "Tải danh sách" để xem dữ liệu</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STOCK -->
+      <div class="screen" id="screen-stock">
+        <div class="card">
+          <div class="filter-bar">
+            <input class="fi" id="stk-search" placeholder="Tìm Container No, Carrier, Size..." oninput="filterStock()" style="flex:1">
+            <select class="fi" id="stk-size" onchange="filterStock()" style="width:110px">
+              <option value="">Tất cả Size</option>
+            </select>
+            <select class="fi" id="stk-carrier" onchange="filterStock()" style="width:120px">
+              <option value="">Tất cả Carrier</option>
+            </select>
+            <button class="btn btn-sm" onclick="document.getElementById('stock-file').click()">Upload TOS file</button>
+            <input type="file" id="stock-file" accept=".xlsx,.xls" style="display:none" onchange="handleStockUpload(this)">
+            <button class="btn btn-sm btn-red" onclick="confirmResetStock()">Reset Stock</button>
+          </div>
+          <div id="stk-info" style="font-size:11px;color:var(--gray);margin-bottom:8px"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:32px">STT</th>
+                  <th style="width:55px">Carrier</th>
+                  <th style="width:105px">Equipment No</th>
+                  <th style="width:48px">Size</th>
+                  <th style="width:48px">ISO</th>
+                  <th style="width:72px">Mfg Date</th>
+                  <th style="width:42px">Grade</th>
+                  <th style="width:110px">Trạng thái</th>
+                  <th style="width:48px">F/E</th>
+                  <th style="width:90px">Yard Location</th>
+                  <th style="width:50px">Ngày lưu</th>
+                  <th style="width:80px">Date In Yard</th>
+                  <th style="width:42px">Loại HH</th>
+                  <th style="width:50px">Container Status</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="stk-rows">
+                <tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORT -->
+      <div class="screen" id="screen-report">
+        <div class="card">
+          <div class="filter-bar">
+            <select class="fi" id="rpt-month" style="width:120px">
+              <option>JANUARY</option><option>FEBRUARY</option><option>MARCH</option>
+              <option>APRIL</option><option>MAY</option><option>JUNE</option>
+              <option>JULY</option><option>AUGUST</option><option>SEPTEMBER</option>
+              <option>OCTOBER</option><option>NOVEMBER</option><option>DECEMBER</option>
+            </select>
+            <select class="fi" id="rpt-year" style="width:90px"></select>
+            <select class="fi" id="rpt-carrier" style="width:120px"><option value="">Tất cả Carrier</option></select>
+            <button class="btn btn-sm btn-blue" onclick="genSummaryReport()">Summary Report</button>
+            <button class="btn btn-sm" onclick="genDetailedReport()">Detailed Statement</button>
+            <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
+          </div>
+          <div class="stats-row" id="rpt-stats" style="margin-bottom:12px"></div>
+          <div id="rpt-result"></div>
+        </div>
+      </div>
+
+      <!-- QUẢN LÝ TARIFF -->
+      <div class="screen" id="screen-tariff">
+
+        <!-- Filter bar -->
+        <div class="card">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select class="fi" id="trf-carrier" onchange="filterTariff()" style="width:140px">
+              <option value="">Tất cả Carrier</option>
+            </select>
+            <input class="fi" id="trf-search" placeholder="Tìm Component, Dmg Type, Rep Type..." oninput="filterTariff()" style="flex:1;min-width:200px">
+            <span id="trf-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
+            <button class="btn btn-sm btn-blue" onclick="document.getElementById('tariff-file').click()">
+              + Import file Tariff
+            </button>
+            <input type="file" id="tariff-file" accept=".xlsx,.xls" style="display:none" onchange="handleTariffFile(this)">
+          </div>
+
+          <!-- Import preview (ẩn mặc định) -->
+          <div id="tariff-preview" style="display:none;margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:11px;font-weight:600;color:var(--gray)">
+                Preview file —
+                <span id="tariff-preview-count" style="background:var(--green-light);color:var(--green);padding:1px 8px;border-radius:4px"></span>
+              </span>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-sm" onclick="cancelTariff()">Huỷ</button>
+                <button class="btn btn-sm btn-blue" onclick="confirmTariff()">Xác nhận Import</button>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th style="width:45px">Carrier</th>
+                  <th style="width:130px">Size Type</th>
+                  <th style="width:75px">Dmg Loc</th>
+                  <th style="width:68px">Component</th>
+                  <th style="width:75px">Dmg Type</th>
+                  <th style="width:65px">Rep Type</th>
+                  <th style="width:52px">Length</th>
+                  <th style="width:52px">Weight</th>
+                  <th style="width:45px">Unit</th>
+                  <th style="width:38px">Limit</th>
+                  <th style="width:48px;text-align:right">Hour</th>
+                  <th style="width:58px;text-align:right">Material</th>
+                  <th style="width:58px;text-align:right">Labour</th>
+                  <th style="width:58px;text-align:right">Total</th>
+                </tr></thead>
+                <tbody id="tariff-preview-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tariff table -->
+        <div class="card">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th style="width:32px">STT</th>
+                <th style="width:48px">Carrier</th>
+                <th style="width:160px">Size Type</th>
+                <th style="width:90px">Dmg Loc</th>
+                <th style="width:75px">Component</th>
+                <th style="width:90px">Dmg Type</th>
+                <th style="width:70px">Rep Type</th>
+                <th style="width:55px">Length</th>
+                <th style="width:55px">Weight</th>
+                <th style="width:45px">Unit</th>
+                <th style="width:40px">Limit</th>
+                <th style="width:50px;text-align:right">Hour</th>
+                <th style="width:65px;text-align:right">Material</th>
+                <th style="width:60px;text-align:right">Labour</th>
+                <th style="width:62px;text-align:right">Total</th>
+              </tr></thead>
+              <tbody id="trf-rows">
+                <tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="trf-footer" style="margin-top:8px;font-size:11px;color:var(--gray);text-align:right"></div>
+        </div>
+      </div>
+
+      <!-- PICTURES -->      <!-- PICTURES -->
+      <div class="screen" id="screen-pictures">
+        <div class="alert alert-info">Tính năng Export Pictures — copy và rename ảnh từ thư mục nguồn sang thư mục đích theo tên cont + Ref No</div>
+        <div class="card">
+          <div class="mode-tabs">
+            <div class="mode-tab active" onclick="setPicMode('A',this)">A — Completion Pictures</div>
+            <div class="mode-tab" onclick="setPicMode('B',this)">B — Survey Pictures</div>
+          </div>
+          <div class="form-grid grid-2">
+            <div class="fg">
+              <div class="fl">Thư mục nguồn</div>
+              <input class="fi" id="pic-src" placeholder="Paste đường dẫn thư mục nguồn...">
+            </div>
+            <div class="fg">
+              <div class="fl">Thư mục đích</div>
+              <input class="fi" id="pic-dst" placeholder="Paste đường dẫn thư mục đích...">
+            </div>
+          </div>
+          <div class="alert alert-info" style="margin-bottom:10px">
+            Tên file sau rename: <code style="background:#B5D4F4;padding:1px 5px;border-radius:3px;font-size:11px">A_MSMU8387696_RPVNBDUAF251200209_001.jpg</code>
+          </div>
+          <div class="alert alert-warn">
+            Tính năng này cần chạy trên máy local có quyền truy cập file system. Sử dụng Electron hoặc chạy qua Apps Script Drive API trong phiên bản tiếp theo.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzZQ22ErS32LJV8dS0dVKGG3d6fhDlQxupeYQREb4pbbWjXnmHxoMPWFXNBcQmj4DmtaQ/exec';
+
+// Auto restore session khi F5
+window.addEventListener('load', function() {
+  const saved = localStorage.getItem('mnr_session');
+  if (saved) {
+    try {
+      const session = JSON.parse(saved);
+      // Kiểm tra expiry
+      const expiry = new Date(session.expiry.split('/').reverse().join('-'));
+      expiry.setHours(23,59,59,0);
+      if (new Date() <= expiry) {
+        state.user = session;
+        document.getElementById('sb-username').textContent = session.fullname || session.username;
+        document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + session.expiry;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadInitialData();
+        return;
+      }
+    } catch(e) {}
+    localStorage.removeItem('mnr_session');
+  }
+});
+
+// STATE
+let state = {
+  user: null,
+  tariff: [],
+  stock: [],
+  tracking: [],
+  summary: [],
+  estimates: [],
+  bulkMode: 'A',
+  ovmMode: 'A',
+  picMode: 'A',
+  ovmData: []
+};
+
+// ===================== API =====================
+async function apiGet(params) {
+  const url = API + '?' + new URLSearchParams(params);
+  const res = await fetch(url);
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    console.error('apiGet parse error:', e, 'Response:', text.substring(0, 200));
+    return { error: 'Parse error: ' + e.message };
+  }
+}
+
+async function apiPost(data) {
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(data)
+  });
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    console.error('apiPost parse error:', e, 'Response:', text.substring(0, 200));
+    return { error: 'Parse error: ' + e.message };
+  }
+}
+
+// ===================== LOGIN =====================
+async function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const key = document.getElementById('login-key').value.trim();
+  if (!username || !key) { showLoginError('Vui lòng nhập đầy đủ username và key'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = 'Đang đăng nhập...';
+  document.getElementById('login-error').style.display = 'none';
+
+  try {
+    const res = await apiGet({ action: 'login', username, key });
+    if (res.success) {
+      state.user = res;
+      // Lưu session vào localStorage
+      localStorage.setItem('mnr_session', JSON.stringify({
+        username, fullname: res.fullname, expiry: res.expiry
+      }));
+      document.getElementById('sb-username').textContent = res.fullname || username;
+      document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + formatDate(res.expiry);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      loadInitialData();
+    } else {
+      showLoginError(res.error || 'Đăng nhập thất bại');
+    }
+  } catch(e) {
+    showLoginError('Lỗi kết nối. Kiểm tra internet và thử lại.');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Đăng nhập';
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ===================== INIT =====================
+async function loadInitialData() {
+  setTopbar('Nhập Estimate mới', [
+    { label: 'Xoá form', fn: 'resetEstimate()' },
+    { label: 'Lưu Estimate', cls: 'btn-blue', fn: 'saveEstimate()' }
+  ]);
+
+  // Set today date
+  document.getElementById('est-date').value = todayStr();
+
+  // Init year selector for report
+  const yr = document.getElementById('rpt-year');
+  const y = new Date().getFullYear();
+  for (let i = y; i >= y-3; i--) {
+    yr.innerHTML += `<option value="${i}">${i}</option>`;
+  }
+  const m = new Date().getMonth();
+  document.getElementById('rpt-month').selectedIndex = m;
+
+  // Load all data in parallel
+  toast('Đang tải dữ liệu...');
+  try {
+    const [tariffRes, stockRes, trkRes, sumRes] = await Promise.all([
+      apiGet({ action: 'getTariff' }),
+      apiGet({ action: 'getEmtyStock' }),
+      apiGet({ action: 'getTracking' }),
+      apiGet({ action: 'getSummary' })
+    ]);
+    if (tariffRes.success) {
+      state.tariff = tariffRes.data;
+      console.log('Tariff loaded:', state.tariff.length, 'rows');
+      if (state.tariff.length > 0) console.log('Tariff sample:', JSON.stringify(state.tariff[0]));
+    }
+    if (stockRes.success) {
+      state.stock = stockRes.data;
+      console.log('Stock loaded:', state.stock.length, 'containers');
+      if (state.stock.length > 0) console.log('Stock sample:', JSON.stringify(state.stock[0]));
+    }
+    if (trkRes.success) state.tracking = trkRes.data;
+    if (sumRes.success) state.summary = sumRes.data;
+    toast('Đã tải xong: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
+  } catch(e) {
+    toast('Lỗi tải dữ liệu: ' + e.message, 4000);
+    console.error('Load error:', e);
+  }
+
+  // Add first estimate row
+  addEstRow();
+  renderEstTotalRow();
+}
+
+// ===================== NAVIGATE =====================
+function nav(screen, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('screen-' + screen).classList.add('active');
+
+  const configs = {
+    estimate: { title: 'Nhập Estimate mới', actions: [
+      { label: 'Xoá form', fn: 'resetEstimate()' },
+      { label: 'Lưu Estimate', cls: 'btn-blue', fn: 'saveEstimate()' }
+    ]},
+    revise: { title: 'Revise Estimate', actions: [
+      { label: 'Xoá form', fn: 'resetRevise()' },
+      { label: 'Lưu Revise', cls: 'btn-blue', fn: 'saveRevise()' }
+    ]},
+    ovm:      { title: 'Update OVM/OVD', actions: [] },
+    tariff:   { title: 'Quản lý Tariff', actions: [] },
+    tracking: { title: 'Estimate Tracking', actions: [] },
+    summary:  { title: 'Summary', actions: [] },
+    bulk:     { title: 'Bulk List & Export', actions: [] },
+    stock:    { title: 'Emty Stock', actions: [] },
+    report:   { title: 'Report tháng', actions: [] },
+    pictures: { title: 'Export Pictures', actions: [] }
+  };
+
+  const cfg = configs[screen] || { title: screen, actions: [] };
+  setTopbar(cfg.title, cfg.actions);
+
+  if (screen === 'tracking') renderTracking();
+  if (screen === 'summary') renderSummary();
+  if (screen === 'stock') renderStock();
+  if (screen === 'tariff') renderTariffScreen();
+}
+
+function setTopbar(title, actions) {
+  document.getElementById('tb-title').textContent = title;
+  const el = document.getElementById('tb-actions');
+  el.innerHTML = actions.map(a =>
+    `<button class="btn btn-sm ${a.cls||''}" onclick="${a.fn}">${a.label}</button>`
+  ).join('');
+}
+
+// ===================== ESTIMATE =====================
+function onEquipmentInput(val) {
+  val = val.trim().toUpperCase();
+  document.getElementById('eq-no').value = val;
+  if (val.length >= 4) {
+    const found = state.stock.find(r =>
+      (r.equipment_no || '').toString().toUpperCase().trim() === val
+    );
+    if (found) {
+      document.getElementById('size-type').value = found.size_type || '';
+      document.getElementById('carrier').value    = found.carrier   || '';
+
+      // Manufacture Date: format thành MM/YYYY
+      let mfgStr = '';
+      if (found.manufactured_date) {
+        const d = new Date(found.manufactured_date);
+        if (!isNaN(d)) {
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          mfgStr = mm + '/' + yyyy;
+        } else {
+          mfgStr = String(found.manufactured_date);
+        }
+      }
+      document.getElementById('mfg-date').value = mfgStr;
+
+      document.getElementById('grade').value = found.grade || '';
+
+      // Container Status = cột R (AV/OF/DM/WA)
+      document.getElementById('cont-status').value = found.container_status || '';
+
+      // Remarks = cột M (Ghi Chú)
+      document.getElementById('est-remarks').value = found.remarks || '';
+
+      document.getElementById('currency').value = 'USD';
+
+      // Auto điền Resp. Party = Carrier
+      document.querySelectorAll('#est-rows tr td:nth-child(14) input').forEach(inp => {
+        if (!inp.value) inp.value = found.carrier || '';
+      });
+    } else {
+      clearAutoFields();
+    }
+  } else {
+    clearAutoFields();
+  }
+}
+
+function clearAutoFields() {
+  ['size-type','carrier','mfg-date','grade','cont-status'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+function addEstRow() {
+  const tbody = document.getElementById('est-rows');
+  const rowNum = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  const trigger = "onblur='lookupTariff(this.closest(\"tr\"))'";
+  tr.innerHTML = `
+    <td>${rowNum}</td>
+    <td><input placeholder="IXXX" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="MCO" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="DY" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="WP" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="QTY" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input placeholder="1" type="number" min="0" step="0.01" value="1" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td class="td-auto"><span class="h-val">—</span></td>
+    <td class="td-auto"><span class="m-val">—</span></td>
+    <td class="td-auto"><span class="l-val">—</span></td>
+    <td class="td-auto"><span class="t-val">—</span></td>
+    <td><input placeholder="MSC"></td>
+    <td style="text-align:center"><button onclick="this.closest('tr').remove();updateEstNumbers();calcEstTotal()" style="border:none;background:none;color:#fc8181;cursor:pointer;font-size:14px">×</button></td>
+  `;
+  tbody.appendChild(tr);
+  updateEstNumbers();
+}
+
+function lookupTariff(row) {
+  // Lấy giá trị từ header form
+  const carrier = document.getElementById('carrier').value.trim().toUpperCase();
+  const szType  = document.getElementById('size-type').value.trim().toUpperCase();
+  const inputs  = row.querySelectorAll('input');
+
+  // Thứ tự input thực tế trong row (STT là text, không phải input):
+  // inputs[0]=DmgLoc, inputs[1]=Component, inputs[2]=DmgType,
+  // inputs[3]=RepType, inputs[4]=Length, inputs[5]=Width,
+  // inputs[6]=Unit, inputs[7]=Qty, inputs[8]=RespParty
+  const dmgLoc  = inputs[0].value.trim().toUpperCase();
+  const comp    = inputs[1].value.trim().toUpperCase();
+  const dmgType = inputs[2].value.trim().toUpperCase();
+  const repType = inputs[3].value.trim().toUpperCase();
+  const lenVal  = parseFloat(inputs[4].value) || 0;
+  // inputs[5] = Width — không dùng để lookup tariff
+  const unit    = inputs[6].value.trim().toUpperCase();
+  const qty     = parseFloat(inputs[7].value) || 1;
+
+  // Cần đủ các field bắt buộc
+  if (!szType || !dmgLoc || !comp || !dmgType || !repType || !unit) {
+    row.querySelector('.h-val').textContent = '—';
+    row.querySelector('.m-val').textContent = '—';
+    row.querySelector('.l-val').textContent = '—';
+    row.querySelector('.t-val').textContent = '—';
+    document.getElementById('est-notfound').style.display = 'none';
+    calcEstTotal();
+    return;
+  }
+
+  // Helper: kiểm tra giá trị có trong chuỗi phân cách / không
+  // Giống VBA: Like "*" & value & "*"
+  function inList(tariffVal, input) {
+    const tv = (tariffVal || '').toString().toUpperCase().trim();
+    const iv = input.trim();
+    if (!tv || !iv) return false;
+    // Direct includes (giống Like *value*)
+    if (tv.includes(iv)) return true;
+    // Tách / so từng phần exact
+    return tv.split('/').map(s => s.trim()).some(s => s === iv);
+  }
+
+  const match = state.tariff.find(t => {
+    // A - Carrier: exact match (nếu có carrier trong tariff)
+    if (carrier && t.carrier) {
+      if (t.carrier.toUpperCase() !== carrier) return false;
+    }
+
+    // B - Size Type: tariff CHỨA size mình nhập
+    if (!inList(t.size_type, szType)) return false;
+
+    // C - Damage Location Group: tariff CHỨA location mình nhập
+    if (!inList(t.damage_location, dmgLoc)) return false;
+
+    // D - Component: tariff CHỨA component mình nhập
+    if (!inList(t.component, comp)) return false;
+
+    // E - Damage Type: tariff CHỨA damage type mình nhập
+    if (!inList(t.damage_type, dmgType)) return false;
+
+    // F - Repair Type: exact match
+    if ((t.repair_type || '').toString().trim().toUpperCase() !== repType) return false;
+
+    // I - Unit: exact match
+    if ((t.unit || '').toString().trim().toUpperCase() !== unit) return false;
+
+    // G - Length: check range (chỉ check khi có nhập length > 0)
+    if (lenVal > 0) {
+      const lenText = (t.length || '').toString().toLowerCase().trim();
+      if (lenText && lenText !== '' && lenText !== 'any') {
+        if (lenText.includes('-')) {
+          const parts = lenText.split('-');
+          const from = parseFloat(parts[0]) || 0;
+          const to   = parseFloat(parts[1]) || 0;
+          if (lenVal < from || lenVal > to) return false;
+        } else if (lenText.includes('over')) {
+          const from = parseFloat(lenText.replace(/over/gi, '').trim()) || 0;
+          if (lenVal <= from) return false;
+        } else if (lenText.includes('below')) {
+          const to = parseFloat(lenText.replace(/below/gi, '').trim()) || 0;
+          if (lenVal >= to) return false;
+        } else {
+          const exact = parseFloat(lenText) || 0;
+          if (exact > 0 && lenVal !== exact) return false;
+        }
+      }
+    }
+
+    // H - Width: check exact match (chỉ check khi tariff có width VÀ mày nhập width)
+    const widthVal = parseFloat(inputs[5].value) || 0;
+    const tariffWeight = parseFloat(t.weight) || 0;
+    if (widthVal > 0 && tariffWeight > 0) {
+      if (widthVal !== tariffWeight) return false;
+    }
+
+    // J - Limit: qty không được vượt
+    const lim = parseFloat(t.limit_qty) || 0;
+    if (lim > 0 && qty > lim) return false;
+
+    return true;
+  });
+
+  console.log('Lookup:', {carrier, szType, dmgLoc, comp, dmgType, repType, unit, qty, lenVal});
+  if (match) {
+    console.log('MATCH:', match);
+    const h   = round2(parseFloat(match.hour     || 0) * qty);
+    const m   = round2(parseFloat(match.material || 0) * qty);
+    const l   = round2(parseFloat(match.labour   || 0) * qty);
+    const tot = round2(m + l);
+    row.querySelector('.h-val').textContent = h.toFixed(2);
+    row.querySelector('.m-val').textContent = m.toFixed(2);
+    row.querySelector('.l-val').textContent = l.toFixed(2);
+    row.querySelector('.t-val').textContent = tot.toFixed(2);
+    row.style.background = '';
+    document.getElementById('est-notfound').style.display = 'none';
+    // Highlight row màu xanh nhẹ khi tìm thấy
+    row.style.background = '#f0fdf4';
+    setTimeout(() => { row.style.background = ''; }, 1000);
+  } else {
+    console.log('NO MATCH — searching similar...');
+    // Debug: tìm dòng gần đúng nhất
+    const partial = state.tariff.find(t =>
+      (t.damage_location||'').toUpperCase().includes(dmgLoc) &&
+      (t.component||'').toUpperCase().includes(comp)
+    );
+    if (partial) console.log('Partial match (no reptype/unit filter):', partial);
+    row.querySelector('.h-val').textContent = '—';
+    row.querySelector('.m-val').textContent = '—';
+    row.querySelector('.l-val').textContent = '—';
+    row.querySelector('.t-val').textContent = '—';
+    row.style.background = '';
+    document.getElementById('est-notfound').style.display = 'block';
+    document.getElementById('est-notfound').textContent =
+      'Không tìm thấy trong Tariff — kiểm tra lại thông tin';
+  }
+  calcEstTotal();
+}
+
+
+function calcEstTotal() {
+  let totH = 0, totM = 0, totL = 0, totT = 0;
+  document.querySelectorAll('#est-rows tr').forEach(row => {
+    const h = parseFloat(row.querySelector('.h-val')?.textContent) || 0;
+    const m = parseFloat(row.querySelector('.m-val')?.textContent) || 0;
+    const l = parseFloat(row.querySelector('.l-val')?.textContent) || 0;
+    const t = parseFloat(row.querySelector('.t-val')?.textContent) || 0;
+    totH += h; totM += m; totL += l; totT += t;
+  });
+  document.getElementById('tot-hours').textContent = totH.toFixed(2);
+  document.getElementById('tot-mat').textContent = totM.toFixed(2);
+  document.getElementById('tot-lab').textContent = totL.toFixed(2);
+  document.getElementById('tot-total').textContent = totT.toFixed(2);
+  document.getElementById('est-total-row').style.display = 'flex';
+}
+
+function renderEstTotalRow() { calcEstTotal(); }
+
+function updateEstNumbers() {
+  document.querySelectorAll('#est-rows tr').forEach((tr, i) => {
+    tr.cells[0].textContent = i + 1;
+  });
+}
+
+function resetEstimate() {
+  document.getElementById('eq-no').value = '';
+  document.getElementById('est-remarks').value = '';
+  clearAutoFields();
+  document.getElementById('est-date').value = todayStr();
+  document.getElementById('est-rows').innerHTML = '';
+  document.getElementById('est-notfound').style.display = 'none';
+  addEstRow();
+  calcEstTotal();
+}
+
+async function saveEstimate() {
+  const eqNo = document.getElementById('eq-no').value.trim();
+  if (!eqNo) { toast('Vui lòng nhập Equipment No!'); return; }
+
+  const lines = [];
+  document.querySelectorAll('#est-rows tr').forEach((row, idx) => {
+    const inputs = row.querySelectorAll('input');
+    // inputs[0]=DmgLoc, [1]=Component, [2]=DmgType, [3]=RepType,
+    // [4]=Length, [5]=Width, [6]=Unit, [7]=Qty, [8]=RespParty
+    const dmgLoc = inputs[0]?.value.trim();
+    if (!dmgLoc) return;
+    lines.push({
+      repair_seq: idx + 1,
+      damage_location: dmgLoc,
+      component: inputs[1]?.value.trim() || '',
+      damage_type: inputs[2]?.value.trim() || '',
+      repair_type: inputs[3]?.value.trim() || '',
+      length: inputs[4]?.value || '',
+      width: inputs[5]?.value || '',
+      unit: inputs[6]?.value.trim() || '',
+      quantity: parseFloat(inputs[7]?.value) || 1,
+      labour_hours: parseFloat(row.querySelector('.h-val')?.textContent) || 0,
+      material_cost: parseFloat(row.querySelector('.m-val')?.textContent) || 0,
+      labour_cost: parseFloat(row.querySelector('.l-val')?.textContent) || 0,
+      total_cost: parseFloat(row.querySelector('.t-val')?.textContent) || 0,
+      responsible_party: inputs[8]?.value.trim() || ''
+    });
+  });
+
+  if (lines.length === 0) { toast('Vui lòng nhập ít nhất 1 hạng mục!'); return; }
+
+  toast('Đang lưu...');
+  try {
+    const res = await apiPost({
+      action: 'saveEstimate',
+      container_no: eqNo,
+      carrier: document.getElementById('carrier').value,
+      size_type: document.getElementById('size-type').value,
+      currency: document.getElementById('currency').value || 'USD',
+      grade: document.getElementById('grade').value,
+      remarks: document.getElementById('est-remarks').value,
+      lines
+    });
+    if (res.success) {
+      toast('Đã lưu thành công! ' + res.lines_saved + ' hạng mục', 3000);
+      // Reload tracking
+      const trkRes = await apiGet({ action: 'getTracking' });
+      if (trkRes.success) state.tracking = trkRes.data;
+      resetEstimate();
+    } else {
+      toast('Lỗi: ' + res.error, 4000);
+    }
+  } catch(e) {
+    toast('Lỗi kết nối: ' + e.message, 4000);
+  }
+}
+
+// ===================== REVISE =====================
+async function onReviseInput(val) {
+  val = val.trim().toUpperCase();
+  if (val.length < 4) return;
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="12" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  const res = await apiGet({ action: 'getEstimates', container_no: val });
+  if (res.success && res.data.length > 0) {
+    // Fill header
+    const first = res.data[0];
+    document.getElementById('rev-app-date').value = formatDate(first.approval_date) || '';
+    document.getElementById('rev-status').value = first.approval_status || 'Pending';
+
+    const tbody = document.getElementById('rev-rows');
+    tbody.innerHTML = '';
+    res.data.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${r.damage_location||''}</td>
+        <td>${r.component||''}</td>
+        <td>${r.damage_type||''}</td>
+        <td>${r.repair_type||''}</td>
+        <td>${r.quantity||''}</td>
+        <td>${r.labour_hours||0}</td>
+        <td>${r.material_cost||0}</td>
+        <td>${r.labour_cost||0}</td>
+        <td class="${r.app_total_approved ? 'td-auto' : ''}"><input type="number" value="${r.app_total_approved||0}" step="0.01" data-seq="${r.repair_seq}"></td>
+        <td><select data-seq="${r.repair_seq}">
+          <option ${r.approval_status==='Approved'?'selected':''}>Approved</option>
+          <option ${r.approval_status==='Partially Approved'?'selected':''}>Partially Approved</option>
+          <option ${r.approval_status==='Rejected'?'selected':''}>Rejected</option>
+          <option ${r.approval_status==='Pending'?'selected':''}>Pending</option>
+          <option ${r.approval_status==='Canceled'?'selected':''}>Canceled</option>
+        </select></td>
+        <td><input placeholder="Ghi chú..." value="${r.app_remark_details||''}"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } else {
+    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
+  }
+}
+
+function resetRevise() {
+  document.getElementById('rev-eq').value = '';
+  document.getElementById('rev-app-date').value = '';
+  document.getElementById('rev-remarks').value = '';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="12" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
+}
+
+async function saveRevise() {
+  const eqNo = document.getElementById('rev-eq').value.trim();
+  if (!eqNo) { toast('Vui lòng nhập Equipment No!'); return; }
+  const lines = [];
+  document.querySelectorAll('#rev-rows tr').forEach(row => {
+    const appInput = row.querySelector('input[data-seq]');
+    const statusSel = row.querySelector('select[data-seq]');
+    const remarkInput = row.querySelectorAll('input')[1];
+    if (!appInput) return;
+    lines.push({
+      repair_seq: appInput.dataset.seq,
+      app_total_approved: parseFloat(appInput.value) || 0,
+      approval_status: statusSel?.value || 'Pending',
+      remark: remarkInput?.value || ''
+    });
+  });
+  toast('Đang lưu Revise...');
+  try {
+    const res = await apiPost({
+      action: 'saveRevise',
+      container_no: eqNo,
+      approval_status: document.getElementById('rev-status').value,
+      approved_date: document.getElementById('rev-app-date').value,
+      remarks: document.getElementById('rev-remarks').value,
+      lines
+    });
+    if (res.success) {
+      toast('Đã lưu Revise thành công! ' + res.message, 3000);
+      resetRevise();
+    } else {
+      toast('Lỗi: ' + res.error, 4000);
+    }
+  } catch(e) {
+    toast('Lỗi kết nối: ' + e.message, 4000);
+  }
+}
+
+// ===================== OVM =====================
+function setOvmMode(mode, el) {
+  state.ovmMode = mode;
+  document.querySelectorAll('#screen-ovm .mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function handleOvmFile(input) {
+  toast('Tính năng đọc file Excel cần thư viện SheetJS — đang phát triển. Vui lòng nhập data thủ công qua Tracking.', 4000);
+  input.value = '';
+}
+
+function confirmOvm() { toast('Đã cập nhật OVM thành công!', 3000); }
+function cancelOvm() {
+  document.getElementById('ovm-preview').style.display = 'none';
+  document.getElementById('ovm-rows').innerHTML = '';
+}
+
+// ===================== TRACKING =====================
+function renderTracking() {
+  const data = state.tracking;
+  const stats = calcTrackingStats(data);
+  renderTrackingStats(stats);
+
+  // Populate carrier filter
+  const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
+  const sel = document.getElementById('trk-carrier');
+  sel.innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+
+  renderTrackingTable(data);
+}
+
+function calcTrackingStats(data) {
+  return {
+    total: data.length,
+    approved: data.filter(r => r.approval_status === 'Approved').length,
+    partial: data.filter(r => r.approval_status === 'Partially Approved').length,
+    pending: data.filter(r => !r.approval_status || r.approval_status === 'Pending').length
+  };
+}
+
+function renderTrackingStats(s) {
+  document.getElementById('tracking-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${s.total}</div></div>
+    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value" style="color:var(--green)">${s.approved}</div><div class="stat-sub">${s.total?Math.round(s.approved/s.total*100):0}%</div></div>
+    <div class="stat-card"><div class="stat-label">Partially</div><div class="stat-value" style="color:var(--amber)">${s.partial}</div><div class="stat-sub">${s.total?Math.round(s.partial/s.total*100):0}%</div></div>
+    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--gray)">${s.pending}</div></div>
+  `;
+}
+
+function filterTracking() {
+  const q = document.getElementById('trk-search').value.toLowerCase();
+  const st = document.getElementById('trk-status').value;
+  const ca = document.getElementById('trk-carrier').value;
+  const filtered = state.tracking.filter(r => {
+    const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
+    const matchSt = !st || r.approval_status === st;
+    const matchCa = !ca || r.carrier === ca;
+    return matchQ && matchSt && matchCa;
+  });
+  renderTrackingTable(filtered);
+}
+
+function renderTrackingTable(data) {
+  const tbody = document.getElementById('trk-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map((r, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.container_no||''}</td>
+      <td>${r.carrier||''}</td>
+      <td>${r.size||''}</td>
+      <td>${formatDate(r.est_date)}</td>
+      <td style="color:var(--blue)">${r.ref_number||'—'}</td>
+      <td style="text-align:right">${num(r.total_cost)}</td>
+      <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
+      <td>${formatDate(r.approved_date)||'—'}</td>
+      <td>${badge(r.approval_status)}</td>
+      <td>${formatDate(r.repair_date)||'—'}</td>
+      <td>${r.po_number||'—'}</td>
+      <td style="white-space:nowrap;padding:3px 4px">
+        <button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:3px">Sửa</button>
+        <button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function exportTracking() {
+  exportTableToCSV('trk-rows', 'est_tracking_' + todayStr().replace(/\//g,'-') + '.csv');
+  toast('Đã export CSV!', 2000);
+}
+
+// ===================== SUMMARY =====================
+function renderSummary() {
+  const data = state.summary;
+
+  // Stats
+  const total = data.length;
+  const approved = data.filter(r => r.approval_status === 'Approved').length;
+  const repaired = data.filter(r => r.repair_date).length;
+  const totalApp = data.reduce((s, r) => s + (parseFloat(r.total_approved)||0), 0);
+
+  document.getElementById('sum-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Đã Approved</div><div class="stat-value" style="color:var(--green)">${approved}</div><div class="stat-sub">${total?Math.round(approved/total*100):0}%</div></div>
+    <div class="stat-card"><div class="stat-label">Đã Repair</div><div class="stat-value" style="color:var(--blue)">${repaired}</div><div class="stat-sub">${total?Math.round(repaired/total*100):0}%</div></div>
+    <div class="stat-card"><div class="stat-label">Total Approved (USD)</div><div class="stat-value" style="font-size:16px">${totalApp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+  `;
+
+  const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
+  document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+  document.getElementById('rpt-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+
+  filterSummary();
+}
+
+function filterSummary() {
+  const q = document.getElementById('sum-search').value.toLowerCase();
+  const st = document.getElementById('sum-status').value;
+  const ca = document.getElementById('sum-carrier').value;
+  const filtered = state.summary.filter(r => {
+    const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
+    const matchSt = !st || r.approval_status === st;
+    const matchCa = !ca || r.carrier === ca;
+    return matchQ && matchSt && matchCa;
+  });
+  renderSummaryTable(filtered);
+}
+
+function renderSummaryTable(data) {
+  const tbody = document.getElementById('sum-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map((r, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.container_no||''}</td>
+      <td>${r.carrier||''}</td>
+      <td>${r.size||''}</td>
+      <td>${formatDate(r.est_date)}</td>
+      <td style="color:var(--blue)">${r.ref_number||'—'}</td>
+      <td>${formatDate(r.approved_date)||'—'}</td>
+      <td>${formatDate(r.repair_date)||'—'}</td>
+      <td>${r.po_number||'—'}</td>
+      <td style="text-align:right">${num(r.labour_hours)}</td>
+      <td style="text-align:right">${num(r.labour_cost)}</td>
+      <td style="text-align:right">${num(r.material_cost)}</td>
+      <td style="text-align:right">${num(r.total_cost)}</td>
+      <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
+      <td>${badge(r.approval_status)}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${r.remarks||'—'}</td>
+    </tr>
+  `).join('');
+
+  // Totals
+  const totCost = data.reduce((s,r) => s+(parseFloat(r.total_cost)||0), 0);
+  const totApp = data.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
+  const totEl = document.getElementById('sum-totals');
+  totEl.style.display = 'flex';
+  totEl.innerHTML = `
+    <span style="font-size:11px;color:var(--gray)">Total Cost: <strong style="color:#2d3748">${num(totCost)}</strong></span>
+    <span style="font-size:11px;color:var(--gray)">Total Approved: <strong style="color:var(--green)">${num(totApp)}</strong></span>
+    <span style="font-size:11px;color:var(--gray)">Chênh lệch: <strong style="color:${totCost-totApp>0?'var(--amber)':'var(--green)'}">${num(totCost-totApp)}</strong></span>
+  `;
+}
+
+async function syncSummary() {
+  toast('Đang sync Summary...');
+  const res = await apiPost({ action: 'syncSummary' });
+  if (res.success) {
+    const sumRes = await apiGet({ action: 'getSummary' });
+    if (sumRes.success) state.summary = sumRes.data;
+    renderSummary();
+    toast('Sync xong! ' + res.synced + ' containers', 3000);
+  } else {
+    toast('Lỗi: ' + res.error, 4000);
+  }
+}
+
+function exportSummary() {
+  exportTableToCSV('sum-rows', 'summary_' + todayStr().replace(/\//g,'-') + '.csv');
+  toast('Đã export CSV!', 2000);
+}
+
+// ===================== STOCK =====================
+async function renderStock() {
+  // Luôn reload stock mới nhất từ Sheets khi vào màn hình này
+  document.getElementById('stk-rows').innerHTML = '<tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('stk-info').textContent = 'Đang tải...';
+
+  try {
+    const res = await apiGet({ action: 'getEmtyStock' });
+    if (res.success) {
+      state.stock = res.data;
+    }
+  } catch(e) {
+    console.error('Error loading stock:', e);
+  }
+
+  const data = state.stock;
+  const sizes = [...new Set(data.map(r => r.size_type).filter(Boolean))];
+  const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
+
+  document.getElementById('stk-size').innerHTML = '<option value="">Tất cả Size</option>' + sizes.map(s => `<option>${s}</option>`).join('');
+  document.getElementById('stk-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+  document.getElementById('stk-info').textContent = data.length + ' containers trong kho';
+
+  renderStockTable(data);
+}
+
+function filterStock() {
+  const q = document.getElementById('stk-search').value.toLowerCase();
+  const sz = document.getElementById('stk-size').value;
+  const ca = document.getElementById('stk-carrier').value;
+  const filtered = state.stock.filter(r => {
+    const matchQ = !q || (r.equipment_no||'').toLowerCase().includes(q) || (r.carrier||'').toLowerCase().includes(q);
+    const matchSz = !sz || r.size_type === sz;
+    const matchCa = !ca || r.carrier === ca;
+    return matchQ && matchSz && matchCa;
+  });
+  renderStockTable(filtered);
+}
+
+function renderStockTable(data) {
+  const tbody = document.getElementById('stk-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.slice(0, 200).map((r, i) => `
+    <tr>
+      <td>${r.seq||i+1}</td>
+      <td>${r.carrier||''}</td>
+      <td>${r.equipment_no||''}</td>
+      <td>${r.size_type||''}</td>
+      <td>${r.size_type_iso||''}</td>
+      <td>${r.manufactured_date||''}</td>
+      <td>${r.grade||''}</td>
+      <td>${r.trang_thai_container||'—'}</td>
+      <td>${r.fe||''}</td>
+      <td>${r.yard_location||''}</td>
+      <td style="text-align:right">${r.so_ngay_luu_bai||''}</td>
+      <td>${r.date_in_yard||''}</td>
+      <td>${r.loai_hang||''}</td>
+      <td>${r.container_status ? `<span class="badge b-gr">${r.container_status}</span>` : '—'}</td>
+      <td>${r.remarks||''}</td>
+    </tr>
+  `).join('');
+  if (data.length > 200) {
+    tbody.innerHTML += `<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:8px">... và ${data.length-200} containers khác. Dùng filter để thu hẹp kết quả.</td></tr>`;
+  }
+}
+
+function confirmResetStock() {
+  if (confirm('Xoá toàn bộ dữ liệu kho? Hành động này không thể hoàn tác!')) {
+    toast('Đã reset stock!', 2000);
+  }
+}
+
+// ===================== BULK =====================
+function setBulkMode(mode, el) {
+  state.bulkMode = mode;
+  document.querySelectorAll('#screen-bulk .mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function loadBulk() {
+  const q = document.getElementById('bulk-search').value.toLowerCase();
+  let data = state.tracking;
+  if (state.bulkMode === 'B') {
+    data = data.filter(r => r.approval_status === 'Approved' || r.approval_status === 'Partially Approved');
+  }
+  if (q) {
+    data = data.filter(r => (r.container_no||'').toLowerCase().includes(q));
+  }
+  const tbody = document.getElementById('bulk-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map((r, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.container_no||''}</td>
+      <td>${formatDate(r.est_date)}</td>
+      <td>${r.carrier||''}</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td>
+      <td style="text-align:right">${num(r.total_cost)}</td>
+      <td style="text-align:right;color:var(--green)">${r.total_approved?num(r.total_approved):'—'}</td>
+      <td>${badge(r.approval_status)}</td>
+    </tr>
+  `).join('');
+  toast('Đã tải ' + data.length + ' containers', 2000);
+}
+
+function exportBulkTemplate() { toast('Đang phát triển tính năng Export Bulk Template', 2000); }
+function exportEstList() { exportTableToCSV('bulk-rows','estimated_list.csv'); toast('Đã export!', 2000); }
+function exportAppList() { exportTableToCSV('bulk-rows','approved_list.csv'); toast('Đã export!', 2000); }
+
+// ===================== REPORT =====================
+function genSummaryReport() {
+  const month = document.getElementById('rpt-month').value;
+  const year = document.getElementById('rpt-year').value;
+  const carrier = document.getElementById('rpt-carrier').value;
+  const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
+
+  const filtered = state.summary.filter(r => {
+    const d = r.po_date ? new Date(r.po_date) : null;
+    const matchMonth = !d ? false : (d.getMonth() === monthIdx && d.getFullYear() == year);
+    const matchCarrier = !carrier || r.carrier === carrier;
+    return matchMonth && matchCarrier;
+  });
+
+  // Group by carrier
+  const groups = {};
+  filtered.forEach(r => {
+    const c = r.carrier || 'Unknown';
+    if (!groups[c]) groups[c] = { count: 0, totalCost: 0, totalApp: 0 };
+    groups[c].count++;
+    groups[c].totalCost += parseFloat(r.total_cost) || 0;
+    groups[c].totalApp += parseFloat(r.total_approved) || 0;
+  });
+
+  const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
+  const vat10 = totalApp;
+  const vat8 = round2(totalApp / 1.1 * 1.08);
+  const noVat = round2(totalApp / 1.1);
+
+  document.getElementById('rpt-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${filtered.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total (VAT 10%)</div><div class="stat-value" style="font-size:15px">${num(vat10)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total (VAT 8%)</div><div class="stat-value" style="font-size:15px">${num(vat8)}</div></div>
+    <div class="stat-card"><div class="stat-label">Total (No VAT)</div><div class="stat-value" style="font-size:15px">${num(noVat)}</div></div>
+  `;
+
+  if (!filtered.length) {
+    document.getElementById('rpt-result').innerHTML = '<div class="alert alert-warn">Không có dữ liệu cho tháng ' + month + ' ' + year + '</div>';
+    return;
+  }
+
+  let rows = Object.entries(groups).map(([carrier, g], i) => ({
+    stt: i+1, carrier,
+    qty: g.count,
+    vat10: round2(g.totalApp),
+    vat8: round2(g.totalApp / 1.1 * 1.08),
+    noVat: round2(g.totalApp / 1.1),
+    unitCost: g.count ? round2(g.totalApp / 1.1 / g.count) : 0
+  }));
+
+  document.getElementById('rpt-result').innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Summary Report — ${month} ${year}</div>
+    <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>STT</th><th>Carrier</th>
+          <th style="text-align:right">Qty cont</th>
+          <th style="text-align:right">Total (VAT10%)</th>
+          <th style="text-align:right">Total (VAT8%)</th>
+          <th style="text-align:right">Total (No VAT)</th>
+          <th style="text-align:right">Unit cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td>${r.stt}</td><td>${r.carrier}</td>
+            <td style="text-align:right">${r.qty}</td>
+            <td style="text-align:right">${num(r.vat10)}</td>
+            <td style="text-align:right">${num(r.vat8)}</td>
+            <td style="text-align:right">${num(r.noVat)}</td>
+            <td style="text-align:right">${num(r.unitCost)}</td>
+          </tr>
+        `).join('')}
+        <tr style="background:var(--green-light);font-weight:600">
+          <td></td><td style="color:var(--green)">Total</td>
+          <td style="text-align:right;color:var(--green)">${filtered.length}</td>
+          <td style="text-align:right;color:var(--green)">${num(vat10)}</td>
+          <td style="text-align:right;color:var(--green)">${num(vat8)}</td>
+          <td style="text-align:right;color:var(--green)">${num(noVat)}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+function genDetailedReport() {
+  const month = document.getElementById('rpt-month').value;
+  const year = document.getElementById('rpt-year').value;
+  const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
+  const filtered = state.summary.filter(r => {
+    const d = r.po_date ? new Date(r.po_date) : null;
+    return d && d.getMonth() === monthIdx && d.getFullYear() == year;
+  });
+  if (!filtered.length) {
+    document.getElementById('rpt-result').innerHTML = '<div class="alert alert-warn">Không có dữ liệu cho tháng ' + month + ' ' + year + '</div>';
+    return;
+  }
+  document.getElementById('rpt-result').innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Detailed Statement — ${month} ${year}</div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>STT</th><th>Equipment No</th><th>Size</th>
+        <th>Est Date</th><th>Ref No</th><th>App. Date</th>
+        <th>Repair Date</th><th>PO Number</th><th>PO Date</th>
+        <th style="text-align:right">Total App. (OVM)</th>
+      </tr></thead>
+      <tbody>
+        ${filtered.map((r,i) => `
+          <tr>
+            <td>${i+1}</td><td>${r.container_no||''}</td><td>${r.size||''}</td>
+            <td>${formatDate(r.est_date)}</td>
+            <td style="color:var(--blue)">${r.ref_number||'—'}</td>
+            <td>${formatDate(r.approved_date)||'—'}</td>
+            <td>${formatDate(r.repair_date)||'—'}</td>
+            <td>${r.po_number||'—'}</td>
+            <td>${formatDate(r.po_date)||'—'}</td>
+            <td style="text-align:right;color:var(--green);font-weight:500">${num(r.total_approved)}</td>
+          </tr>
+        `).join('')}
+        <tr style="background:var(--blue-light);font-weight:600">
+          <td colspan="9" style="text-align:right;color:var(--blue)">Total:</td>
+          <td style="text-align:right;color:var(--green)">${num(filtered.reduce((s,r)=>s+(parseFloat(r.total_approved)||0),0))}</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+function exportReport() {
+  exportTableToCSV('rpt-result', 'report_' + document.getElementById('rpt-month').value + '_' + document.getElementById('rpt-year').value + '.csv');
+  toast('Đã export CSV!', 2000);
+}
+
+// ===================== PICTURES =====================
+function setPicMode(mode, el) {
+  state.picMode = mode;
+  document.querySelectorAll('#screen-pictures .mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===================== EDIT ESTIMATE =====================
+async function editEstimate(containerNo) {
+  toast('Đang tải dữ liệu ' + containerNo + '...');
+  try {
+    const res = await apiGet({ action: 'getEstimates', container_no: containerNo });
+    if (!res.success || !res.data.length) {
+      toast('Không tìm thấy dữ liệu estimate!', 3000);
+      return;
+    }
+    const lines = res.data;
+    const first = lines[0];
+
+    // Chuyển sang màn hình Nhập Estimate
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelector('.nav-item[onclick*="estimate"]').classList.add('active');
+    document.getElementById('screen-estimate').classList.add('active');
+    setTopbar('Chỉnh sửa — ' + containerNo, [
+      { label: 'Huỷ', fn: 'cancelEditEstimate()' },
+      { label: 'Lưu chỉnh sửa', cls: 'btn-blue', fn: 'saveEditEstimate("' + containerNo + '")' }
+    ]);
+
+    // Điền header
+    document.getElementById('eq-no').value      = containerNo;
+    document.getElementById('size-type').value  = first.size_type || '';
+    document.getElementById('carrier').value    = first.carrier   || '';
+    document.getElementById('est-date').value   = formatDate(first.estimate_date) || todayStr();
+    document.getElementById('currency').value   = first.currency  || 'USD';
+    document.getElementById('est-remarks').value= first.header_remarks || '';
+    document.getElementById('grade').value      = first.grade_code || '';
+    document.getElementById('cont-status').value= '';
+    document.getElementById('mfg-date').value   = '';
+
+    // Điền từ stock nếu có
+    const stockItem = state.stock.find(r =>
+      (r.equipment_no || '').toUpperCase() === containerNo.toUpperCase()
+    );
+    if (stockItem) {
+      let mfgStr = '';
+      if (stockItem.manufactured_date) {
+        const d = new Date(stockItem.manufactured_date);
+        if (!isNaN(d)) mfgStr = String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+      }
+      document.getElementById('mfg-date').value       = mfgStr;
+      document.getElementById('grade').value           = stockItem.grade || first.grade_code || '';
+      document.getElementById('cont-status').value     = stockItem.container_status || '';
+    }
+
+    // Điền các dòng hạng mục
+    document.getElementById('est-rows').innerHTML = '';
+    lines.forEach((line, idx) => {
+      addEstRow();
+      const rows   = document.querySelectorAll('#est-rows tr');
+      const tr     = rows[rows.length - 1];
+      const inputs = tr.querySelectorAll('input');
+      inputs[0].value = line.damage_location   || '';
+      inputs[1].value = line.component         || '';
+      inputs[2].value = line.damage_type       || '';
+      inputs[3].value = line.repair_type       || '';
+      inputs[4].value = line.length            || '';
+      inputs[5].value = line.width             || '';
+      inputs[6].value = line.unit              || '';
+      inputs[7].value = line.quantity          || 1;
+      inputs[8].value = line.responsible_party || first.carrier || '';
+      tr.querySelector('.h-val').textContent = parseFloat(line.labour_hours  || 0).toFixed(2);
+      tr.querySelector('.m-val').textContent = parseFloat(line.material_cost || 0).toFixed(2);
+      tr.querySelector('.l-val').textContent = parseFloat(line.labour_cost   || 0).toFixed(2);
+      tr.querySelector('.t-val').textContent = parseFloat(line.total_cost    || 0).toFixed(2);
+    });
+    calcEstTotal();
+    toast('Đã tải ' + lines.length + ' hạng mục — chỉnh sửa rồi nhấn Lưu', 3000);
+  } catch(err) {
+    toast('Lỗi: ' + err.message, 4000);
+  }
+}
+
+function cancelEditEstimate() {
+  resetEstimate();
+  setTopbar('Nhập Estimate mới', [
+    { label: 'Xoá form', fn: 'resetEstimate()' },
+    { label: 'Lưu Estimate', cls: 'btn-blue', fn: 'saveEstimate()' }
+  ]);
+}
+
+async function saveEditEstimate(containerNo) {
+  const eqNo = document.getElementById('eq-no').value.trim();
+  if (!eqNo) { toast('Không có Equipment No!'); return; }
+  const lines = [];
+  document.querySelectorAll('#est-rows tr').forEach((row, idx) => {
+    const inputs = row.querySelectorAll('input');
+    const dmgLoc = inputs[0] && inputs[0].value.trim();
+    if (!dmgLoc) return;
+    lines.push({
+      repair_seq:        idx + 1,
+      damage_location:   dmgLoc,
+      component:         inputs[1] ? inputs[1].value.trim() : '',
+      damage_type:       inputs[2] ? inputs[2].value.trim() : '',
+      repair_type:       inputs[3] ? inputs[3].value.trim() : '',
+      length:            inputs[4] ? inputs[4].value : '',
+      width:             inputs[5] ? inputs[5].value : '',
+      unit:              inputs[6] ? inputs[6].value.trim() : '',
+      quantity:          inputs[7] ? parseFloat(inputs[7].value) || 1 : 1,
+      responsible_party: inputs[8] ? inputs[8].value.trim() : '',
+      labour_hours:  parseFloat(row.querySelector('.h-val') ? row.querySelector('.h-val').textContent : 0) || 0,
+      material_cost: parseFloat(row.querySelector('.m-val') ? row.querySelector('.m-val').textContent : 0) || 0,
+      labour_cost:   parseFloat(row.querySelector('.l-val') ? row.querySelector('.l-val').textContent : 0) || 0,
+      total_cost:    parseFloat(row.querySelector('.t-val') ? row.querySelector('.t-val').textContent : 0) || 0,
+    });
+  });
+  if (!lines.length) { toast('Chưa có hạng mục!'); return; }
+  toast('Đang lưu chỉnh sửa...');
+  try {
+    const payload = {
+      action:       'updateEstimate',
+      container_no: eqNo,
+      carrier:      document.getElementById('carrier').value,
+      size_type:    document.getElementById('size-type').value,
+      currency:     document.getElementById('currency').value || 'USD',
+      grade:        document.getElementById('grade').value,
+      remarks:      document.getElementById('est-remarks').value,
+      lines
+    };
+    console.log('Sending updateEstimate:', eqNo, lines.length, 'lines');
+    const res = await apiPost(payload);
+    console.log('updateEstimate response:', res);
+    if (res.success) {
+      const trkRes = await apiGet({ action: 'getTracking' });
+      if (trkRes.success) state.tracking = trkRes.data;
+      toast('Đã lưu! ' + res.lines_saved + ' hạng mục', 3000);
+      cancelEditEstimate();
+    } else {
+      toast('Lỗi: ' + (res.error || JSON.stringify(res)), 4000);
+    }
+  } catch(err) {
+    console.error('saveEditEstimate error:', err);
+    toast('Lỗi: ' + err.message, 4000);
+  }
+}
+
+// ===================== DELETE ESTIMATE =====================
+async function deleteEstimate(containerNo) {
+  if (!confirm('Xoá toàn bộ estimate của ' + containerNo + '?\n\nKhông thể hoàn tác!')) return;
+  toast('Đang xoá ' + containerNo + '...');
+  try {
+    const res = await apiPost({ action: 'deleteEstimate', container_no: containerNo });
+    if (res.success) {
+      state.tracking = state.tracking.filter(r => r.container_no !== containerNo);
+      state.summary  = state.summary.filter(r => r.container_no !== containerNo);
+      renderTracking();
+      toast(res.message, 3000);
+    } else {
+      toast('Lỗi: ' + (res.error || 'Unknown'), 4000);
+    }
+  } catch(err) {
+    toast('Lỗi kết nối: ' + err.message, 4000);
+  }
+}
+
+// ===================== LOGOUT =====================
+function doLogout() {
+  localStorage.removeItem('mnr_session');
+  location.reload();
+}
+
+// ===================== UTILS =====================
+function round2(n) { return Math.round((n||0) * 100) / 100; }
+
+function num(n) {
+  const v = parseFloat(n) || 0;
+  return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  if (typeof d === 'string' && d.includes('/')) return d;
+  const dt = new Date(d);
+  if (isNaN(dt)) return d || '';
+  return dt.toLocaleDateString('vi-VN');
+}
+
+function todayStr() {
+  return new Date().toLocaleDateString('vi-VN');
+}
+
+function badge(status) {
+  if (!status || status === 'Pending') return '<span class="badge b-gr">Pending</span>';
+  if (status === 'Approved') return '<span class="badge b-ok">Approved</span>';
+  if (status === 'Partially Approved') return '<span class="badge b-wa">Partially Approved</span>';
+  if (status === 'Rejected') return '<span class="badge b-ng">Rejected</span>';
+  if (status === 'Canceled') return '<span class="badge b-ng">Canceled</span>';
+  return `<span class="badge b-gr">${status}</span>`;
+}
+
+function toast(msg, duration = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function exportTableToCSV(tbodyId, filename) {
+  const rows = [];
+  document.querySelectorAll('#' + tbodyId + ' tr').forEach(tr => {
+    const cells = [...tr.querySelectorAll('td')].map(td => '"' + td.textContent.replace(/"/g,'""').trim() + '"');
+    if (cells.length) rows.push(cells.join(','));
+  });
+  const csv = '\uFEFF' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ===================== QUẢN LÝ TARIFF =====================
+let tariffImportData = [];
+
+function renderTariffScreen() {
+  const data = state.tariff;
+
+  // Populate carrier filter
+  const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
+  document.getElementById('trf-carrier').innerHTML =
+    '<option value="">Tất cả Carrier</option>' +
+    carriers.map(c => `<option>${c}</option>`).join('');
+
+  filterTariff();
+}
+
+function filterTariff() {
+  const ca = document.getElementById('trf-carrier').value;
+  const q  = document.getElementById('trf-search').value.toLowerCase();
+
+  const filtered = state.tariff.filter(r => {
+    const matchCa = !ca || r.carrier === ca;
+    const matchQ  = !q ||
+      (r.component     || '').toLowerCase().includes(q) ||
+      (r.damage_type   || '').toLowerCase().includes(q) ||
+      (r.repair_type   || '').toLowerCase().includes(q) ||
+      (r.damage_location || '').toLowerCase().includes(q) ||
+      (r.size_type     || '').toLowerCase().includes(q);
+    return matchCa && matchQ;
+  });
+
+  document.getElementById('trf-count').textContent = filtered.length + ' / ' + state.tariff.length + ' dòng';
+  renderTariffTable(filtered);
+}
+
+function renderTariffTable(data) {
+  const tbody = document.getElementById('trf-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu — import file tariff để bắt đầu</td></tr>';
+    document.getElementById('trf-footer').textContent = '';
+    return;
+  }
+
+  // Chỉ render 500 dòng để tránh lag
+  const display = data.slice(0, 500);
+  tbody.innerHTML = display.map((r, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.carrier||''}</td>
+      <td style="font-size:10px">${r.size_type||''}</td>
+      <td>${r.damage_location||''}</td>
+      <td>${r.component||''}</td>
+      <td>${r.damage_type||''}</td>
+      <td>${r.repair_type||''}</td>
+      <td style="text-align:right">${r.length||''}</td>
+      <td style="text-align:right">${r.weight||''}</td>
+      <td>${r.unit||''}</td>
+      <td style="text-align:right">${r.limit_qty||''}</td>
+      <td style="text-align:right;background:var(--green-light);color:var(--green)">${num(r.hour)}</td>
+      <td style="text-align:right;background:var(--green-light);color:var(--green)">${num(r.material)}</td>
+      <td style="text-align:right;background:var(--green-light);color:var(--green)">${num(r.labour)}</td>
+      <td style="text-align:right;background:var(--blue-light);color:var(--blue);font-weight:500">${num(r.total_cost)}</td>
+    </tr>
+  `).join('');
+
+  const footer = data.length > 500
+    ? `Hiển thị 500 / ${data.length} dòng — dùng filter để thu hẹp kết quả`
+    : `Tổng ${data.length} dòng`;
+  document.getElementById('trf-footer').textContent = footer;
+}
+
+async function handleTariffFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  toast('Đang đọc file Tariff...');
+
+  if (typeof XLSX === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Bỏ header row 1, lấy data
+      tariffImportData = rows.slice(1).filter(r => r[1] && r[1].toString().trim() !== '');
+
+      // Preview 10 dòng
+      document.getElementById('tariff-preview-rows').innerHTML = tariffImportData.slice(0, 10).map(r => `
+        <tr>
+          <td>${r[0]||''}</td>
+          <td style="font-size:10px">${r[1]||''}</td>
+          <td>${r[2]||''}</td>
+          <td>${r[3]||''}</td>
+          <td>${r[4]||''}</td>
+          <td>${r[5]||''}</td>
+          <td style="text-align:right">${r[6]||''}</td>
+          <td style="text-align:right">${r[7]||''}</td>
+          <td>${r[8]||''}</td>
+          <td style="text-align:right">${r[9]||''}</td>
+          <td style="text-align:right">${num(r[10])}</td>
+          <td style="text-align:right">${num(r[11])}</td>
+          <td style="text-align:right">${num(r[12])}</td>
+          <td style="text-align:right">${num(r[13])}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('tariff-preview-count').textContent = tariffImportData.length + ' dòng';
+      document.getElementById('tariff-preview').style.display = 'block';
+      toast('Đọc được ' + tariffImportData.length + ' dòng — kiểm tra rồi xác nhận', 3000);
+    } catch(err) {
+      toast('Lỗi đọc file: ' + err.message, 4000);
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function confirmTariff() {
+  if (!tariffImportData.length) { toast('Không có dữ liệu!'); return; }
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Đang import...';
+
+  try {
+    const res = await apiPost({ action: 'appendTariff', rows: tariffImportData });
+    if (res.success) {
+      // Reload tariff
+      const tariffRes = await apiGet({ action: 'getTariff' });
+      if (tariffRes.success) state.tariff = tariffRes.data;
+      renderTariffScreen();
+      cancelTariff();
+      toast('Import thành công! ' + res.message + ' · Tổng: ' + state.tariff.length + ' dòng', 4000);
+    } else {
+      toast('Lỗi: ' + (res.error || 'Unknown'), 4000);
+    }
+  } catch(err) {
+    toast('Lỗi kết nối: ' + err.message, 4000);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Xác nhận Import';
+}
+
+function cancelTariff() {
+  tariffImportData = [];
+  document.getElementById('tariff-preview').style.display = 'none';
+  document.getElementById('tariff-preview-rows').innerHTML = '';
+}
+// ===================== UPLOAD TOS FILE =====================
+async function handleStockUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  toast('Đang đọc file TOS...');
+
+  // Load SheetJS nếu chưa có
+  if (typeof XLSX === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Bỏ header row (row 0), lấy data từ row 1
+      const dataRows = rows.slice(1).filter(r => r[6] && r[6].toString().trim() !== '');
+
+      toast('Đọc được ' + dataRows.length + ' containers — đang import...');
+
+      const res = await apiPost({
+        action: 'importStockFromTOS',
+        rows: dataRows
+      });
+
+      if (res.success) {
+        // Reload stock data
+        const stockRes = await apiGet({ action: 'getEmtyStock' });
+        if (stockRes.success) {
+          state.stock = stockRes.data;
+          renderStock();
+        }
+        toast('Import thành công! ' + res.message, 3000);
+      } else {
+        toast('Lỗi import: ' + (res.error || 'Unknown error'), 4000);
+      }
+    } catch(err) {
+      toast('Lỗi đọc file: ' + err.message, 4000);
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+</script>
+</body>
+</html>
