@@ -1684,7 +1684,7 @@ async function exportBulkTemplate() {
 
       rows.push([
         r.equipment_number  || '',  // A
-        { t: 's', v: dt },          // B - Estimate Date dạng text
+        { t: 's', v: dt, z: '@' }, // B - Estimate Date dạng text
         r.repair_seq        || '',  // C
         r.damage_location   || '',  // D
         r.component         || '',  // E
@@ -1723,6 +1723,16 @@ async function exportBulkTemplate() {
       CreatedDate: new Date()
     };
     var ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Force cột B (Estimate Date) là text
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    for (var R = 1; R <= range.e.r; R++) {
+      var cellAddr = XLSX.utils.encode_cell({ r: R, c: 1 }); // col B = index 1
+      if (ws[cellAddr]) {
+        ws[cellAddr].t = 's';
+        ws[cellAddr].z = '@';
+      }
+    }
 
     // Set column widths
     ws['!cols'] = [
