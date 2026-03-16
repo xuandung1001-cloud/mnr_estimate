@@ -1580,7 +1580,7 @@ function loadBulk() {
   // Tách danh sách cont từ ô tìm kiếm (space, comma, newline)
   var searchList = [];
   if (searchVal) {
-    searchList = searchVal.toUpperCase().split(/[\s,;]+/).filter(function(s) { return s.length > 3; });
+    searchList = searchVal.toUpperCase().replace(/[,;]+/g, ' ').split(' ').filter(function(s) { return s.length > 3; });
   }
 
   var data = state.tracking;
@@ -1635,14 +1635,12 @@ async function exportBulkTemplate() {
       });
     }
 
-    // Dùng danh sách đang filter (nếu có), không thì lấy hết
-    var filterConts = (typeof bulkFilteredConts !== 'undefined' && bulkFilteredConts.length > 0)
-      ? bulkFilteredConts : null;
-
-    if (filterConts && filterConts.length === 0) {
-      toast('Chưa tải danh sách! Nhấn "Tải danh sách" trước.', 3000);
+    // Phải tải danh sách trước mới export
+    if (typeof bulkFilteredConts === 'undefined' || bulkFilteredConts.length === 0) {
+      toast('Nhấn "Tải danh sách" trước rồi mới export!', 3000);
       return;
     }
+    var filterConts = bulkFilteredConts;
 
     // Load estimates
     var res = await apiGet({ action: 'getAllEstimates' });
