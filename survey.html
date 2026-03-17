@@ -526,7 +526,7 @@ input[type="file"] { display: none; }
       </div>
 
       <!-- Hidden file inputs -->
-      <input type="file" id="cam-input" accept="image/*" multiple onchange="handleFiles(this)">
+      <input type="file" id="cam-input" accept="image/*" capture="environment" onchange="handleFiles(this)">
       <input type="file" id="gallery-input" accept="image/*" multiple onchange="handleFiles(this)">
 
       <!-- Photo grid -->
@@ -640,10 +640,11 @@ async function doLogin() {
   if (!user || !pass) { document.getElementById('login-err').textContent = 'Nhập đủ thông tin!'; return; }
   document.getElementById('login-err').textContent = 'Đang đăng nhập...';
   try {
-    var res = await apiPost({ action: 'login', username: user, password: pass });
+    var res = await apiGet({ action: 'login', username: user, key: pass });
     if (res.success) {
-      state.user = res.user;
-      localStorage.setItem('mnr_session', JSON.stringify(res.user));
+      var session = { username: user, fullname: res.fullname, expiry: res.expiry };
+      state.user = session;
+      localStorage.setItem('mnr_session', JSON.stringify(session));
       showApp();
     } else {
       document.getElementById('login-err').textContent = res.error || 'Sai thông tin đăng nhập';
