@@ -299,7 +299,7 @@ td input:focus,td select:focus{background:#fffbeb}
               <span>📷 Ảnh Trước Sửa Chữa</span>
               <span id="est-photos-label" style="font-size:10px;font-weight:400;color:var(--gray)"></span>
             </div>
-            <div id="est-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;max-width:100%"></div>
+            <div id="est-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;max-height:480px;overflow-y:auto;padding-right:4px"></div>
           </div>
         </div>
 
@@ -1016,12 +1016,24 @@ function loadEstPhotos(contNo, carrier) {
       }
 
       label.textContent = contNo + ' / ' + carrier + ' — ' + res.photos.length + ' ảnh';
-      grid.innerHTML = res.photos.map(function(p) {
-        return '<div style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--bg);cursor:zoom-in" onclick="openLightbox(\'' + p.url + '\',\'' + p.name.replace(/'/g,"\\'") + '\')">'
+      grid.innerHTML = res.photos.map(function(p, idx) {
+        return '<div class="est-photo-item" data-idx="' + idx + '" style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--bg);cursor:zoom-in">'
           + '<img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
           + '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>'
           + '</div>';
       }).join('');
+
+      // Lưu photos để lightbox dùng
+      window._estPhotosData = res.photos;
+
+      // Gán click events sau khi render xong
+      grid.querySelectorAll('.est-photo-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var idx = parseInt(this.dataset.idx);
+          var p = window._estPhotosData[idx];
+          if (p) openLightbox(p.url, p.name);
+        });
+      });
 
     } catch(e) {
       grid.innerHTML = '<div style="color:var(--red);font-size:11px;padding:8px 0">Lỗi tải ảnh: ' + e.message + '</div>';
