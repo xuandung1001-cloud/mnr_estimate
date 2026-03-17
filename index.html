@@ -1042,8 +1042,16 @@ function loadEstPhotos(contNo, carrier) {
 }
 
 function openLightbox(url, name) {
+  // url từ API là file.getUrl() (không embed được), convert sang thumbnail size lớn
+  // Nếu đã là thumbnail URL thì tăng size, nếu là drive URL thì extract ID
+  var imgUrl = url;
+  var idMatch = url.match(/\/d\/([a-zA-Z0-9_-]{10,})\//);
+  if (!idMatch) idMatch = url.match(/id=([a-zA-Z0-9_-]{10,})/);
+  if (idMatch) {
+    imgUrl = 'https://drive.google.com/thumbnail?id=' + idMatch[1] + '&sz=w1600';
+  }
   var lb = document.getElementById('lightbox');
-  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox-img').src = imgUrl;
   document.getElementById('lightbox-name').textContent = name || '';
   lb.style.display = 'flex';
 }
