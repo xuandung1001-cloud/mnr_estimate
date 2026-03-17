@@ -1531,10 +1531,22 @@ async function handleOvmFile(input) {
         var appDateStr = '';
         if (appDate) {
           if (appDate instanceof Date) {
-            appDateStr = String(appDate.getDate()).padStart(2,'0') + '/' +
-                         String(appDate.getMonth()+1).padStart(2,'0') + '/' +
-                         appDate.getFullYear();
-          } else appDateStr = String(appDate);
+            // Date object — dùng UTC để tránh lệch timezone
+            appDateStr = String(appDate.getUTCDate()).padStart(2,'0') + '/' +
+                         String(appDate.getUTCMonth()+1).padStart(2,'0') + '/' +
+                         appDate.getUTCFullYear();
+          } else {
+            // String dạng "M/D/YYYY h:mm:ss AM" hoặc "M/D/YYYY"
+            var s = String(appDate).trim();
+            var datePart = s.split(' ')[0]; // lấy phần ngày trước space
+            var parts = datePart.split('/');
+            if (parts.length === 3) {
+              var m = parseInt(parts[0]), d = parseInt(parts[1]), y = parseInt(parts[2]);
+              appDateStr = String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0') + '/' + y;
+            } else {
+              appDateStr = s;
+            }
+          }
         }
 
         // Lookup est total + current status từ tracking
