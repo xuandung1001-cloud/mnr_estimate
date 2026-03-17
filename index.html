@@ -2590,25 +2590,7 @@ function num(n) {
 
 function formatDate(d) {
   if (!d) return '';
-  if (typeof d === 'string') {
-    // Đã đúng dd/MM/yyyy
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d;
-    // Dạng M/D/YYYY từ Apps Script — convert sang dd/MM/yyyy
-    if (d.includes('/')) {
-      var p = d.split('/');
-      if (p.length === 3) {
-        var p0 = parseInt(p[0]), p1 = parseInt(p[1]), p2 = parseInt(p[2]);
-        // Nếu p1 > 12 → đang là MM/DD/YYYY → đổi lại
-        if (p1 > 12) return String(p1).padStart(2,'0') + '/' + String(p0).padStart(2,'0') + '/' + p2;
-        return String(p0).padStart(2,'0') + '/' + String(p1).padStart(2,'0') + '/' + p2;
-      }
-    }
-    // ISO yyyy-MM-dd
-    if (/^\d{4}-\d{2}-\d{2}/.test(d)) {
-      var p = d.substring(0,10).split('-');
-      return p[2] + '/' + p[1] + '/' + p[0];
-    }
-  }
+  if (typeof d === 'string' && d.includes('/')) return d;
   const dt = new Date(d);
   if (isNaN(dt)) return d || '';
   return dt.toLocaleDateString('vi-VN');
