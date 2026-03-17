@@ -1731,7 +1731,7 @@ function renderTrackingTable(data) {
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button><button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${r.approval_status === 'Partially Approved' ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
