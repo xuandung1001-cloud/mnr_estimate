@@ -580,6 +580,26 @@ input[type="file"] { display: none; }
     </div>
 
     <div id="view-results"></div>
+
+    <!-- Nút bổ sung ảnh (chỉ hiện khi đã có kết quả) -->
+    <div id="view-add-bar" style="display:none;margin-top:12px">
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('view-cam-input').click()"
+          style="flex:1;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">
+          📷 Chụp thêm
+        </button>
+        <button onclick="document.getElementById('view-gallery-input').click()"
+          style="flex:1;padding:12px;background:white;color:var(--blue);border:1.5px solid var(--blue);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">
+          📁 Chọn từ thư viện
+        </button>
+      </div>
+      <div id="view-upload-status" style="display:none;margin-top:8px;padding:10px 12px;background:var(--amber-light);border-radius:8px;font-size:12px;font-weight:600;color:var(--amber);text-align:center"></div>
+    </div>
+
+    <!-- Hidden inputs cho view tab -->
+    <input type="file" id="view-cam-input" accept="image/*" capture="environment" onchange="handleViewFiles(this)">
+    <input type="file" id="view-gallery-input" accept="image/*" multiple onchange="handleViewFiles(this)">
+
   </div><!-- end pane-view -->
 
 </div><!-- end app -->
@@ -752,13 +772,19 @@ async function loadViewPhotos() {
 
     if (!res.success) {
       res_div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:13px">Lỗi: ' + (res.error || 'Unknown') + '</div>';
+      document.getElementById('view-add-bar').style.display = 'none';
       return;
     }
 
     if (!res.photos || !res.photos.length) {
       res_div.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);font-size:13px">Chưa có ảnh nào</div>';
+      document.getElementById('view-add-bar').style.display = 'block';
       return;
     }
+
+    // Hiện add bar
+    document.getElementById('view-add-bar').style.display = 'block';
+    document.getElementById('view-upload-status').style.display = 'none';
 
     // Render grid
     var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
@@ -803,7 +829,69 @@ async function deletePhoto(fileId) {
   }
 }
 
-// ===================== CONT =====================
+// ===================== VIEW TAB - BỔ SUNG ẢNH =====================
+function handleViewFiles(input) {
+  var files = Array.from(input.files);
+  if (!files.length) return;
+
+  var contNo  = document.getElementById('view-cont-no').value.trim().toUpperCase();
+  var carrier = document.getElementById('view-carrier').value;
+  if (!contNo || !carrier) { toast('Chọn Container và Carrier trước!'); return; }
+
+  var statusEl = document.getElementById('view-upload-status');
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Đang xử lý ' + files.length + ' ảnh...';
+
+  var today = new Date();
+  var dd    = String(today.getDate()).padStart(2,'0');
+  var mm    = String(today.getMonth()+1).padStart(2,'0');
+  var yyyy  = today.getFullYear();
+  var dateStr = dd + mm + yyyy;
+
+  var processed = 0;
+  var queue = [];
+
+  files.forEach(function(file) {
+    resizeImage(file, 1200, 0.8, function(base64, dataUrl) {
+      queue.push({ name: file.name || ('photo_' + Date.now() + '.jpg'), base64: base64, mime: file.type || 'image/jpeg' });
+      processed++;
+      if (processed === files.length) {
+        uploadViewSequential(queue, 0, dateStr, contNo, carrier, function(doneCount, errCount) {
+          var msg = '✓ Upload xong ' + doneCount + '/' + queue.length + ' ảnh';
+          if (errCount) msg += ' (' + errCount + ' lỗi)';
+          statusEl.textContent = msg;
+          // Reload lại grid
+          setTimeout(function() { loadViewPhotos(); }, 1000);
+        });
+      }
+    });
+  });
+  input.value = '';
+}
+
+async function uploadViewSequential(list, i, dateStr, contNo, carrier, onDone) {
+  var done = 0, err = 0;
+  for (var j = 0; j < list.length; j++) {
+    var item = list[j];
+    var statusEl = document.getElementById('view-upload-status');
+    if (statusEl) statusEl.textContent = 'Đang upload ' + (j+1) + '/' + list.length + '...';
+    try {
+      var res = await apiPost({
+        action:       'uploadImage',
+        container_no: contNo,
+        carrier:      carrier,
+        loai_anh:     currentViewType,
+        date_str:     dateStr,
+        file_name:    item.name,
+        base64:       item.base64,
+        mime_type:    item.mime
+      });
+      if (res.success) done++; else err++;
+    } catch(e) { err++; }
+  }
+  if (onDone) onDone(done, err);
+}
+
 function setCont() {
   var val     = document.getElementById('cont-no').value.trim().toUpperCase();
   var carrier = document.getElementById('sel-carrier').value;
