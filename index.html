@@ -684,31 +684,68 @@ td input:focus,td select:focus{background:#fffbeb}
         </div>
       </div>
 
-      <!-- PICTURES -->      <!-- PICTURES -->
+      <!-- PICTURES -->
       <div class="screen" id="screen-pictures">
-        <div class="alert alert-info">Tính năng Export Pictures — copy và rename ảnh từ thư mục nguồn sang thư mục đích theo tên cont + Ref No</div>
+
         <div class="card">
-          <div class="mode-tabs">
-            <div class="mode-tab active" onclick="setPicMode('A',this)">A — Completion Pictures</div>
-            <div class="mode-tab" onclick="setPicMode('B',this)">B — Survey Pictures</div>
-          </div>
-          <div class="form-grid grid-2">
+          <div class="card-title">Export Ảnh Trước Sửa Chữa → Google Drive</div>
+
+          <!-- Carrier -->
+          <div class="form-grid grid-2" style="margin-bottom:10px">
             <div class="fg">
-              <div class="fl">Thư mục nguồn</div>
-              <input class="fi" id="pic-src" placeholder="Paste đường dẫn thư mục nguồn...">
+              <div class="fl">Carrier *</div>
+              <select class="fi" id="pic-carrier">
+                <option value="">-- Chọn Carrier --</option>
+              </select>
             </div>
             <div class="fg">
-              <div class="fl">Thư mục đích</div>
-              <input class="fi" id="pic-dst" placeholder="Paste đường dẫn thư mục đích...">
+              <div class="fl">Loại ảnh</div>
+              <select class="fi" id="pic-loai">
+                <option value="Trước sửa chữa">Trước sửa chữa</option>
+                <option value="Sau sửa chữa">Sau sửa chữa</option>
+              </select>
             </div>
           </div>
-          <div class="alert alert-info" style="margin-bottom:10px">
-            Tên file sau rename: <code style="background:#B5D4F4;padding:1px 5px;border-radius:3px;font-size:11px">A_MSMU8387696_RPVNBDUAF251200209_001.jpg</code>
+
+          <!-- Cont list -->
+          <div class="fg" style="margin-bottom:10px">
+            <div class="fl">Danh sách Container * <span style="font-weight:400;text-transform:none">(mỗi số 1 dòng, hoặc cách nhau bằng dấu phẩy/space)</span></div>
+            <textarea class="fi" id="pic-cont-list" rows="6"
+              placeholder="MSMU1234567&#10;CAIU8765432&#10;BEAU4225240&#10;..."
+              style="resize:vertical;font-family:monospace;font-size:12px;letter-spacing:0.5px"></textarea>
           </div>
-          <div class="alert alert-warn">
-            Tính năng này cần chạy trên máy local có quyền truy cập file system. Sử dụng Electron hoặc chạy qua Apps Script Drive API trong phiên bản tiếp theo.
+
+          <!-- Hoặc lấy từ Bulk List -->
+          <div style="margin-bottom:12px">
+            <button class="btn btn-sm" onclick="fillContFromBulk()">📋 Lấy từ Bulk List hiện tại</button>
+            <span id="pic-bulk-hint" style="font-size:11px;color:var(--gray);margin-left:8px"></span>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">
+              📂 Export lên Drive
+            </button>
+            <span style="font-size:11px;color:var(--gray)">Ảnh sẽ được copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_DDMMYYYY_HHMMSS/</code></span>
           </div>
         </div>
+
+        <!-- Progress -->
+        <div id="pic-progress" style="display:none" class="card">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="spinner"></div>
+            <div>
+              <div style="font-size:12px;font-weight:600" id="pic-progress-text">Đang export...</div>
+              <div style="font-size:11px;color:var(--gray)">Vui lòng chờ, không đóng trang này</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div id="pic-result" style="display:none" class="card">
+          <div class="card-title">Kết quả Export</div>
+          <div id="pic-result-body"></div>
+        </div>
+
       </div>
 
     </div>
@@ -920,6 +957,7 @@ function nav(screen, el) {
   if (screen === 'summary') renderSummary();
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
+  if (screen === 'pictures') initPicturesScreen();
 }
 
 function setTopbar(title, actions) {
@@ -2033,10 +2071,120 @@ function exportReport() {
 }
 
 // ===================== PICTURES =====================
-function setPicMode(mode, el) {
-  state.picMode = mode;
-  document.querySelectorAll('#screen-pictures .mode-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+function initPicturesScreen() {
+  // Populate carrier từ tariff
+  var carriers = [...new Set(state.tariff.map(r => r.carrier).filter(Boolean))].sort();
+  var sel = document.getElementById('pic-carrier');
+  sel.innerHTML = '<option value="">-- Chọn Carrier --</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+}
+
+function fillContFromBulk() {
+  // Lấy danh sách cont từ bulk list đang hiển thị
+  var rows = document.querySelectorAll('#bulk-rows tr');
+  var conts = [];
+  rows.forEach(function(tr) {
+    var cells = tr.querySelectorAll('td');
+    if (cells.length >= 2) {
+      var val = cells[1].textContent.trim();
+      if (val && val.length >= 4 && val !== '—') conts.push(val);
+    }
+  });
+  if (!conts.length) {
+    toast('Bulk List đang trống — hãy tải Bulk List trước!', 3000);
+    return;
+  }
+  document.getElementById('pic-cont-list').value = conts.join('\n');
+  document.getElementById('pic-bulk-hint').textContent = '✓ Đã lấy ' + conts.length + ' containers từ Bulk List';
+
+  // Sync carrier nếu bulk list có carrier
+  var carrierSet = [...new Set(state.tracking
+    .filter(r => conts.includes(r.container_no))
+    .map(r => r.carrier).filter(Boolean))];
+  if (carrierSet.length === 1) {
+    document.getElementById('pic-carrier').value = carrierSet[0];
+  }
+}
+
+async function doExportPictures() {
+  var carrier  = document.getElementById('pic-carrier').value;
+  var loaiAnh  = document.getElementById('pic-loai').value;
+  var rawText  = document.getElementById('pic-cont-list').value.trim();
+
+  if (!carrier)  { toast('Chọn Carrier!'); return; }
+  if (!rawText)  { toast('Nhập danh sách container!'); return; }
+
+  // Parse cont list — split by newline, comma, space, semicolon
+  var contList = rawText.toUpperCase()
+    .split(/[\n,;\s]+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 4);
+
+  if (!contList.length) { toast('Không có container hợp lệ!'); return; }
+
+  // UI: show progress
+  document.getElementById('pic-progress').style.display = 'block';
+  document.getElementById('pic-result').style.display = 'none';
+  document.getElementById('pic-progress-text').textContent = 'Đang export ' + contList.length + ' containers...';
+  document.getElementById('pic-export-btn').disabled = true;
+
+  try {
+    var res = await apiPost({
+      action:    'exportPictures',
+      cont_list: contList,
+      carrier:   carrier,
+      loai_anh:  loaiAnh
+    });
+
+    document.getElementById('pic-progress').style.display = 'none';
+    document.getElementById('pic-export-btn').disabled = false;
+
+    if (!res.success) {
+      toast('Lỗi: ' + res.error, 5000);
+      return;
+    }
+
+    // Hiện kết quả
+    var notFoundHtml = res.not_found && res.not_found.length
+      ? `<div class="alert alert-warn" style="margin-top:10px">
+          <strong>Không tìm thấy ảnh (${res.not_found.length} cont):</strong><br>
+          <span style="font-family:monospace;font-size:11px">${res.not_found.join(', ')}</span>
+         </div>`
+      : '';
+
+    var detailRows = (res.results || []).map((r, i) =>
+      `<tr>
+        <td>${i+1}</td>
+        <td style="font-family:monospace">${r.cont}</td>
+        <td style="text-align:right;color:var(--blue);font-weight:500">${r.count} ảnh</td>
+      </tr>`
+    ).join('');
+
+    document.getElementById('pic-result-body').innerHTML = `
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+        <div class="stat-card"><div class="stat-label">Tổng ảnh đã copy</div><div class="stat-value" style="color:var(--blue)">${res.total_copied}</div></div>
+        <div class="stat-card"><div class="stat-label">Cont có ảnh</div><div class="stat-value" style="color:var(--green)">${res.found_conts} / ${res.total_conts}</div></div>
+        <div class="stat-card"><div class="stat-label">Folder Drive</div><div class="stat-value" style="font-size:13px"><a href="${res.folder_url}" target="_blank" style="color:var(--blue)">📂 Mở Drive</a></div></div>
+      </div>
+      <div class="alert alert-ok">
+        ✓ Export xong! Folder: <strong>${res.folder_name}</strong><br>
+        Drive Desktop sẽ tự sync xuống máy trong vài phút.
+      </div>
+      ${notFoundHtml}
+      <div class="tbl-wrap" style="margin-top:10px">
+        <table>
+          <thead><tr><th>STT</th><th>Container</th><th style="text-align:right">Số ảnh</th></tr></thead>
+          <tbody>${detailRows}</tbody>
+        </table>
+      </div>
+    `;
+    document.getElementById('pic-result').style.display = 'block';
+    toast('Export xong! ' + res.total_copied + ' ảnh — ' + res.found_conts + '/' + res.total_conts + ' cont', 4000);
+
+  } catch(e) {
+    document.getElementById('pic-progress').style.display = 'none';
+    document.getElementById('pic-export-btn').disabled = false;
+    toast('Lỗi kết nối: ' + e.message, 4000);
+  }
 }
 
 // GO REVISE — chuyển sang màn hình Revise và điền cont số
