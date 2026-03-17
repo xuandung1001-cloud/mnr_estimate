@@ -447,7 +447,20 @@ input[type="file"] { display: none; }
     <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
   </div>
 
-  <div class="content">
+  <!-- TABS -->
+  <div style="display:flex;background:white;border-bottom:1px solid var(--border)">
+    <button id="tab-upload" onclick="switchTab('upload')"
+      style="flex:1;padding:12px;border:none;background:none;font-size:13px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--blue);cursor:pointer">
+      📷 Upload
+    </button>
+    <button id="tab-view" onclick="switchTab('view')"
+      style="flex:1;padding:12px;border:none;background:none;font-size:13px;font-weight:600;color:var(--gray);border-bottom:2px solid transparent;cursor:pointer">
+      🖼 Xem ảnh
+    </button>
+  </div>
+
+  <!-- UPLOAD TAB -->
+  <div id="pane-upload" class="content">
 
     <!-- CONT INPUT -->
     <div class="cont-card">
@@ -460,12 +473,26 @@ input[type="file"] { display: none; }
           onkeydown="if(event.key==='Enter') setCont()">
         <button class="btn-set" onclick="setCont()">OK</button>
       </div>
+
+      <!-- Carrier + Loại ảnh -->
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <div style="flex:1">
+          <div class="cont-label" style="margin-bottom:4px">Carrier</div>
+          <select id="sel-carrier" class="cont-input" style="font-size:14px;font-weight:600;padding:10px 12px">
+            <option value="">-- Chọn --</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <div class="cont-label" style="margin-bottom:4px">Loại ảnh</div>
+          <select id="sel-type" class="cont-input" style="font-size:13px;font-weight:600;padding:10px 12px">
+            <option value="Trước sửa chữa">Trước sửa chữa</option>
+            <option value="Sau sửa chữa">Sau sửa chữa</option>
+          </select>
+        </div>
+      </div>
+
       <div class="cont-info" id="cont-info">
         <div class="cont-info-row">
-          <div class="cont-info-item">
-            <div class="label">CARRIER</div>
-            <div class="value" id="info-carrier">—</div>
-          </div>
           <div class="cont-info-item">
             <div class="label">SIZE</div>
             <div class="value" id="info-size">—</div>
@@ -485,7 +512,7 @@ input[type="file"] { display: none; }
     <!-- CAMERA -->
     <div class="camera-card" id="camera-card">
       <div class="camera-header">
-        <div class="camera-title">Ảnh Survey — Trước sửa chữa</div>
+        <div class="camera-title" id="camera-title">Ảnh Survey — Trước sửa chữa</div>
         <div class="photo-counter" id="photo-counter">0 ảnh</div>
       </div>
 
@@ -519,15 +546,50 @@ input[type="file"] { display: none; }
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- end pane-upload -->
+
+  <!-- VIEW TAB -->
+  <div id="pane-view" class="content" style="display:none">
+    <div class="cont-card">
+      <div class="cont-label">Tìm ảnh theo số Container</div>
+      <div class="cont-input-row">
+        <input type="text" class="cont-input" id="view-cont-no"
+          placeholder="CAIU1234567"
+          maxlength="11"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') loadViewPhotos()">
+        <select id="view-carrier" class="cont-input" style="font-size:13px;font-weight:500;padding:10px 10px;max-width:100px">
+          <option value="">Carrier</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-set" style="flex:1;border-radius:10px" onclick="loadViewPhotos()">Tải ảnh</button>
+      </div>
+    </div>
+
+    <!-- Loại ảnh tabs -->
+    <div style="display:flex;gap:8px;padding:0 0 12px 0" id="view-type-tabs">
+      <button onclick="switchViewType('Trước sửa chữa', this)"
+        style="flex:1;padding:9px;border:1.5px solid var(--blue);background:var(--blue);color:white;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer">
+        Trước SC
+      </button>
+      <button onclick="switchViewType('Sau sửa chữa', this)"
+        style="flex:1;padding:9px;border:1.5px solid var(--border);background:white;color:var(--gray);border-radius:10px;font-size:12px;font-weight:600;cursor:pointer">
+        Sau SC
+      </button>
+    </div>
+
+    <div id="view-results"></div>
+  </div><!-- end pane-view -->
+
+</div><!-- end app -->
 
 <div class="toast" id="toast"></div>
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbzZQ22ErS32LJV8dS0dVKGG3d6fhDlQxupeYQREb4pbbWjXnmHxoMPWFXNBcQmj4DmtaQ/exec';
 
-var state = { user: null, stock: [], contNo: '', carrier: '', photos: [] };
+var state = { user: null, stock: [], carriers: [], contNo: '', carrier: '', loaiAnh: 'Trước sửa chữa', photos: [] };
 
 // ===================== API =====================
 async function apiGet(params) {
@@ -599,6 +661,24 @@ function showApp() {
   apiGet({ action: 'getEmtyStock' }).then(function(res) {
     if (res.success) state.stock = res.data;
   });
+  // Load carriers từ tariff
+  apiGet({ action: 'getTariff' }).then(function(res) {
+    if (res.success && res.data.length) {
+      var carriers = [];
+      res.data.forEach(function(r) {
+        if (r.carrier && carriers.indexOf(r.carrier) === -1) carriers.push(r.carrier);
+      });
+      carriers.sort();
+      state.carriers = carriers;
+      var sel = document.getElementById('sel-carrier');
+      carriers.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+    }
+  });
 }
 
 function doLogout() {
@@ -606,35 +686,150 @@ function doLogout() {
   location.reload();
 }
 
+// ===================== TABS =====================
+var currentTab = 'upload';
+var currentViewType = 'Trước sửa chữa';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('pane-upload').style.display = tab === 'upload' ? 'block' : 'none';
+  document.getElementById('pane-view').style.display   = tab === 'view'   ? 'block' : 'none';
+
+  document.getElementById('tab-upload').style.color       = tab === 'upload' ? 'var(--blue)' : 'var(--gray)';
+  document.getElementById('tab-upload').style.borderBottom= tab === 'upload' ? '2px solid var(--blue)' : '2px solid transparent';
+  document.getElementById('tab-view').style.color         = tab === 'view'   ? 'var(--blue)' : 'var(--gray)';
+  document.getElementById('tab-view').style.borderBottom  = tab === 'view'   ? '2px solid var(--blue)' : '2px solid transparent';
+
+  // Sync carrier dropdown
+  if (tab === 'view') syncViewCarriers();
+}
+
+function syncViewCarriers() {
+  var sel = document.getElementById('view-carrier');
+  var current = sel.value;
+  sel.innerHTML = '<option value="">Carrier</option>';
+  state.carriers.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    if (c === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function switchViewType(type, btn) {
+  currentViewType = type;
+  var btns = document.querySelectorAll('#view-type-tabs button');
+  btns.forEach(function(b) {
+    b.style.background   = 'white';
+    b.style.color        = 'var(--gray)';
+    b.style.borderColor  = 'var(--border)';
+  });
+  btn.style.background  = 'var(--blue)';
+  btn.style.color       = 'white';
+  btn.style.borderColor = 'var(--blue)';
+  // Reload nếu đang có kết quả
+  var contNo = document.getElementById('view-cont-no').value.trim().toUpperCase();
+  if (contNo.length > 3) loadViewPhotos();
+}
+
+// ===================== VIEW PHOTOS =====================
+async function loadViewPhotos() {
+  var contNo  = document.getElementById('view-cont-no').value.trim().toUpperCase();
+  var carrier = document.getElementById('view-carrier').value;
+  if (contNo.length < 4) { toast('Nhập số container!'); return; }
+  if (!carrier)           { toast('Chọn Carrier!'); return; }
+
+  var res_div = document.getElementById('view-results');
+  res_div.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)">Đang tải...</div>';
+
+  try {
+    var res = await apiGet({
+      action:       'getPhotosByFolder',
+      container_no: contNo,
+      carrier:      carrier,
+      loai_anh:     currentViewType
+    });
+
+    if (!res.success) {
+      res_div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:13px">Lỗi: ' + (res.error || 'Unknown') + '</div>';
+      return;
+    }
+
+    if (!res.photos || !res.photos.length) {
+      res_div.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray);font-size:13px">Chưa có ảnh nào</div>';
+      return;
+    }
+
+    // Render grid
+    var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+    res.photos.forEach(function(p) {
+      html += '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg)" id="vphoto-' + p.id + '">';
+      html += '<a href="' + p.url + '" target="_blank"><img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"></a>';
+      html += '<button onclick="deletePhoto('' + p.id + '','' + contNo + '','' + carrier + '')" '
+           + 'style="position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(192,57,43,0.85);border:none;border-radius:50%;color:white;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>';
+      html += '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:8px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<div style="text-align:center;margin-top:10px;font-size:11px;color:var(--gray)">' + res.photos.length + ' ảnh — ' + contNo + ' / ' + carrier + ' / ' + currentViewType + '</div>';
+    res_div.innerHTML = html;
+
+  } catch(e) {
+    res_div.innerHTML = '<div style="color:var(--red);font-size:12px;padding:16px">Lỗi: ' + e.message + '</div>';
+  }
+}
+
+async function deletePhoto(fileId, contNo, carrier) {
+  if (!confirm('Xoá ảnh này?')) return;
+  try {
+    var res = await apiPost({ action: 'deletePhoto', file_id: fileId });
+    if (res.success) {
+      var el = document.getElementById('vphoto-' + fileId);
+      if (el) { el.style.opacity = '0.3'; el.style.pointerEvents = 'none'; }
+      toast('Đã xoá ảnh');
+    } else {
+      toast('Lỗi: ' + (res.error || 'Unknown'));
+    }
+  } catch(e) {
+    toast('Lỗi: ' + e.message);
+  }
+}
+
 // ===================== CONT =====================
 function setCont() {
-  var val = document.getElementById('cont-no').value.trim().toUpperCase();
-  if (val.length < 4) { toast('Nhập số container!'); return; }
-  state.contNo = val;
-  state.photos = [];
+  var val     = document.getElementById('cont-no').value.trim().toUpperCase();
+  var carrier = document.getElementById('sel-carrier').value;
+  var loai    = document.getElementById('sel-type').value;
+
+  if (val.length < 4)  { toast('Nhập số container!'); return; }
+  if (!carrier)        { toast('Chọn Carrier!'); return; }
+
+  state.contNo  = val;
+  state.carrier = carrier;
+  state.loaiAnh = loai;
+  state.photos  = [];
+
   document.getElementById('photo-grid').innerHTML = '';
   document.getElementById('photo-counter').textContent = '0 ảnh';
   document.getElementById('drive-link').style.display = 'none';
   document.getElementById('upload-progress').style.display = 'none';
+  document.getElementById('camera-title').textContent = 'Ảnh Survey — ' + loai;
 
   // Lookup stock
   var si = state.stock.find(function(r) {
     return (r.equipment_no || '').toUpperCase() === val;
   });
   if (si) {
-    document.getElementById('info-carrier').textContent = si.carrier || '—';
-    document.getElementById('info-size').textContent    = si.size_type || '—';
-    document.getElementById('info-grade').textContent   = si.grade || '—';
-    document.getElementById('info-status').textContent  = si.container_status || '—';
-    document.getElementById('cont-info').style.display  = 'block';
-    state.carrier = si.carrier || 'UNKNOWN';
+    document.getElementById('info-size').textContent   = si.size_type || '—';
+    document.getElementById('info-grade').textContent  = si.grade || '—';
+    document.getElementById('info-status').textContent = si.container_status || '—';
+    document.getElementById('cont-info').style.display = 'block';
   } else {
     document.getElementById('cont-info').style.display = 'none';
-    state.carrier = 'UNKNOWN';
   }
 
   document.getElementById('camera-card').style.display = 'block';
-  toast('Container: ' + val);
+  toast(val + ' — ' + carrier + ' — ' + loai);
 }
 
 // ===================== PHOTOS =====================
@@ -723,6 +918,7 @@ async function uploadPhoto(photo, idx) {
       action:       'uploadImage',
       container_no: state.contNo,
       carrier:      state.carrier,
+      loai_anh:     state.loaiAnh,
       date_str:     dateStr,
       file_name:    photo.name,
       base64:       photo.base64,
