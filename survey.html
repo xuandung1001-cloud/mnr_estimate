@@ -845,24 +845,38 @@ function handleFiles(input) {
   var files = Array.from(input.files);
   if (!files.length) return;
   toast('Đang xử lý ' + files.length + ' ảnh...');
+
+  var processed = 0;
+  var pendingPhotos = [];
+
   files.forEach(function(file) {
     resizeImage(file, 1200, 0.8, function(base64, dataUrl) {
       var photo = {
-        name:   file.name || ('photo_' + Date.now() + '.jpg'),
-        base64: base64,
-        mime:   file.type || 'image/jpeg',
+        name:    file.name || ('photo_' + Date.now() + '.jpg'),
+        base64:  base64,
+        mime:    file.type || 'image/jpeg',
         dataUrl: dataUrl,
-        status: 'pending' // pending, uploading, done, error
+        status:  'pending'
       };
       state.photos.push(photo);
-      var idx = state.photos.length - 1;
-      renderPhoto(photo, idx);
+      var idx2 = state.photos.length - 1;
+      renderPhoto(photo, idx2);
       updateCounter();
-      // Upload ngay
-      uploadPhoto(photo, idx);
+      pendingPhotos.push({ photo: photo, idx: idx2 });
+      processed++;
+      if (processed === files.length) {
+        toast('Đã load xong, đang upload tuần tự...');
+        uploadSequential(pendingPhotos, 0);
+      }
     });
   });
   input.value = '';
+}
+
+async function uploadSequential(list, i) {
+  if (i >= list.length) return;
+  await uploadPhoto(list[i].photo, list[i].idx);
+  uploadSequential(list, i + 1);
 }
 
 function resizeImage(file, maxSize, quality, callback) {
