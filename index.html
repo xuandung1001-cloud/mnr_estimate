@@ -363,37 +363,50 @@ td input:focus,td select:focus{background:#fffbeb}
 
       <!-- OVM -->
       <div class="screen" id="screen-ovm">
-        <div class="mode-tabs">
-          <div class="mode-tab active" onclick="setOvmMode('A',this)">A — Approval từ OVM</div>
-          <div class="mode-tab" onclick="setOvmMode('B',this)">B — Ref No từ OVD</div>
-          <div class="mode-tab" onclick="setOvmMode('C',this)">C — Post Repair</div>
-          <div class="mode-tab" onclick="setOvmMode('D',this)">D — Complete Repair</div>
-        </div>
         <div class="card">
+          <div class="card-title">Import file OVM từ hãng tàu</div>
+          <div class="alert alert-info" style="margin-bottom:12px">
+            Upload file OVM bất kỳ — app tự detect loại và cập nhật đúng fields:<br>
+            <span style="font-size:11px">
+              • <strong>Sent for Approval</strong> → lấy Ref Number<br>
+              • <strong>Approved</strong> (total bằng est) → lấy Approved Date + Total Approved + Status<br>
+              • <strong>Partially Approved</strong> (total lệch est) → lấy Approved Date + Total Approved + Status
+            </span>
+          </div>
           <div class="upload-area" onclick="document.getElementById('ovm-file').click()">
-            <div class="upload-title">Upload file OVM/OVD (.xlsx)</div>
-            <div class="upload-sub">Kéo thả hoặc click để chọn file</div>
+            <div class="upload-title">Upload file OVM (.xlsx)</div>
+            <div class="upload-sub">Click để chọn file — hỗ trợ tất cả loại file OVM</div>
             <input type="file" id="ovm-file" accept=".xlsx,.xls" style="display:none" onchange="handleOvmFile(this)">
           </div>
-          <div id="ovm-preview" style="display:none">
-            <div class="sec-div">Preview — kiểm tra trước khi lưu <span id="ovm-count" style="background:var(--green-light);color:var(--green);padding:1px 8px;border-radius:4px;font-size:10px"></span></div>
+
+          <div id="ovm-preview" style="display:none;margin-top:14px">
+            <div class="sec-div">
+              Preview — kiểm tra trước khi lưu
+              <span id="ovm-count" style="background:var(--green-light);color:var(--green);padding:1px 8px;border-radius:4px;font-size:10px"></span>
+            </div>
+            <!-- Summary stats -->
+            <div id="ovm-stats" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+            <!-- Table -->
             <div class="tbl-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Equipment No</th>
-                    <th style="text-align:right">Total Est.</th>
-                    <th style="text-align:right">Total Approved</th>
-                    <th style="text-align:right">Chênh lệch</th>
-                    <th>Status mới</th>
-                    <th>App. Date</th>
+                    <th style="width:32px">STT</th>
+                    <th style="width:110px">Equipment No</th>
+                    <th style="width:150px">Ref Number</th>
+                    <th style="width:80px;text-align:right">Est. Total</th>
+                    <th style="width:80px;text-align:right">OVM Total</th>
+                    <th style="width:80px;text-align:right">Chênh lệch</th>
+                    <th style="width:130px">Status mới</th>
+                    <th style="width:90px">App. Date</th>
+                    <th style="width:80px">Ghi chú</th>
                   </tr>
                 </thead>
                 <tbody id="ovm-rows"></tbody>
               </table>
             </div>
             <div style="margin-top:10px;display:flex;gap:8px">
-              <button class="btn btn-blue" onclick="confirmOvm()">Xác nhận cập nhật</button>
+              <button class="btn btn-blue" onclick="confirmOvm()" id="ovm-confirm-btn">Xác nhận cập nhật</button>
               <button class="btn" onclick="cancelOvm()">Huỷ</button>
             </div>
           </div>
@@ -688,54 +701,35 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="screen" id="screen-pictures">
 
         <div class="card">
-          <div class="card-title">Export Pictures → Google Drive</div>
-
-          <!-- Mode tabs -->
-          <div class="mode-tabs" style="margin-bottom:14px">
-            <div class="mode-tab active" id="pic-tab-b" onclick="setPicMode('B',this)">B — Trước Sửa Chữa</div>
-            <div class="mode-tab" id="pic-tab-a" onclick="setPicMode('A',this)">A — Sau Sửa Chữa</div>
-          </div>
-
-          <!-- Info bar -->
-          <div id="pic-mode-info" class="alert alert-info" style="margin-bottom:12px">
-            <span id="pic-mode-info-text"></span>
-          </div>
+          <div class="card-title">Export Ảnh Trước Sửa Chữa → Google Drive</div>
 
           <!-- Carrier -->
-          <div class="fg" style="margin-bottom:10px">
-            <div class="fl">Carrier *</div>
-            <select class="fi" id="pic-carrier" style="max-width:200px">
-              <option value="">-- Chọn Carrier --</option>
-            </select>
-          </div>
-
-          <!-- Cont list + Ref preview -->
-          <div class="fg" style="margin-bottom:10px">
-            <div class="fl">Danh sách Container * <span style="font-weight:400;text-transform:none">(mỗi số 1 dòng, hoặc cách nhau bằng dấu phẩy/space)</span></div>
-            <textarea class="fi" id="pic-cont-list" rows="5"
-              placeholder="MSMU1234567&#10;CAIU8765432&#10;BEAU4225240&#10;..."
-              style="resize:vertical;font-family:monospace;font-size:12px;letter-spacing:0.5px"
-              oninput="previewRefNos()"></textarea>
-          </div>
-
-          <!-- Preview Ref No -->
-          <div id="pic-ref-preview" style="display:none;margin-bottom:12px">
-            <div class="fl" style="margin-bottom:6px">Preview Ref Number (từ Tracking)</div>
-            <div class="tbl-wrap">
-              <table>
-                <thead><tr>
-                  <th style="width:32px">STT</th>
-                  <th>Container</th>
-                  <th>Ref Number</th>
-                  <th>Tên file mẫu</th>
-                </tr></thead>
-                <tbody id="pic-ref-rows"></tbody>
-              </table>
+          <div class="form-grid grid-2" style="margin-bottom:10px">
+            <div class="fg">
+              <div class="fl">Carrier *</div>
+              <select class="fi" id="pic-carrier">
+                <option value="">-- Chọn Carrier --</option>
+              </select>
+            </div>
+            <div class="fg">
+              <div class="fl">Loại ảnh</div>
+              <select class="fi" id="pic-loai">
+                <option value="Trước sửa chữa">Trước sửa chữa</option>
+                <option value="Sau sửa chữa">Sau sửa chữa</option>
+              </select>
             </div>
           </div>
 
-          <!-- Lấy từ Bulk List -->
-          <div style="margin-bottom:14px">
+          <!-- Cont list -->
+          <div class="fg" style="margin-bottom:10px">
+            <div class="fl">Danh sách Container * <span style="font-weight:400;text-transform:none">(mỗi số 1 dòng, hoặc cách nhau bằng dấu phẩy/space)</span></div>
+            <textarea class="fi" id="pic-cont-list" rows="6"
+              placeholder="MSMU1234567&#10;CAIU8765432&#10;BEAU4225240&#10;..."
+              style="resize:vertical;font-family:monospace;font-size:12px;letter-spacing:0.5px"></textarea>
+          </div>
+
+          <!-- Hoặc lấy từ Bulk List -->
+          <div style="margin-bottom:12px">
             <button class="btn btn-sm" onclick="fillContFromBulk()">📋 Lấy từ Bulk List hiện tại</button>
             <span id="pic-bulk-hint" style="font-size:11px;color:var(--gray);margin-left:8px"></span>
           </div>
@@ -744,9 +738,7 @@ td input:focus,td select:focus{background:#fffbeb}
             <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">
               📂 Export lên Drive
             </button>
-            <span style="font-size:11px;color:var(--gray)">
-              Copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_bulk_DDMMYYYY/</code>
-            </span>
+            <span style="font-size:11px;color:var(--gray)">Ảnh sẽ được copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_DDMMYYYY_HHMMSS/</code></span>
           </div>
         </div>
 
@@ -1495,21 +1487,209 @@ async function saveRevise() {
 }
 
 // ===================== OVM =====================
+// ===================== OVM =====================
+var _ovmData = []; // data đã parse để confirm
+
 function setOvmMode(mode, el) {
   state.ovmMode = mode;
   document.querySelectorAll('#screen-ovm .mode-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
 }
 
-function handleOvmFile(input) {
-  toast('Tính năng đọc file Excel cần thư viện SheetJS — đang phát triển. Vui lòng nhập data thủ công qua Tracking.', 4000);
+async function handleOvmFile(input) {
+  const file = input.files[0];
+  if (!file) return;
   input.value = '';
+
+  // Load SheetJS
+  if (typeof XLSX === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  toast('Đang đọc file...');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, { type: 'array', cellDates: true });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
+
+      // Header row 0: A=Equipment Number, C=Reference Number, K=Total Cost, Q=Status, V=Approved Date
+      const COL = { cont: 0, ref: 2, total: 10, status: 16, appDate: 21 };
+
+      _ovmData = [];
+      rows.slice(1).forEach(function(row) {
+        var contNo = String(row[COL.cont] || '').trim().toUpperCase();
+        if (!contNo) return;
+
+        var refNo   = String(row[COL.ref]    || '').trim();
+        var ovm_total = parseFloat(row[COL.total]) || 0;
+        var appDate = row[COL.appDate];
+        var appDateStr = '';
+        if (appDate) {
+          if (appDate instanceof Date) {
+            appDateStr = String(appDate.getDate()).padStart(2,'0') + '/' +
+                         String(appDate.getMonth()+1).padStart(2,'0') + '/' +
+                         appDate.getFullYear();
+          } else {
+            appDateStr = String(appDate);
+          }
+        }
+
+        // Lookup est total từ tracking
+        var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
+        var est_total = trk ? (parseFloat(trk.total_cost) || 0) : 0;
+
+        // Detect loại
+        var newStatus, updateFields, note;
+        if (!appDateStr) {
+          // Sent for Approval — chỉ lấy ref
+          newStatus    = 'Sent for Approval';
+          updateFields = 'ref_number';
+          note         = 'Lấy Ref Number';
+        } else {
+          // Có approved date — so sánh total
+          var diff = Math.abs(ovm_total - est_total);
+          var pct  = est_total > 0 ? diff / est_total : 0;
+          if (pct < 0.001) { // bằng nhau (tolerance 0.1%)
+            newStatus    = 'Approved';
+            updateFields = 'status+approved_date+total_approved';
+            note         = 'Total khớp';
+          } else {
+            newStatus    = 'Partially Approved';
+            updateFields = 'status+approved_date+total_approved';
+            note         = 'Total lệch ' + num(diff);
+          }
+        }
+
+        // Warn nếu không tìm thấy trong tracking
+        if (!trk) note = '⚠ Không có trong Tracking';
+
+        _ovmData.push({
+          cont_no:      contNo,
+          ref_no:       refNo,
+          est_total:    est_total,
+          ovm_total:    ovm_total,
+          app_date:     appDateStr,
+          new_status:   newStatus,
+          update_fields: updateFields,
+          note:         note,
+          in_tracking:  !!trk
+        });
+      });
+
+      if (!_ovmData.length) { toast('Không đọc được dữ liệu!', 3000); return; }
+
+      renderOvmPreview();
+    } catch(err) {
+      toast('Lỗi đọc file: ' + err.message, 4000);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
-function confirmOvm() { toast('Đã cập nhật OVM thành công!', 3000); }
+function renderOvmPreview() {
+  // Stats
+  var sentCount  = _ovmData.filter(r => r.new_status === 'Sent for Approval').length;
+  var appCount   = _ovmData.filter(r => r.new_status === 'Approved').length;
+  var partCount  = _ovmData.filter(r => r.new_status === 'Partially Approved').length;
+  var warnCount  = _ovmData.filter(r => !r.in_tracking).length;
+
+  document.getElementById('ovm-stats').innerHTML = `
+    <div class="stat-card" style="padding:8px 12px">
+      <div class="stat-label">Tổng dòng</div>
+      <div class="stat-value" style="font-size:18px">${_ovmData.length}</div>
+    </div>
+    ${sentCount ? `<div class="stat-card" style="padding:8px 12px">
+      <div class="stat-label">Sent for Approval</div>
+      <div class="stat-value" style="font-size:18px;color:var(--gray)">${sentCount}</div>
+    </div>` : ''}
+    ${appCount ? `<div class="stat-card" style="padding:8px 12px">
+      <div class="stat-label">Approved</div>
+      <div class="stat-value" style="font-size:18px;color:var(--green)">${appCount}</div>
+    </div>` : ''}
+    ${partCount ? `<div class="stat-card" style="padding:8px 12px">
+      <div class="stat-label">Partially Approved</div>
+      <div class="stat-value" style="font-size:18px;color:var(--amber)">${partCount}</div>
+    </div>` : ''}
+    ${warnCount ? `<div class="stat-card" style="padding:8px 12px;background:var(--red-light)">
+      <div class="stat-label" style="color:var(--red)">Không tìm thấy</div>
+      <div class="stat-value" style="font-size:18px;color:var(--red)">${warnCount}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('ovm-count').textContent = _ovmData.length + ' dòng';
+
+  // Table rows
+  document.getElementById('ovm-rows').innerHTML = _ovmData.map(function(r, i) {
+    var diff    = r.ovm_total - r.est_total;
+    var diffAbs = Math.abs(diff);
+    var diffStr = diff === 0 ? '—' : (diff > 0 ? '+' : '-') + num(diffAbs);
+    var diffColor = diff === 0 ? '' : (diff > 0 ? 'color:var(--green)' : 'color:var(--red)');
+
+    var statusBadge = badge(r.new_status);
+    var rowBg = !r.in_tracking ? 'background:var(--red-light)' : '';
+
+    // Chỉ hiện ref nếu là Sent for Approval
+    var refCell = r.new_status === 'Sent for Approval'
+      ? `<td style="font-family:monospace;font-size:10px;color:var(--blue)">${r.ref_no||'—'}</td>`
+      : `<td style="color:var(--gray);font-size:10px">—</td>`;
+
+    return `<tr style="${rowBg}">
+      <td>${i+1}</td>
+      <td style="font-family:monospace">${r.cont_no}</td>
+      ${refCell}
+      <td style="text-align:right">${r.est_total ? num(r.est_total) : '—'}</td>
+      <td style="text-align:right">${r.ovm_total ? num(r.ovm_total) : '—'}</td>
+      <td style="text-align:right;${diffColor}">${diffStr}</td>
+      <td>${statusBadge}</td>
+      <td style="font-size:11px">${r.app_date||'—'}</td>
+      <td style="font-size:10px;color:var(--gray)">${r.note}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('ovm-preview').style.display = 'block';
+  toast('Đọc xong ' + _ovmData.length + ' dòng — kiểm tra rồi xác nhận', 3000);
+}
+
+async function confirmOvm() {
+  if (!_ovmData.length) { toast('Không có dữ liệu!'); return; }
+  const btn = document.getElementById('ovm-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Đang cập nhật...';
+  toast('Đang cập nhật...');
+
+  try {
+    var res = await apiPost({ action: 'importOVM', rows: _ovmData });
+    if (res.success) {
+      // Reload tracking
+      var trkRes = await apiGet({ action: 'getTracking' });
+      if (trkRes.success) state.tracking = trkRes.data;
+      cancelOvm();
+      toast('Cập nhật xong! ' + res.updated + ' containers', 4000);
+    } else {
+      toast('Lỗi: ' + (res.error || 'Unknown'), 4000);
+    }
+  } catch(e) {
+    toast('Lỗi kết nối: ' + e.message, 4000);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Xác nhận cập nhật';
+}
+
 function cancelOvm() {
+  _ovmData = [];
   document.getElementById('ovm-preview').style.display = 'none';
   document.getElementById('ovm-rows').innerHTML = '';
+  document.getElementById('ovm-stats').innerHTML = '';
 }
 
 // ===================== TRACKING =====================
@@ -2092,70 +2272,15 @@ function exportReport() {
 }
 
 // ===================== PICTURES =====================
-var _picMode = 'B'; // B = Trước SC, A = Sau SC
-
-function setPicMode(mode, el) {
-  _picMode = mode;
-  document.querySelectorAll('#screen-pictures .mode-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  var loai = mode === 'B' ? 'Trước sửa chữa' : 'Sau sửa chữa';
-  var prefix = mode; // B hoặc A
-  document.getElementById('pic-mode-info').className = 'alert ' + (mode === 'B' ? 'alert-info' : 'alert-ok');
-  document.getElementById('pic-mode-info-text').innerHTML =
-    'Loại ảnh: <strong>' + loai + '</strong> &nbsp;|&nbsp; ' +
-    'Tên file: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">' +
-    prefix + '_CONTNO_REFNO_001.jpg</code> &nbsp;|&nbsp; ' +
-    'Folder: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">Export_bulk_DDMMYYYY/</code>';
-  previewRefNos();
-}
-
 function initPicturesScreen() {
-  _picMode = 'B';
-  document.getElementById('pic-tab-b').classList.add('active');
-  document.getElementById('pic-tab-a').classList.remove('active');
-  // Populate carrier
+  // Populate carrier từ tariff
   var carriers = [...new Set(state.tariff.map(r => r.carrier).filter(Boolean))].sort();
   var sel = document.getElementById('pic-carrier');
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">-- Chọn Carrier --</option>' + carriers.map(c => `<option${c===cur?' selected':''}>${c}</option>`).join('');
-  // Set info bar
-  setPicMode('B', document.getElementById('pic-tab-b'));
-}
-
-function parseContList() {
-  var raw = document.getElementById('pic-cont-list').value.trim();
-  if (!raw) return [];
-  return [...new Set(
-    raw.toUpperCase().split(/[\n,;\s]+/).map(s => s.trim()).filter(s => s.length >= 4)
-  )];
-}
-
-function previewRefNos() {
-  var conts = parseContList();
-  var preview = document.getElementById('pic-ref-preview');
-  var tbody   = document.getElementById('pic-ref-rows');
-  if (!conts.length) { preview.style.display = 'none'; return; }
-
-  var prefix = _picMode; // A hoặc B
-  var rows = conts.map(function(contNo, i) {
-    var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
-    var ref = (trk && trk.ref_number) ? trk.ref_number : '—';
-    var refPart = (trk && trk.ref_number) ? trk.ref_number : '';
-    var sample = prefix + '_' + contNo + '_' + (refPart ? refPart + '_' : '') + '001.jpg';
-    var refClass = ref === '—' ? 'color:var(--amber)' : 'color:var(--green)';
-    return `<tr>
-      <td>${i+1}</td>
-      <td style="font-family:monospace">${contNo}</td>
-      <td style="font-family:monospace;${refClass}">${ref}</td>
-      <td style="font-family:monospace;font-size:10px;color:var(--gray)">${sample}</td>
-    </tr>`;
-  }).join('');
-
-  tbody.innerHTML = rows;
-  preview.style.display = 'block';
+  sel.innerHTML = '<option value="">-- Chọn Carrier --</option>' + carriers.map(c => `<option>${c}</option>`).join('');
 }
 
 function fillContFromBulk() {
+  // Lấy danh sách cont từ bulk list đang hiển thị
   var rows = document.querySelectorAll('#bulk-rows tr');
   var conts = [];
   rows.forEach(function(tr) {
@@ -2165,33 +2290,39 @@ function fillContFromBulk() {
       if (val && val.length >= 4 && val !== '—') conts.push(val);
     }
   });
-  if (!conts.length) { toast('Bulk List đang trống — hãy tải Bulk List trước!', 3000); return; }
-  conts = [...new Set(conts)];
+  if (!conts.length) {
+    toast('Bulk List đang trống — hãy tải Bulk List trước!', 3000);
+    return;
+  }
   document.getElementById('pic-cont-list').value = conts.join('\n');
   document.getElementById('pic-bulk-hint').textContent = '✓ Đã lấy ' + conts.length + ' containers từ Bulk List';
-  // Sync carrier
+
+  // Sync carrier nếu bulk list có carrier
   var carrierSet = [...new Set(state.tracking
     .filter(r => conts.includes(r.container_no))
     .map(r => r.carrier).filter(Boolean))];
-  if (carrierSet.length === 1) document.getElementById('pic-carrier').value = carrierSet[0];
-  previewRefNos();
+  if (carrierSet.length === 1) {
+    document.getElementById('pic-carrier').value = carrierSet[0];
+  }
 }
 
 async function doExportPictures() {
-  var carrier = document.getElementById('pic-carrier').value;
-  var contList = parseContList();
-  if (!carrier)        { toast('Chọn Carrier!'); return; }
-  if (!contList.length){ toast('Nhập danh sách container!'); return; }
+  var carrier  = document.getElementById('pic-carrier').value;
+  var loaiAnh  = document.getElementById('pic-loai').value;
+  var rawText  = document.getElementById('pic-cont-list').value.trim();
 
-  // Build ref map từ tracking
-  var refMap = {};
-  contList.forEach(function(contNo) {
-    var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
-    refMap[contNo] = (trk && trk.ref_number) ? trk.ref_number : '';
-  });
+  if (!carrier)  { toast('Chọn Carrier!'); return; }
+  if (!rawText)  { toast('Nhập danh sách container!'); return; }
 
-  var loaiAnh = _picMode === 'B' ? 'Trước sửa chữa' : 'Sau sửa chữa';
+  // Parse cont list — split by newline, comma, space, semicolon
+  var contList = rawText.toUpperCase()
+    .split(/[\n,;\s]+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 4);
 
+  if (!contList.length) { toast('Không có container hợp lệ!'); return; }
+
+  // UI: show progress
   document.getElementById('pic-progress').style.display = 'block';
   document.getElementById('pic-result').style.display = 'none';
   document.getElementById('pic-progress-text').textContent = 'Đang export ' + contList.length + ' containers...';
@@ -2200,9 +2331,7 @@ async function doExportPictures() {
   try {
     var res = await apiPost({
       action:    'exportPictures',
-      mode:      _picMode,
       cont_list: contList,
-      ref_map:   refMap,
       carrier:   carrier,
       loai_anh:  loaiAnh
     });
@@ -2210,21 +2339,24 @@ async function doExportPictures() {
     document.getElementById('pic-progress').style.display = 'none';
     document.getElementById('pic-export-btn').disabled = false;
 
-    if (!res.success) { toast('Lỗi: ' + res.error, 5000); return; }
+    if (!res.success) {
+      toast('Lỗi: ' + res.error, 5000);
+      return;
+    }
 
+    // Hiện kết quả
     var notFoundHtml = res.not_found && res.not_found.length
       ? `<div class="alert alert-warn" style="margin-top:10px">
           <strong>Không tìm thấy ảnh (${res.not_found.length} cont):</strong><br>
           <span style="font-family:monospace;font-size:11px">${res.not_found.join(', ')}</span>
-         </div>` : '';
+         </div>`
+      : '';
 
     var detailRows = (res.results || []).map((r, i) =>
       `<tr>
         <td>${i+1}</td>
         <td style="font-family:monospace">${r.cont}</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
         <td style="text-align:right;color:var(--blue);font-weight:500">${r.count} ảnh</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
       </tr>`
     ).join('');
 
@@ -2241,10 +2373,11 @@ async function doExportPictures() {
       ${notFoundHtml}
       <div class="tbl-wrap" style="margin-top:10px">
         <table>
-          <thead><tr><th>STT</th><th>Container</th><th>Ref No</th><th style="text-align:right">Số ảnh</th><th>Tên file mẫu</th></tr></thead>
+          <thead><tr><th>STT</th><th>Container</th><th style="text-align:right">Số ảnh</th></tr></thead>
           <tbody>${detailRows}</tbody>
         </table>
-      </div>`;
+      </div>
+    `;
     document.getElementById('pic-result').style.display = 'block';
     toast('Export xong! ' + res.total_copied + ' ảnh — ' + res.found_conts + '/' + res.total_conts + ' cont', 4000);
 
