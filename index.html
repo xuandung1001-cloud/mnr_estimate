@@ -292,7 +292,18 @@ td input:focus,td select:focus{background:#fffbeb}
             <span style="font-size:11px;color:var(--gray)">Total: <strong id="tot-total" style="color:var(--green);font-size:13px">0.00</strong></span>
           </div>
         </div>
-      </div>
+        <!-- PHOTOS TRƯỚC SỬA CHỮA -->
+        <div id="est-photos" style="display:none">
+          <div class="card">
+            <div class="card-title">
+              <span>📷 Ảnh Trước Sửa Chữa</span>
+              <span id="est-photos-label" style="font-size:10px;font-weight:400;color:var(--gray)"></span>
+            </div>
+            <div id="est-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px"></div>
+          </div>
+        </div>
+
+      </div><!-- end screen-estimate -->
 
       <!-- REVISE -->
       <div class="screen" id="screen-revise">
@@ -706,6 +717,12 @@ td input:focus,td select:focus{background:#fffbeb}
 
 <div id="toast"></div>
 
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:500;align-items:center;justify-content:center;cursor:zoom-out">
+  <img id="lightbox-img" style="max-width:92vw;max-height:92vh;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+  <div id="lightbox-name" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.7);font-size:11px;background:rgba(0,0,0,0.4);padding:3px 12px;border-radius:10px;pointer-events:none"></div>
+</div>
+
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbzZQ22ErS32LJV8dS0dVKGG3d6fhDlQxupeYQREb4pbbWjXnmHxoMPWFXNBcQmj4DmtaQ/exec';
 
@@ -946,11 +963,16 @@ function onEquipmentInput(val) {
       document.querySelectorAll('#est-rows tr td:nth-child(14) input').forEach(inp => {
         if (!inp.value) inp.value = found.carrier || '';
       });
+
+      // Load ảnh Trước Sửa Chữa
+      loadEstPhotos(val, found.carrier || '');
     } else {
       clearAutoFields();
+      clearEstPhotos();
     }
   } else {
     clearAutoFields();
+    clearEstPhotos();
   }
 }
 
@@ -959,6 +981,67 @@ function clearAutoFields() {
     document.getElementById(id).value = '';
   });
 }
+
+function clearEstPhotos() {
+  document.getElementById('est-photos').style.display = 'none';
+  document.getElementById('est-photos-grid').innerHTML = '';
+}
+
+var _estPhotosTimer = null;
+function loadEstPhotos(contNo, carrier) {
+  clearEstPhotos();
+  if (!contNo || !carrier) return;
+  // Debounce 600ms để không gọi API liên tục khi đang gõ
+  clearTimeout(_estPhotosTimer);
+  _estPhotosTimer = setTimeout(async function() {
+    var grid = document.getElementById('est-photos-grid');
+    var section = document.getElementById('est-photos');
+    var label = document.getElementById('est-photos-label');
+
+    grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:8px 0">Đang tải ảnh...</div>';
+    section.style.display = 'block';
+
+    try {
+      var res = await apiGet({
+        action:       'getPhotosByFolder',
+        container_no: contNo,
+        carrier:      carrier,
+        loai_anh:     'Trước sửa chữa'
+      });
+
+      if (!res.success || !res.photos || !res.photos.length) {
+        grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:8px 0;font-style:italic">Chưa có ảnh Trước Sửa Chữa cho container này</div>';
+        label.textContent = contNo + ' / ' + carrier;
+        return;
+      }
+
+      label.textContent = contNo + ' / ' + carrier + ' — ' + res.photos.length + ' ảnh';
+      grid.innerHTML = res.photos.map(function(p) {
+        return '<div style="position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--bg);cursor:zoom-in" onclick="openLightbox(\'' + p.url + '\',\'' + p.name.replace(/'/g,"\\'") + '\')">'
+          + '<img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+          + '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.4);color:#fff;font-size:8px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>'
+          + '</div>';
+      }).join('');
+
+    } catch(e) {
+      grid.innerHTML = '<div style="color:var(--red);font-size:11px;padding:8px 0">Lỗi tải ảnh: ' + e.message + '</div>';
+    }
+  }, 600);
+}
+
+function openLightbox(url, name) {
+  var lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox-name').textContent = name || '';
+  lb.style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+  document.getElementById('lightbox-img').src = '';
+}
+
+
 
 function addEstRow() {
   const tbody = document.getElementById('est-rows');
@@ -1153,6 +1236,7 @@ function resetEstimate() {
   document.getElementById('eq-no').value = '';
   document.getElementById('est-remarks').value = '';
   clearAutoFields();
+  clearEstPhotos();
   document.getElementById('est-date').value = todayStr();
   document.getElementById('est-rows').innerHTML = '';
   document.getElementById('est-notfound').style.display = 'none';
