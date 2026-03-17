@@ -688,23 +688,32 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="screen" id="screen-pictures">
 
         <div class="card">
-          <div class="card-title">Export Ảnh Trước Sửa Chữa → Google Drive</div>
+          <div class="card-title">Export Pictures → Google Drive</div>
+
+          <!-- Mode tabs -->
+          <div class="mode-tabs" style="margin-bottom:14px">
+            <div class="mode-tab active" id="pic-tab-a" onclick="setPicMode('A',this)">A — Trước Sửa Chữa</div>
+            <div class="mode-tab" id="pic-tab-b" onclick="setPicMode('B',this)">B — Sau Sửa Chữa <span style="font-size:10px;opacity:0.7">(sắp có)</span></div>
+          </div>
+
+          <!-- Mode A info -->
+          <div id="pic-mode-a-info" class="alert alert-info" style="margin-bottom:10px">
+            Tên file: <code style="background:#B5D4F4;padding:1px 6px;border-radius:3px">A_CONTNO_001.jpg</code> &nbsp;|&nbsp;
+            Folder: <code style="background:#B5D4F4;padding:1px 6px;border-radius:3px">Export_bulk_DDMMYYYY/</code> &nbsp;|&nbsp;
+            Tất cả cont gom chung 1 folder
+          </div>
+          <!-- Mode B info (ẩn) -->
+          <div id="pic-mode-b-info" class="alert alert-warn" style="display:none;margin-bottom:10px">
+            Tên file: <code style="background:#FAC775;padding:1px 6px;border-radius:3px">B_REFNO_CONTNO_001.jpg</code> &nbsp;|&nbsp;
+            Tính năng này sẽ được bổ sung sau khi có OVM data.
+          </div>
 
           <!-- Carrier -->
-          <div class="form-grid grid-2" style="margin-bottom:10px">
-            <div class="fg">
-              <div class="fl">Carrier *</div>
-              <select class="fi" id="pic-carrier">
-                <option value="">-- Chọn Carrier --</option>
-              </select>
-            </div>
-            <div class="fg">
-              <div class="fl">Loại ảnh</div>
-              <select class="fi" id="pic-loai">
-                <option value="Trước sửa chữa">Trước sửa chữa</option>
-                <option value="Sau sửa chữa">Sau sửa chữa</option>
-              </select>
-            </div>
+          <div class="fg" style="margin-bottom:10px">
+            <div class="fl">Carrier *</div>
+            <select class="fi" id="pic-carrier" style="max-width:200px">
+              <option value="">-- Chọn Carrier --</option>
+            </select>
           </div>
 
           <!-- Cont list -->
@@ -715,8 +724,8 @@ td input:focus,td select:focus{background:#fffbeb}
               style="resize:vertical;font-family:monospace;font-size:12px;letter-spacing:0.5px"></textarea>
           </div>
 
-          <!-- Hoặc lấy từ Bulk List -->
-          <div style="margin-bottom:12px">
+          <!-- Lấy từ Bulk List -->
+          <div style="margin-bottom:14px">
             <button class="btn btn-sm" onclick="fillContFromBulk()">📋 Lấy từ Bulk List hiện tại</button>
             <span id="pic-bulk-hint" style="font-size:11px;color:var(--gray);margin-left:8px"></span>
           </div>
@@ -725,7 +734,9 @@ td input:focus,td select:focus{background:#fffbeb}
             <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">
               📂 Export lên Drive
             </button>
-            <span style="font-size:11px;color:var(--gray)">Ảnh sẽ được copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_DDMMYYYY_HHMMSS/</code></span>
+            <span style="font-size:11px;color:var(--gray)">
+              Ảnh copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_bulk_DDMMYYYY/</code>
+            </span>
           </div>
         </div>
 
@@ -2071,15 +2082,31 @@ function exportReport() {
 }
 
 // ===================== PICTURES =====================
+// ===================== PICTURES =====================
+var _picMode = 'A';
+
+function setPicMode(mode, el) {
+  _picMode = mode;
+  document.querySelectorAll('#screen-pictures .mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pic-mode-a-info').style.display = mode === 'A' ? 'block' : 'none';
+  document.getElementById('pic-mode-b-info').style.display = mode === 'B' ? 'block' : 'none';
+  document.getElementById('pic-export-btn').disabled = mode === 'B';
+}
+
 function initPicturesScreen() {
-  // Populate carrier từ tariff
   var carriers = [...new Set(state.tariff.map(r => r.carrier).filter(Boolean))].sort();
   var sel = document.getElementById('pic-carrier');
   sel.innerHTML = '<option value="">-- Chọn Carrier --</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+  _picMode = 'A';
+  document.getElementById('pic-tab-a').classList.add('active');
+  document.getElementById('pic-tab-b').classList.remove('active');
+  document.getElementById('pic-mode-a-info').style.display = 'block';
+  document.getElementById('pic-mode-b-info').style.display = 'none';
+  document.getElementById('pic-export-btn').disabled = false;
 }
 
 function fillContFromBulk() {
-  // Lấy danh sách cont từ bulk list đang hiển thị
   var rows = document.querySelectorAll('#bulk-rows tr');
   var conts = [];
   rows.forEach(function(tr) {
@@ -2089,39 +2116,32 @@ function fillContFromBulk() {
       if (val && val.length >= 4 && val !== '—') conts.push(val);
     }
   });
-  if (!conts.length) {
-    toast('Bulk List đang trống — hãy tải Bulk List trước!', 3000);
-    return;
-  }
+  if (!conts.length) { toast('Bulk List đang trống — hãy tải Bulk List trước!', 3000); return; }
+  // Deduplicate
+  conts = [...new Set(conts)];
   document.getElementById('pic-cont-list').value = conts.join('\n');
   document.getElementById('pic-bulk-hint').textContent = '✓ Đã lấy ' + conts.length + ' containers từ Bulk List';
-
-  // Sync carrier nếu bulk list có carrier
+  // Sync carrier
   var carrierSet = [...new Set(state.tracking
     .filter(r => conts.includes(r.container_no))
     .map(r => r.carrier).filter(Boolean))];
-  if (carrierSet.length === 1) {
-    document.getElementById('pic-carrier').value = carrierSet[0];
-  }
+  if (carrierSet.length === 1) document.getElementById('pic-carrier').value = carrierSet[0];
 }
 
 async function doExportPictures() {
-  var carrier  = document.getElementById('pic-carrier').value;
-  var loaiAnh  = document.getElementById('pic-loai').value;
-  var rawText  = document.getElementById('pic-cont-list').value.trim();
+  if (_picMode === 'B') { toast('Mode B chưa hỗ trợ!', 3000); return; }
 
-  if (!carrier)  { toast('Chọn Carrier!'); return; }
-  if (!rawText)  { toast('Nhập danh sách container!'); return; }
+  var carrier = document.getElementById('pic-carrier').value;
+  var rawText = document.getElementById('pic-cont-list').value.trim();
 
-  // Parse cont list — split by newline, comma, space, semicolon
-  var contList = rawText.toUpperCase()
-    .split(/[\n,;\s]+/)
-    .map(s => s.trim())
-    .filter(s => s.length >= 4);
+  if (!carrier) { toast('Chọn Carrier!'); return; }
+  if (!rawText) { toast('Nhập danh sách container!'); return; }
 
+  var contList = [...new Set(
+    rawText.toUpperCase().split(/[\n,;\s]+/).map(s => s.trim()).filter(s => s.length >= 4)
+  )];
   if (!contList.length) { toast('Không có container hợp lệ!'); return; }
 
-  // UI: show progress
   document.getElementById('pic-progress').style.display = 'block';
   document.getElementById('pic-result').style.display = 'none';
   document.getElementById('pic-progress-text').textContent = 'Đang export ' + contList.length + ' containers...';
@@ -2130,32 +2150,29 @@ async function doExportPictures() {
   try {
     var res = await apiPost({
       action:    'exportPictures',
+      mode:      _picMode,
       cont_list: contList,
       carrier:   carrier,
-      loai_anh:  loaiAnh
+      loai_anh:  'Trước sửa chữa'
     });
 
     document.getElementById('pic-progress').style.display = 'none';
     document.getElementById('pic-export-btn').disabled = false;
 
-    if (!res.success) {
-      toast('Lỗi: ' + res.error, 5000);
-      return;
-    }
+    if (!res.success) { toast('Lỗi: ' + res.error, 5000); return; }
 
-    // Hiện kết quả
     var notFoundHtml = res.not_found && res.not_found.length
       ? `<div class="alert alert-warn" style="margin-top:10px">
           <strong>Không tìm thấy ảnh (${res.not_found.length} cont):</strong><br>
           <span style="font-family:monospace;font-size:11px">${res.not_found.join(', ')}</span>
-         </div>`
-      : '';
+         </div>` : '';
 
     var detailRows = (res.results || []).map((r, i) =>
       `<tr>
         <td>${i+1}</td>
         <td style="font-family:monospace">${r.cont}</td>
         <td style="text-align:right;color:var(--blue);font-weight:500">${r.count} ảnh</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">A_${r.cont}_001 → A_${r.cont}_${String(r.count).padStart(3,'0')}</td>
       </tr>`
     ).join('');
 
@@ -2172,11 +2189,10 @@ async function doExportPictures() {
       ${notFoundHtml}
       <div class="tbl-wrap" style="margin-top:10px">
         <table>
-          <thead><tr><th>STT</th><th>Container</th><th style="text-align:right">Số ảnh</th></tr></thead>
+          <thead><tr><th>STT</th><th>Container</th><th style="text-align:right">Số ảnh</th><th>Tên file</th></tr></thead>
           <tbody>${detailRows}</tbody>
         </table>
-      </div>
-    `;
+      </div>`;
     document.getElementById('pic-result').style.display = 'block';
     toast('Export xong! ' + res.total_copied + ' ảnh — ' + res.found_conts + '/' + res.total_conts + ' cont', 4000);
 
