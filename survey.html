@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MNR Survey</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --blue: #185FA5;
+  --blue-light: #E6F1FB;
+  --green: #2D7A3A;
+  --green-light: #EAF3DE;
+  --red: #C0392B;
+  --red-light: #FCEBEB;
+  --amber: #B7610A;
+  --amber-light: #FDF3E3;
+  --gray: #6B7280;
+  --border: #E5E7EB;
+  --bg: #F3F4F6;
+  --white: #FFFFFF;
+  --text: #1F2937;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+}
+
+.login-box {
+  background: white;
+  border-radius: 20px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-logo .app-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: -0.5px;
+}
+
+.login-logo .app-sub {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+.login-logo .survey-badge {
+  display: inline-block;
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 6px;
+}
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus { border-color: var(--blue); }
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.btn-login:active { opacity: 0.8; }
+.login-err { color: var(--red); font-size: 12px; text-align: center; margin-top: 10px; min-height: 16px; }
+
+/* MAIN APP */
+#app { display: none; }
+
+/* TOPBAR */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--blue);
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-user { font-size: 11px; opacity: 0.8; }
+.btn-logout {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* CONTENT */
+.content { padding: 16px; }
+
+/* CONT INPUT */
+.cont-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.cont-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.cont-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.cont-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  outline: none;
+  letter-spacing: 1px;
+}
+
+.cont-input:focus { border-color: var(--blue); }
+
+.btn-set {
+  padding: 12px 18px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* CONT INFO */
+.cont-info {
+  display: none;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--blue-light);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.cont-info-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.cont-info-item { }
+.cont-info-item .label { color: var(--gray); font-size: 10px; }
+.cont-info-item .value { font-weight: 600; color: var(--blue); }
+
+/* CAMERA SECTION */
+.camera-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: none;
+}
+
+.camera-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.camera-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.photo-counter {
+  font-size: 12px;
+  color: var(--gray);
+  background: var(--bg);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* BIG CAPTURE BUTTON */
+.capture-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.btn-capture {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 4px solid white;
+  box-shadow: 0 0 0 3px var(--blue), 0 4px 16px rgba(24,95,165,0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.btn-capture:active { transform: scale(0.92); }
+
+.btn-capture svg { width: 32px; height: 32px; fill: white; }
+
+.btn-gallery {
+  padding: 10px 20px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  width: 100%;
+}
+
+input[type="file"] { display: none; }
+
+/* PHOTO GRID */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-item .del-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.photo-item .status-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.status-uploading { background: rgba(255,193,7,0.9); color: #000; }
+.status-done      { background: rgba(46,160,67,0.9); color: #fff; }
+.status-error     { background: rgba(192,57,43,0.9); color: #fff; }
+
+/* PROGRESS */
+.upload-progress {
+  display: none;
+  background: var(--amber-light);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-bottom: 6px;
+}
+
+.progress-bar-wrap {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  height: 5px;
+}
+
+.progress-bar {
+  background: var(--amber);
+  height: 5px;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* DRIVE LINK */
+.drive-link {
+  display: none;
+  background: var(--green-light);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.drive-link a {
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1F2937;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1000;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="app-name">MNR Estimate</div>
+      <div class="app-sub">Cảng Thạnh Phước</div>
+      <div class="survey-badge">📷 Survey Mode</div>
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Key</label>
+      <input type="password" id="login-pass" placeholder="••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📷 Survey Upload</div>
+      <div class="topbar-user" id="topbar-user">—</div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+  </div>
+
+  <div class="content">
+
+    <!-- CONT INPUT -->
+    <div class="cont-card">
+      <div class="cont-label">Số Container</div>
+      <div class="cont-input-row">
+        <input type="text" class="cont-input" id="cont-no"
+          placeholder="CAIU1234567"
+          maxlength="11"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') setCont()">
+        <button class="btn-set" onclick="setCont()">OK</button>
+      </div>
+      <div class="cont-info" id="cont-info">
+        <div class="cont-info-row">
+          <div class="cont-info-item">
+            <div class="label">CARRIER</div>
+            <div class="value" id="info-carrier">—</div>
+          </div>
+          <div class="cont-info-item">
+            <div class="label">SIZE</div>
+            <div class="value" id="info-size">—</div>
+          </div>
+          <div class="cont-info-item">
+            <div class="label">GRADE</div>
+            <div class="value" id="info-grade">—</div>
+          </div>
+          <div class="cont-info-item">
+            <div class="label">STATUS</div>
+            <div class="value" id="info-status">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMERA -->
+    <div class="camera-card" id="camera-card">
+      <div class="camera-header">
+        <div class="camera-title">Ảnh Survey — Trước sửa chữa</div>
+        <div class="photo-counter" id="photo-counter">0 ảnh</div>
+      </div>
+
+      <div class="capture-area">
+        <button class="btn-capture" onclick="document.getElementById('cam-input').click()" title="Chụp ảnh">
+          <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 3L7.17 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9zm3 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+        </button>
+        <button class="btn-gallery" onclick="document.getElementById('gallery-input').click()">
+          📁 Chọn từ thư viện
+        </button>
+      </div>
+
+      <!-- Hidden file inputs -->
+      <input type="file" id="cam-input" accept="image/*" capture="environment" onchange="handleFiles(this)">
+      <input type="file" id="gallery-input" accept="image/*" multiple onchange="handleFiles(this)">
+
+      <!-- Photo grid -->
+      <div class="photo-grid" id="photo-grid"></div>
+
+      <!-- Upload progress -->
+      <div class="upload-progress" id="upload-progress">
+        <div class="progress-text" id="progress-text">Đang upload...</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Drive link -->
+      <div class="drive-link" id="drive-link">
+        <a id="drive-link-a" href="#" target="_blank">📂 Mở thư mục Drive</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzZQ22ErS32LJV8dS0dVKGG3d6fhDlQxupeYQREb4pbbWjXnmHxoMPWFXNBcQmj4DmtaQ/exec';
+
+var state = { user: null, stock: [], contNo: '', carrier: '', photos: [] };
+
+// ===================== API =====================
+async function apiGet(params) {
+  var url = API + '?' + new URLSearchParams(params);
+  var res = await fetch(url);
+  var text = await res.text();
+  try { return JSON.parse(text); } catch(e) { return { success: false, error: e.message }; }
+}
+
+async function apiPost(data) {
+  var res = await fetch(API, { method: 'POST', body: JSON.stringify(data) });
+  var text = await res.text();
+  try { return JSON.parse(text); } catch(e) { return { success: false, error: e.message }; }
+}
+
+// ===================== TOAST =====================
+function toast(msg, dur) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, dur || 2500);
+}
+
+// ===================== LOGIN =====================
+window.addEventListener('load', function() {
+  try {
+    var saved = localStorage.getItem('mnr_session');
+    if (saved) {
+      var session = JSON.parse(saved);
+      if (session && session.expiry) {
+        var parts = session.expiry.split('/');
+        var expiry = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+        expiry.setHours(23,59,59,0);
+        if (new Date() <= expiry) {
+          state.user = session;
+          showApp();
+          return;
+        }
+      }
+    }
+  } catch(e) {}
+  localStorage.removeItem('mnr_session');
+});
+
+async function doLogin() {
+  var user = document.getElementById('login-user').value.trim();
+  var pass = document.getElementById('login-pass').value.trim();
+  if (!user || !pass) { document.getElementById('login-err').textContent = 'Nhập đủ thông tin!'; return; }
+  document.getElementById('login-err').textContent = 'Đang đăng nhập...';
+  try {
+    var res = await apiPost({ action: 'login', username: user, password: pass });
+    if (res.success) {
+      state.user = res.user;
+      localStorage.setItem('mnr_session', JSON.stringify(res.user));
+      showApp();
+    } else {
+      document.getElementById('login-err').textContent = res.error || 'Sai thông tin đăng nhập';
+    }
+  } catch(e) {
+    document.getElementById('login-err').textContent = 'Lỗi kết nối: ' + e.message;
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbar-user').textContent = state.user.fullname || state.user.username;
+  // Load stock
+  apiGet({ action: 'getEmtyStock' }).then(function(res) {
+    if (res.success) state.stock = res.data;
+  });
+}
+
+function doLogout() {
+  localStorage.removeItem('mnr_session');
+  location.reload();
+}
+
+// ===================== CONT =====================
+function setCont() {
+  var val = document.getElementById('cont-no').value.trim().toUpperCase();
+  if (val.length < 4) { toast('Nhập số container!'); return; }
+  state.contNo = val;
+  state.photos = [];
+  document.getElementById('photo-grid').innerHTML = '';
+  document.getElementById('photo-counter').textContent = '0 ảnh';
+  document.getElementById('drive-link').style.display = 'none';
+  document.getElementById('upload-progress').style.display = 'none';
+
+  // Lookup stock
+  var si = state.stock.find(function(r) {
+    return (r.equipment_no || '').toUpperCase() === val;
+  });
+  if (si) {
+    document.getElementById('info-carrier').textContent = si.carrier || '—';
+    document.getElementById('info-size').textContent    = si.size_type || '—';
+    document.getElementById('info-grade').textContent   = si.grade || '—';
+    document.getElementById('info-status').textContent  = si.container_status || '—';
+    document.getElementById('cont-info').style.display  = 'block';
+    state.carrier = si.carrier || 'UNKNOWN';
+  } else {
+    document.getElementById('cont-info').style.display = 'none';
+    state.carrier = 'UNKNOWN';
+  }
+
+  document.getElementById('camera-card').style.display = 'block';
+  toast('Container: ' + val);
+}
+
+// ===================== PHOTOS =====================
+function handleFiles(input) {
+  var files = Array.from(input.files);
+  if (!files.length) return;
+  toast('Đang xử lý ' + files.length + ' ảnh...');
+  files.forEach(function(file) {
+    resizeImage(file, 1200, 0.8, function(base64, dataUrl) {
+      var photo = {
+        name:   file.name || ('photo_' + Date.now() + '.jpg'),
+        base64: base64,
+        mime:   file.type || 'image/jpeg',
+        dataUrl: dataUrl,
+        status: 'pending' // pending, uploading, done, error
+      };
+      state.photos.push(photo);
+      var idx = state.photos.length - 1;
+      renderPhoto(photo, idx);
+      updateCounter();
+      // Upload ngay
+      uploadPhoto(photo, idx);
+    });
+  });
+  input.value = '';
+}
+
+function resizeImage(file, maxSize, quality, callback) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      callback(dataUrl.split(',')[1], dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPhoto(photo, idx) {
+  var grid = document.getElementById('photo-grid');
+  var div = document.createElement('div');
+  div.className = 'photo-item';
+  div.id = 'photo-item-' + idx;
+  div.innerHTML =
+    '<img src="' + photo.dataUrl + '">' +
+    '<button class="del-btn" onclick="removePhoto(' + idx + ')">×</button>' +
+    '<div class="status-badge status-uploading" id="badge-' + idx + '">Đang upload</div>';
+  grid.appendChild(div);
+}
+
+function updateCounter() {
+  document.getElementById('photo-counter').textContent = state.photos.length + ' ảnh';
+}
+
+function removePhoto(idx) {
+  var el = document.getElementById('photo-item-' + idx);
+  if (el) el.remove();
+  state.photos[idx] = null;
+  updateCounter();
+}
+
+async function uploadPhoto(photo, idx) {
+  if (!state.contNo) return;
+
+  var badge = document.getElementById('badge-' + idx);
+  if (badge) { badge.textContent = 'Đang upload'; badge.className = 'status-badge status-uploading'; }
+
+  var today = new Date();
+  var dd = String(today.getDate()).padStart(2,'0');
+  var mm = String(today.getMonth()+1).padStart(2,'0');
+  var yyyy = today.getFullYear();
+  var dateStr = dd + mm + yyyy;
+
+  try {
+    var res = await apiPost({
+      action:       'uploadImage',
+      container_no: state.contNo,
+      carrier:      state.carrier,
+      date_str:     dateStr,
+      file_name:    photo.name,
+      base64:       photo.base64,
+      mime_type:    photo.mime
+    });
+
+    if (res.success) {
+      if (badge) { badge.textContent = '✓ Xong'; badge.className = 'status-badge status-done'; }
+      photo.status = 'done';
+      // Hiện drive link
+      if (res.folder_url) {
+        var driveDiv = document.getElementById('drive-link');
+        document.getElementById('drive-link-a').href = res.folder_url;
+        driveDiv.style.display = 'block';
+      }
+    } else {
+      if (badge) { badge.textContent = '✗ Lỗi'; badge.className = 'status-badge status-error'; }
+      photo.status = 'error';
+      toast('Lỗi upload: ' + (res.error || 'Unknown'));
+    }
+  } catch(e) {
+    if (badge) { badge.textContent = '✗ Lỗi'; badge.className = 'status-badge status-error'; }
+    photo.status = 'error';
+    toast('Lỗi kết nối: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
