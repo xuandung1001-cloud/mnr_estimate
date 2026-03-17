@@ -1514,8 +1514,8 @@ async function handleOvmFile(input) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
+      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: false });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
       if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
 
       // Cột cố định theo format file OVM hãng tàu
@@ -1530,22 +1530,17 @@ async function handleOvmFile(input) {
         var appDate   = row[21];
         var appDateStr = '';
         if (appDate) {
-          if (appDate instanceof Date) {
-            // Date object — dùng UTC để tránh lệch timezone
-            appDateStr = String(appDate.getUTCDate()).padStart(2,'0') + '/' +
-                         String(appDate.getUTCMonth()+1).padStart(2,'0') + '/' +
-                         appDate.getUTCFullYear();
-          } else {
-            // String dạng "M/D/YYYY h:mm:ss AM" hoặc "M/D/YYYY"
-            var s = String(appDate).trim();
-            var datePart = s.split(' ')[0]; // lấy phần ngày trước space
-            var parts = datePart.split('/');
-            if (parts.length === 3) {
-              var m = parseInt(parts[0]), d = parseInt(parts[1]), y = parseInt(parts[2]);
-              appDateStr = String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0') + '/' + y;
-            } else {
-              appDateStr = s;
-            }
+          // raw:false → SheetJS trả string "M/D/YYYY h:mm:ss AM" hoặc Date object
+          var s = (appDate instanceof Date)
+            ? (appDate.getMonth()+1) + '/' + appDate.getDate() + '/' + appDate.getFullYear()
+            : String(appDate).trim();
+          var datePart = s.split(' ')[0]; // bỏ phần giờ
+          var parts = datePart.split('/');
+          if (parts.length === 3) {
+            var mo = parseInt(parts[0]), dy = parseInt(parts[1]), yr = parseInt(parts[2]);
+            if (yr < 100) yr += 2000;
+            // File OVM format Mỹ M/D/YYYY → convert dd/MM/yyyy
+            appDateStr = String(dy).padStart(2,'0') + '/' + String(mo).padStart(2,'0') + '/' + yr;
           }
         }
 
