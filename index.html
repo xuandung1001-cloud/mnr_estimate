@@ -309,7 +309,7 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="screen" id="screen-revise">
         <div class="alert alert-warn">Chỉnh sửa estimate sau khi Carrier đã Partially Approved — các thay đổi sẽ ghi vào cột Approve bên Estimates</div>
         <div class="card">
-          <div class="form-grid grid-3">
+          <div class="form-grid grid-4">
             <div class="fg">
               <div class="fl">Equipment No * (nhập để load)</div>
               <input class="fi" id="rev-eq" placeholder="Nhập số cont..." oninput="onReviseInput(this.value)">
@@ -321,6 +321,10 @@ td input:focus,td select:focus{background:#fffbeb}
             <div class="fg">
               <div class="fl fl-blue">Carrier</div>
               <input class="fi fi-auto" id="rev-carrier" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Size Type</div>
+              <input class="fi fi-auto" id="rev-size" readonly placeholder="—">
             </div>
           </div>
           <div class="fg">
@@ -349,12 +353,13 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:52px" class="td-auto">Hours</th>
                   <th style="width:60px" class="td-auto">Material</th>
                   <th style="width:58px" class="td-auto">Labour</th>
+                  <th style="width:65px">Total Est.</th>
                   <th style="width:65px" class="td-total">Total App.</th>
                   <th style="width:100px">Remark</th>
                 </tr>
               </thead>
               <tbody id="rev-rows">
-                <tr><td colspan="14" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
+                <tr><td colspan="15" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
               </tbody>
             </table>
           </div>
@@ -362,6 +367,7 @@ td input:focus,td select:focus{background:#fffbeb}
             <span style="font-size:11px;color:var(--gray)">Total Hours: <strong id="rev-tot-hours" style="color:var(--blue)">0.00</strong></span>
             <span style="font-size:11px;color:var(--gray)">Material: <strong id="rev-tot-mat" style="color:var(--blue)">0.00</strong></span>
             <span style="font-size:11px;color:var(--gray)">Labour: <strong id="rev-tot-lab" style="color:var(--blue)">0.00</strong></span>
+            <span style="font-size:11px;color:var(--gray)">Total Est.: <strong id="rev-tot-est" style="color:var(--gray)">0.00</strong></span>
             <span style="font-size:11px;color:var(--gray)">Total App.: <strong id="rev-tot-total" style="color:var(--green);font-size:13px">0.00</strong></span>
           </div>
         </div>
@@ -1415,39 +1421,40 @@ async function saveEstimate() {
 async function onReviseInput(val) {
   val = val.trim().toUpperCase();
   if (val.length < 4) return;
-  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="14" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   const res = await apiGet({ action: 'getEstimates', container_no: val });
   if (res.success && res.data.length > 0) {
     const first = res.data[0];
-    document.getElementById('rev-app-date').value  = formatDate(first.approval_date) || '';
-    document.getElementById('rev-carrier').value   = first.carrier || '';
+    document.getElementById('rev-app-date').value = formatDate(first.approval_date) || '';
+    document.getElementById('rev-carrier').value  = first.carrier   || '';
+    document.getElementById('rev-size').value     = first.size_type || '';
 
     const tbody = document.getElementById('rev-rows');
     tbody.innerHTML = '';
     res.data.forEach((r, i) => {
       const tr = document.createElement('tr');
       tr.dataset.seq = r.repair_seq;
-      // Dùng app_* nếu đã có, fallback về estimate gốc
       const dl  = r.app_damage_location || r.damage_location || '';
       const co  = r.app_component       || r.component       || '';
       const dt  = r.app_damage_type     || r.damage_type     || '';
       const rt  = r.app_repair_type     || r.repair_type     || '';
-      const len = r.app_length          || r.length          || '';
-      const wid = r.app_width           || r.width           || '';
+      const len = r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length || '');
+      const wid = r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width  || '');
       const uni = r.app_unit            || r.unit            || '';
       const qty = r.app_quantity        || r.quantity        || 1;
       const h   = parseFloat(r.app_labour_hours  || r.labour_hours  || 0).toFixed(2);
       const m   = parseFloat(r.app_material_cost || r.material_cost || 0).toFixed(2);
       const l   = parseFloat(r.app_labour_cost   || r.labour_cost   || 0).toFixed(2);
-      const tot = parseFloat(r.app_total_approved|| r.total_cost    || 0).toFixed(2);
+      const est = parseFloat(r.total_cost || 0).toFixed(2);  // Total Est gốc
+      const tot = parseFloat(r.app_total_approved || r.total_cost || 0).toFixed(2);
       const rem = r.app_remark_details || '';
 
       tr.innerHTML = `
         <td>${i+1}</td>
         <td><input value="${dl}" placeholder="IXXX" onblur="lookupRevise(this.closest('tr'))"></td>
-        <td><input value="${co}" placeholder="MCO" onblur="lookupRevise(this.closest('tr'))"></td>
-        <td><input value="${dt}" placeholder="DY"  onblur="lookupRevise(this.closest('tr'))"></td>
-        <td><input value="${rt}" placeholder="WP"  onblur="lookupRevise(this.closest('tr'))"></td>
+        <td><input value="${co}" placeholder="MCO"  onblur="lookupRevise(this.closest('tr'))"></td>
+        <td><input value="${dt}" placeholder="DY"   onblur="lookupRevise(this.closest('tr'))"></td>
+        <td><input value="${rt}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))"></td>
         <td><input value="${len}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
         <td><input value="${wid}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
         <td><input value="${uni}" placeholder="QTY" onblur="lookupRevise(this.closest('tr'))"></td>
@@ -1455,6 +1462,7 @@ async function onReviseInput(val) {
         <td class="td-auto"><span class="rv-h">${h}</span></td>
         <td class="td-auto"><span class="rv-m">${m}</span></td>
         <td class="td-auto"><span class="rv-l">${l}</span></td>
+        <td style="text-align:right;color:var(--gray);font-size:11px"><span class="rv-e">${est}</span></td>
         <td class="td-total"><span class="rv-t">${tot}</span></td>
         <td><input placeholder="Ghi chú..." value="${rem}"></td>
       `;
@@ -1464,32 +1472,32 @@ async function onReviseInput(val) {
     document.getElementById('rev-total-row').style.display = 'flex';
     calcReviseTotal();
   } else {
-    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
+    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
     document.getElementById('rev-total-row').style.display = 'none';
   }
 }
 
 function lookupRevise(row) {
-  const carrier = document.getElementById('rev-carrier').value.trim().toUpperCase();
-  const inputs  = row.querySelectorAll('input');
-  // inputs: 0=DmgLoc,1=Comp,2=DmgType,3=RepType,4=Length,5=Width,6=Unit,7=Qty
-  const dmgLoc  = inputs[0].value.trim().toUpperCase();
-  const comp    = inputs[1].value.trim().toUpperCase();
-  const dmgType = inputs[2].value.trim().toUpperCase();
-  const repType = inputs[3].value.trim().toUpperCase();
-  const lenVal  = parseFloat(inputs[4].value) || 0;
-  const widVal  = parseFloat(inputs[5].value) || 0;
-  const unit    = inputs[6].value.trim().toUpperCase();
-  const qty     = parseFloat(inputs[7].value) || 1;
+  const carrier  = document.getElementById('rev-carrier').value.trim().toUpperCase();
+  const szType   = document.getElementById('rev-size').value.trim().toUpperCase();
+  const inputs   = row.querySelectorAll('input');
+  const dmgLoc   = inputs[0].value.trim().toUpperCase();
+  const comp     = inputs[1].value.trim().toUpperCase();
+  const dmgType  = inputs[2].value.trim().toUpperCase();
+  const repType  = inputs[3].value.trim().toUpperCase();
+  const lenVal   = parseFloat(inputs[4].value) || 0;
+  const widVal   = parseFloat(inputs[5].value) || 0;
+  const unit     = inputs[6].value.trim().toUpperCase();
+  const qty      = parseFloat(inputs[7].value) || 1;
 
-  if (!dmgLoc || !comp) return;
+  if (!comp) return;
 
-  // Dùng lại hàm lookupTariff logic — tìm trong state.tariff
-  const tariff = state.tariff;
-  const match  = tariff.find(function(t) {
+  // Lookup tariff với carrier + size_type
+  const match = state.tariff.find(function(t) {
     if (carrier && t.carrier && t.carrier.toUpperCase() !== carrier) return false;
+    if (szType && t.size_type && !t.size_type.toUpperCase().includes(szType) && !szType.includes(t.size_type.toUpperCase())) return false;
     if (t.component && t.component.toUpperCase() !== comp) return false;
-    if (t.damage_type && t.damage_type.toUpperCase() !== dmgType) return false;
+    if (dmgType && t.damage_type && t.damage_type.toUpperCase() !== dmgType) return false;
     if (repType && t.repair_type && t.repair_type.toUpperCase() !== repType) return false;
     if (unit && t.unit && t.unit.toUpperCase() !== unit) return false;
     return true;
@@ -1509,16 +1517,18 @@ function lookupRevise(row) {
 }
 
 function calcReviseTotal() {
-  let totH = 0, totM = 0, totL = 0, totT = 0;
+  let totH = 0, totM = 0, totL = 0, totE = 0, totT = 0;
   document.querySelectorAll('#rev-rows tr').forEach(function(row) {
     totH += parseFloat(row.querySelector('.rv-h')?.textContent || 0);
     totM += parseFloat(row.querySelector('.rv-m')?.textContent || 0);
     totL += parseFloat(row.querySelector('.rv-l')?.textContent || 0);
+    totE += parseFloat(row.querySelector('.rv-e')?.textContent || 0);
     totT += parseFloat(row.querySelector('.rv-t')?.textContent || 0);
   });
   document.getElementById('rev-tot-hours').textContent = round2(totH).toFixed(2);
   document.getElementById('rev-tot-mat').textContent   = round2(totM).toFixed(2);
   document.getElementById('rev-tot-lab').textContent   = round2(totL).toFixed(2);
+  document.getElementById('rev-tot-est').textContent   = round2(totE).toFixed(2);
   document.getElementById('rev-tot-total').textContent = round2(totT).toFixed(2);
 }
 
@@ -1526,8 +1536,9 @@ function resetRevise() {
   document.getElementById('rev-eq').value       = '';
   document.getElementById('rev-app-date').value = '';
   document.getElementById('rev-carrier').value  = '';
+  document.getElementById('rev-size').value     = '';
   document.getElementById('rev-remarks').value  = '';
-  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="14" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="15" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
   document.getElementById('rev-total-row').style.display = 'none';
 }
 
@@ -1561,15 +1572,14 @@ async function saveRevise() {
   toast('Đang lưu Revise...');
   try {
     const res = await apiPost({
-      action:           'saveRevise',
-      container_no:     eqNo,
-      approval_status:  'Partially Approved',
-      approved_date:    document.getElementById('rev-app-date').value,
-      remarks:          document.getElementById('rev-remarks').value,
+      action:          'saveRevise',
+      container_no:    eqNo,
+      approval_status: 'Partially Approved',
+      approved_date:   document.getElementById('rev-app-date').value,
+      remarks:         document.getElementById('rev-remarks').value,
       lines
     });
     if (res.success) {
-      // Reload tracking
       const trkRes = await apiGet({ action: 'getTracking' });
       if (trkRes.success) state.tracking = trkRes.data;
       toast('Đã lưu Revise thành công!', 3000);
