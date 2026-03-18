@@ -947,11 +947,13 @@ async function loadInitialData() {
   const m = new Date().getMonth();
   document.getElementById('rpt-month').selectedIndex = m;
 
-  toast('Đang tải dữ liệu...');
+  const hasCachedTariff = !!localStorage.getItem('mnr_tariff');
+  const hasCachedStock  = !!localStorage.getItem('mnr_stock');
+  if (!hasCachedTariff || !hasCachedStock) toast('Đang tải dữ liệu...');
 
   // Tariff & Stock: cache sessionStorage — chỉ fetch lần đầu mỗi session
   try {
-    const cachedTariff = sessionStorage.getItem('mnr_tariff');
+    const cachedTariff = localStorage.getItem('mnr_tariff');
     if (cachedTariff) {
       state.tariff = JSON.parse(cachedTariff);
       console.log('Tariff from cache:', state.tariff.length);
@@ -959,14 +961,14 @@ async function loadInitialData() {
       var tariffRes = await apiGet({ action: 'getTariff' });
       if (tariffRes && tariffRes.success) {
         state.tariff = tariffRes.data;
-        sessionStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
+        localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
         console.log('Tariff fetched:', state.tariff.length);
       }
     }
   } catch(e) { console.error('Tariff load error:', e); }
 
   try {
-    const cachedStock = sessionStorage.getItem('mnr_stock');
+    const cachedStock = localStorage.getItem('mnr_stock');
     if (cachedStock) {
       state.stock = JSON.parse(cachedStock);
       console.log('Stock from cache:', state.stock.length);
@@ -974,7 +976,7 @@ async function loadInitialData() {
       var stockRes = await apiGet({ action: 'getEmtyStock' });
       if (stockRes && stockRes.success) {
         state.stock = stockRes.data;
-        sessionStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+        localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
         console.log('Stock fetched:', state.stock.length);
       }
     }
@@ -989,7 +991,9 @@ async function loadInitialData() {
     if (sumRes && sumRes.success) { state.summary = sumRes.data; }
   } catch(e) { console.error('Summary load error:', e); }
 
-  toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
+  if (!hasCachedTariff || !hasCachedStock) {
+    toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
+  }
 
   // Add first estimate row
   addEstRow();
@@ -2922,19 +2926,19 @@ function renderTariffScreen() {
 }
 
 async function refreshCache() {
-  sessionStorage.removeItem('mnr_tariff');
-  sessionStorage.removeItem('mnr_stock');
+  localStorage.removeItem('mnr_tariff');
+  localStorage.removeItem('mnr_stock');
   toast('Đang tải lại Tariff + Stock...');
   try {
     var tariffRes = await apiGet({ action: 'getTariff' });
     if (tariffRes && tariffRes.success) {
       state.tariff = tariffRes.data;
-      sessionStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
+      localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
     }
     var stockRes = await apiGet({ action: 'getEmtyStock' });
     if (stockRes && stockRes.success) {
       state.stock = stockRes.data;
-      sessionStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
     }
     filterTariff();
     toast('Đã tải lại: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
