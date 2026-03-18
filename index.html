@@ -1666,6 +1666,7 @@ async function saveRevise() {
     const seq   = row.dataset.seq;
     const isNew = String(seq).indexOf('new_') === 0;
     let lineStatus = sel?.value || 'Partially Approved';
+    // Logic tự động: nếu không sửa so với est gốc → Approved, có sửa → Partially Approved
     if (!isNew && lineStatus !== 'Rejected') {
       const orig = _revOrigData[seq];
       if (orig) {
@@ -1699,7 +1700,8 @@ async function saveRevise() {
     });
   });
   if (!lines.length) { toast('Chưa có hạng mục!'); return; }
-  const contStatus = lines.every(l => l.approval_status === 'Approved') ? 'Approved' : 'Partially Approved';
+  // Cont status: tất cả Approved → Approved, còn lại → Partially Approved - Revised
+  const contStatus = lines.every(l => l.approval_status === 'Approved') ? 'Approved' : 'Partially Approved - Revised';
   toast('Đang lưu Revise...');
   try {
     const res = await apiPost({
@@ -1711,7 +1713,7 @@ async function saveRevise() {
     if (res.success) {
       const trkRes = await apiGet({ action: 'getTracking' });
       if (trkRes.success) state.tracking = trkRes.data;
-      toast('Đã lưu Revise! Status cont: ' + contStatus, 3000);
+      toast('Đã lưu Revise! Status: ' + contStatus, 3000);
       resetRevise();
     } else { toast('Lỗi: ' + res.error, 4000); }
   } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
@@ -1956,7 +1958,7 @@ function renderTrackingTable(data) {
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${r.approval_status === 'Partially Approved' ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
@@ -2835,6 +2837,7 @@ function badge(status) {
   if (!status || status === 'Pending') return '<span class="badge b-gr">Pending</span>';
   if (status === 'Approved') return '<span class="badge b-ok">Approved</span>';
   if (status === 'Partially Approved') return '<span class="badge b-wa">Partially Approved</span>';
+  if (status === 'Partially Approved - Revised') return '<span class="badge b-wa" style="background:#e0e7ff;color:#3730a3">Partially Approved - Revised</span>';
   if (status === 'Rejected') return '<span class="badge b-ng">Rejected</span>';
   if (status === 'Canceled') return '<span class="badge b-ng">Canceled</span>';
   return `<span class="badge b-gr">${status}</span>`;
