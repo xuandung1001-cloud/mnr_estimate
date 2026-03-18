@@ -447,6 +447,7 @@ td input:focus,td select:focus{background:#fffbeb}
               <option>Partially Approved</option>
               <option>Partially Approved - Revised</option>
               <option>Sent for Approval</option>
+              <option>Repair Pending</option>
               <option>Pending</option>
               <option>Rejected</option>
               <option>Canceled</option>
@@ -1950,11 +1951,12 @@ function renderTracking() {
 
 function calcTrackingStats(data) {
   return {
-    total:   data.length,
+    total:    data.length,
     approved: data.filter(r => r.approval_status === 'Approved').length,
     partial:  data.filter(r => r.approval_status === 'Partially Approved').length,
     revised:  data.filter(r => r.approval_status === 'Partially Approved - Revised').length,
     sent:     data.filter(r => r.approval_status === 'Sent for Approval').length,
+    repair:   data.filter(r => r.approval_status === 'Repair Pending').length,
     pending:  data.filter(r => !r.approval_status || r.approval_status === 'Pending').length
   };
 }
@@ -1967,6 +1969,7 @@ function renderTrackingStats(s) {
     <div class="stat-card"><div class="stat-label">Partially</div><div class="stat-value" style="color:var(--amber)">${s.partial}</div><div class="stat-sub">${pct(s.partial)}%</div></div>
     ${s.revised ? `<div class="stat-card"><div class="stat-label">Revised</div><div class="stat-value" style="color:#3730a3">${s.revised}</div><div class="stat-sub">${pct(s.revised)}%</div></div>` : ''}
     ${s.sent ? `<div class="stat-card"><div class="stat-label">Sent for Appr.</div><div class="stat-value" style="color:var(--blue)">${s.sent}</div><div class="stat-sub">${pct(s.sent)}%</div></div>` : ''}
+    ${s.repair ? `<div class="stat-card"><div class="stat-label">Repair Pending</div><div class="stat-value" style="color:#0891b2">${s.repair}</div><div class="stat-sub">${pct(s.repair)}%</div></div>` : ''}
     <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--gray)">${s.pending}</div></div>
   `;
 }
@@ -2892,6 +2895,8 @@ function badge(status) {
   if (status === 'Approved') return '<span class="badge b-ok">Approved</span>';
   if (status === 'Partially Approved') return '<span class="badge b-wa">Partially Approved</span>';
   if (status === 'Partially Approved - Revised') return '<span class="badge b-wa" style="background:#e0e7ff;color:#3730a3">Partially Approved - Revised</span>';
+  if (status === 'Sent for Approval') return '<span class="badge b-gr" style="background:#dbeafe;color:#1e40af">Sent for Approval</span>';
+  if (status === 'Repair Pending') return '<span class="badge b-gr" style="background:#cffafe;color:#0e7490">Repair Pending</span>';
   if (status === 'Rejected') return '<span class="badge b-ng">Rejected</span>';
   if (status === 'Canceled') return '<span class="badge b-ng">Canceled</span>';
   return `<span class="badge b-gr">${status}</span>`;
