@@ -307,9 +307,9 @@ td input:focus,td select:focus{background:#fffbeb}
 
       <!-- REVISE -->
       <div class="screen" id="screen-revise">
-        <div class="alert alert-warn">Chỉnh sửa estimate sau khi Carrier đã Approved — các thay đổi sẽ ghi lại vào Data_Estimate</div>
+        <div class="alert alert-warn">Chỉnh sửa estimate sau khi Carrier đã Partially Approved — lưu lại sẽ ghi vào cột Approve bên Estimates</div>
         <div class="card">
-          <div class="form-grid grid-3">
+          <div class="form-grid grid-4">
             <div class="fg">
               <div class="fl">Equipment No * (nhập để load)</div>
               <input class="fi" id="rev-eq" placeholder="Nhập số cont..." oninput="onReviseInput(this.value)">
@@ -319,13 +319,12 @@ td input:focus,td select:focus{background:#fffbeb}
               <input class="fi fi-auto" id="rev-app-date" readonly placeholder="—">
             </div>
             <div class="fg">
-              <div class="fl">Approval Status</div>
-              <select class="fi" id="rev-status">
-                <option>Partially Approved</option>
-                <option>Approved</option>
-                <option>Rejected</option>
-                <option>Canceled</option>
-              </select>
+              <div class="fl fl-blue">Carrier</div>
+              <input class="fi fi-auto" id="rev-carrier" readonly placeholder="—">
+            </div>
+            <div class="fg">
+              <div class="fl fl-blue">Size Type</div>
+              <input class="fi fi-auto" id="rev-size" readonly placeholder="—">
             </div>
           </div>
           <div class="fg">
@@ -334,9 +333,15 @@ td input:focus,td select:focus{background:#fffbeb}
           </div>
         </div>
         <div class="card">
-          <div class="sec-div">Chi tiết hạng mục</div>
+          <div class="sec-div">
+            Chi tiết hạng mục — chỉnh sửa rồi lưu
+            <span style="font-size:10px;color:var(--gray);font-weight:400">Ô xanh lá = giá tự lookup từ Tariff</span>
+          </div>
+          <div style="margin-bottom:8px">
+            <button class="btn btn-sm" onclick="addReviseRow()">+ Thêm dòng</button>
+          </div>
           <div class="tbl-wrap">
-            <table>
+            <table id="rev-table">
               <thead>
                 <tr>
                   <th style="width:32px">STT</th>
@@ -344,19 +349,39 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:75px">Component</th>
                   <th style="width:62px">Dmg Type</th>
                   <th style="width:62px">Rep Type</th>
+                  <th style="width:48px">Length</th>
+                  <th style="width:48px">Width</th>
+                  <th style="width:50px">Unit</th>
                   <th style="width:40px">Qty</th>
-                  <th style="width:52px">Hours</th>
-                  <th style="width:60px">Material</th>
-                  <th style="width:58px">Labour</th>
-                  <th style="width:70px" class="td-auto">Total App.</th>
+                  <th style="width:52px" class="td-auto">Hours</th>
+                  <th style="width:60px" class="td-auto">Material</th>
+                  <th style="width:58px" class="td-auto">Labour</th>
+                  <th style="width:65px">Total Est.</th>
+                  <th style="width:65px" class="td-total">Total App.</th>
+                  <th style="width:70px">Resp. Party</th>
                   <th style="width:110px">Status</th>
-                  <th style="width:100px">Remark</th>
+                  <th style="width:90px">Remark</th>
+                  <th style="width:28px"></th>
                 </tr>
               </thead>
               <tbody id="rev-rows">
-                <tr><td colspan="12" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
+                <tr><td colspan="18" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
               </tbody>
             </table>
+          </div>
+          <div id="rev-total-row" style="display:none;margin-top:8px;padding:8px 12px;background:var(--blue-light);border-radius:6px">
+            <div style="display:flex;justify-content:flex-end;gap:20px;margin-bottom:6px">
+              <span style="font-size:11px;color:var(--gray)">Total Hours: <strong id="rev-tot-hours" style="color:var(--blue)">0.00</strong></span>
+              <span style="font-size:11px;color:var(--gray)">Material: <strong id="rev-tot-mat" style="color:var(--blue)">0.00</strong></span>
+              <span style="font-size:11px;color:var(--gray)">Labour: <strong id="rev-tot-lab" style="color:var(--blue)">0.00</strong></span>
+              <span style="font-size:11px;color:var(--gray)">Total Est.: <strong id="rev-tot-est" style="color:var(--gray)">0.00</strong></span>
+              <span style="font-size:11px;color:var(--gray)">Total App. (tính lại): <strong id="rev-tot-total" style="color:var(--green);font-size:13px">0.00</strong></span>
+            </div>
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:6px;border-top:1px solid #c3dafe">
+              <span style="font-size:11px;color:var(--gray)">Total Approved (Tracking): <strong id="rev-trk-total" style="color:var(--amber)">—</strong></span>
+              <span style="font-size:11px;color:var(--gray)">Chênh lệch: <strong id="rev-diff" style="font-size:12px">—</strong></span>
+              <span id="rev-match-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -1285,8 +1310,8 @@ function lookupTariff(row) {
     return 999;
   }
   // Sort: range nhỏ nhất trước → match chính xác hơn
-  matches.sort((a, b) => getLenRange(a) - getLenRange(b));
-  const match = matches[0] || null;
+  _allMatches.sort((a, b) => getLenRange(a) - getLenRange(b));
+  const match = _allMatches[0] || null;
 
   console.log('Lookup:', {carrier, szType, dmgLoc, comp, dmgType, repType, unit, qty, lenVal});
   if (match) {
@@ -1419,90 +1444,277 @@ async function saveEstimate() {
 }
 
 // ===================== REVISE =====================
+var _revOrigData = {};
+var _revTrkTotal = 0;
+
+function makeReviseRow(i, r) {
+  const carrier = document.getElementById('rev-carrier').value.trim();
+  const tr = document.createElement('tr');
+  tr.dataset.seq = r ? r.repair_seq : 'new_' + Date.now();
+  const dl  = r ? (r.app_damage_location || r.damage_location || '') : '';
+  const co  = r ? (r.app_component       || r.component       || '') : '';
+  const dt  = r ? (r.app_damage_type     || r.damage_type     || '') : '';
+  const rt  = r ? (r.app_repair_type     || r.repair_type     || '') : '';
+  const len = r ? (r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length || '')) : '';
+  const wid = r ? (r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width  || '')) : '';
+  const uni = r ? (r.app_unit   || r.unit   || '') : '';
+  const qty = r ? (r.app_quantity || r.quantity || 1) : 1;
+  const h   = r ? parseFloat(r.app_labour_hours  || r.labour_hours  || 0).toFixed(2) : '0.00';
+  const m   = r ? parseFloat(r.app_material_cost || r.material_cost || 0).toFixed(2) : '0.00';
+  const l   = r ? parseFloat(r.app_labour_cost   || r.labour_cost   || 0).toFixed(2) : '0.00';
+  const est = r ? parseFloat(r.total_cost || 0).toFixed(2) : '0.00';
+  const tot = r ? parseFloat(r.app_total_approved || r.total_cost || 0).toFixed(2) : '0.00';
+  const rsp = r ? (r.app_responsible_party || r.responsible_party || carrier || '') : carrier;
+  const sta = r ? (r.approval_status || 'Partially Approved') : 'Partially Approved';
+  const rem = r ? (r.app_remark_details || '') : '';
+  tr.innerHTML = `
+    <td>${i+1}</td>
+    <td><input value="${dl}" placeholder="IXXX" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${co}" placeholder="MCO"  onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${dt}" placeholder="DY"   onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${rt}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${len}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${wid}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${uni}" placeholder="QTY" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${qty}" type="number" min="0" step="0.01" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td class="td-auto"><span class="rv-h">${h}</span></td>
+    <td class="td-auto"><span class="rv-m">${m}</span></td>
+    <td class="td-auto"><span class="rv-l">${l}</span></td>
+    <td style="text-align:right;color:var(--gray);font-size:11px"><span class="rv-e">${est}</span></td>
+    <td class="td-total"><span class="rv-t">${tot}</span></td>
+    <td><input value="${rsp}" placeholder="MSC"></td>
+    <td><select style="font-size:11px;border:none;background:transparent;width:100%;color:#1a202c" onchange="onReviseStatusChange(this)">
+      <option ${sta==='Partially Approved'?'selected':''}>Partially Approved</option>
+      <option ${sta==='Approved'?'selected':''}>Approved</option>
+      <option ${sta==='Rejected'?'selected':''}>Rejected</option>
+    </select></td>
+    <td><input placeholder="Ghi chú..." value="${rem}"></td>
+    <td style="text-align:center"><button onclick="this.closest('tr').remove();updateReviseNumbers();calcReviseTotal()" style="border:none;background:none;color:#fc8181;cursor:pointer;font-size:14px">×</button></td>
+  `;
+  return tr;
+}
+
+function onReviseStatusChange(sel) {
+  const row = sel.closest('tr');
+  if (sel.value === 'Rejected') {
+    row.querySelector('.rv-h').textContent = '0.00';
+    row.querySelector('.rv-m').textContent = '0.00';
+    row.querySelector('.rv-l').textContent = '0.00';
+    row.querySelector('.rv-t').textContent = '0.00';
+  }
+  calcReviseTotal();
+}
+
 async function onReviseInput(val) {
   val = val.trim().toUpperCase();
   if (val.length < 4) return;
-  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="12" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   const res = await apiGet({ action: 'getEstimates', container_no: val });
   if (res.success && res.data.length > 0) {
-    // Fill header
     const first = res.data[0];
     document.getElementById('rev-app-date').value = formatDate(first.approval_date) || '';
-    document.getElementById('rev-status').value = first.approval_status || 'Pending';
-
+    document.getElementById('rev-carrier').value  = first.carrier   || '';
+    document.getElementById('rev-size').value     = first.size_type || '';
+    _revOrigData = {};
+    res.data.forEach(r => {
+      _revOrigData[r.repair_seq] = {
+        dl: r.damage_location, co: r.component, dt: r.damage_type,
+        rt: r.repair_type, len: r.length, wid: r.width, uni: r.unit, qty: r.quantity
+      };
+    });
+    const trk = state.tracking.find(t => (t.container_no||'').toUpperCase() === val);
+    _revTrkTotal = trk ? (parseFloat(trk.total_approved) || 0) : 0;
     const tbody = document.getElementById('rev-rows');
     tbody.innerHTML = '';
-    res.data.forEach((r, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${i+1}</td>
-        <td>${r.damage_location||''}</td>
-        <td>${r.component||''}</td>
-        <td>${r.damage_type||''}</td>
-        <td>${r.repair_type||''}</td>
-        <td>${r.quantity||''}</td>
-        <td>${r.labour_hours||0}</td>
-        <td>${r.material_cost||0}</td>
-        <td>${r.labour_cost||0}</td>
-        <td class="${r.app_total_approved ? 'td-auto' : ''}"><input type="number" value="${r.app_total_approved||0}" step="0.01" data-seq="${r.repair_seq}"></td>
-        <td><select data-seq="${r.repair_seq}">
-          <option ${r.approval_status==='Approved'?'selected':''}>Approved</option>
-          <option ${r.approval_status==='Partially Approved'?'selected':''}>Partially Approved</option>
-          <option ${r.approval_status==='Rejected'?'selected':''}>Rejected</option>
-          <option ${r.approval_status==='Pending'?'selected':''}>Pending</option>
-          <option ${r.approval_status==='Canceled'?'selected':''}>Canceled</option>
-        </select></td>
-        <td><input placeholder="Ghi chú..." value="${r.app_remark_details||''}"></td>
-      `;
-      tbody.appendChild(tr);
-    });
+    res.data.forEach((r, i) => tbody.appendChild(makeReviseRow(i, r)));
+    document.getElementById('rev-total-row').style.display = 'block';
+    calcReviseTotal();
   } else {
-    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
+    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
+    document.getElementById('rev-total-row').style.display = 'none';
   }
 }
 
+function addReviseRow() {
+  const tbody = document.getElementById('rev-rows');
+  tbody.appendChild(makeReviseRow(tbody.querySelectorAll('tr').length, null));
+  calcReviseTotal();
+}
+
+function updateReviseNumbers() {
+  document.querySelectorAll('#rev-rows tr').forEach(function(tr, i) {
+    if (tr.cells[0]) tr.cells[0].textContent = i + 1;
+  });
+}
+
+function lookupRevise(row) {
+  const carrier = document.getElementById('rev-carrier').value.trim().toUpperCase();
+  const szType  = document.getElementById('rev-size').value.trim().toUpperCase();
+  const inputs  = row.querySelectorAll('input');
+  const dmgLoc  = inputs[0].value.trim().toUpperCase();
+  const comp    = inputs[1].value.trim().toUpperCase();
+  const dmgType = inputs[2].value.trim().toUpperCase();
+  const repType = inputs[3].value.trim().toUpperCase();
+  const lenVal  = parseFloat(inputs[4].value) || 0;
+  const widVal  = parseFloat(inputs[5].value) || 0;
+  const unit    = inputs[6].value.trim().toUpperCase();
+  const qty     = parseFloat(inputs[7].value) || 1;
+  const sel = row.querySelector('select');
+  if (sel && sel.value === 'Rejected') { calcReviseTotal(); return; }
+  if (!szType || !dmgLoc || !comp || !dmgType || !repType || !unit) { calcReviseTotal(); return; }
+
+  function inList(tariffVal, input) {
+    const tv = (tariffVal || '').toString().toUpperCase().trim();
+    const iv = input.trim();
+    if (!tv || !iv) return false;
+    if (tv.includes(iv)) return true;
+    return tv.split('/').map(s => s.trim()).some(s => s === iv);
+  }
+  function getLenRange(t) {
+    const lt = (t.length || '').toString().toLowerCase().trim();
+    if (lt.includes('-')) { const p = lt.split('-'); return (parseFloat(p[1])||999) - (parseFloat(p[0])||0); }
+    return 999;
+  }
+
+  const allMatches = state.tariff.filter(function(t) {
+    if (carrier && t.carrier && t.carrier.toUpperCase() !== carrier) return false;
+    if (!inList(t.size_type, szType)) return false;
+    if (!inList(t.damage_location, dmgLoc)) return false;
+    if (!inList(t.component, comp)) return false;
+    if (!inList(t.damage_type, dmgType)) return false;
+    if ((t.repair_type||'').toString().trim().toUpperCase() !== repType) return false;
+    if ((t.unit||'').toString().trim().toUpperCase() !== unit) return false;
+    if (lenVal > 0) {
+      const lt = (t.length||'').toString().toLowerCase().trim();
+      if (lt && lt !== 'any') {
+        if (lt.includes('-')) { const p = lt.split('-'); if (lenVal < (parseFloat(p[0])||0) || lenVal > (parseFloat(p[1])||0)) return false; }
+        else if (lt.includes('over')) { if (lenVal <= (parseFloat(lt.replace(/over/gi,'').trim())||0)) return false; }
+        else if (lt.includes('below')) { if (lenVal >= (parseFloat(lt.replace(/below/gi,'').trim())||0)) return false; }
+        else { const ex = parseFloat(lt)||0; if (ex > 0 && lenVal !== ex) return false; }
+      }
+    }
+    const tw = parseFloat(t.weight)||0;
+    if (widVal > 0 && tw > 0 && widVal !== tw) return false;
+    const lim = parseFloat(t.limit_qty)||0;
+    if (lim > 0 && qty > lim) return false;
+    return true;
+  });
+  allMatches.sort((a, b) => getLenRange(a) - getLenRange(b));
+  const match = allMatches[0] || null;
+
+  if (match) {
+    const h   = round2(parseFloat(match.hour    ||0) * qty);
+    const m   = round2(parseFloat(match.material||0) * qty);
+    const l   = round2(parseFloat(match.labour  ||0) * qty);
+    row.querySelector('.rv-h').textContent = h.toFixed(2);
+    row.querySelector('.rv-m').textContent = m.toFixed(2);
+    row.querySelector('.rv-l').textContent = l.toFixed(2);
+    row.querySelector('.rv-t').textContent = round2(m + l).toFixed(2);
+  }
+  calcReviseTotal();
+}
+
+function calcReviseTotal() {
+  let totH = 0, totM = 0, totL = 0, totE = 0, totT = 0;
+  document.querySelectorAll('#rev-rows tr').forEach(function(row) {
+    totH += parseFloat(row.querySelector('.rv-h')?.textContent || 0);
+    totM += parseFloat(row.querySelector('.rv-m')?.textContent || 0);
+    totL += parseFloat(row.querySelector('.rv-l')?.textContent || 0);
+    totE += parseFloat(row.querySelector('.rv-e')?.textContent || 0);
+    totT += parseFloat(row.querySelector('.rv-t')?.textContent || 0);
+  });
+  document.getElementById('rev-tot-hours').textContent = round2(totH).toFixed(2);
+  document.getElementById('rev-tot-mat').textContent   = round2(totM).toFixed(2);
+  document.getElementById('rev-tot-lab').textContent   = round2(totL).toFixed(2);
+  document.getElementById('rev-tot-est').textContent   = round2(totE).toFixed(2);
+  document.getElementById('rev-tot-total').textContent = round2(totT).toFixed(2);
+  const trkTot = _revTrkTotal;
+  document.getElementById('rev-trk-total').textContent = trkTot > 0 ? num(trkTot) : '—';
+  const diff = round2(totT - trkTot);
+  const diffEl = document.getElementById('rev-diff');
+  const badge  = document.getElementById('rev-match-badge');
+  if (trkTot > 0) {
+    diffEl.textContent = (diff > 0 ? '+' : '') + num(diff);
+    diffEl.style.color = Math.abs(diff) < 0.01 ? 'var(--green)' : 'var(--red)';
+    if (Math.abs(diff) < 0.01) {
+      badge.textContent = '✓ Khớp'; badge.style.background = '#d1fae5'; badge.style.color = '#065f46';
+    } else {
+      badge.textContent = '⚠ Lệch'; badge.style.background = '#fef3c7'; badge.style.color = '#92400e';
+    }
+  } else { diffEl.textContent = '—'; badge.textContent = ''; }
+}
+
 function resetRevise() {
-  document.getElementById('rev-eq').value = '';
+  document.getElementById('rev-eq').value       = '';
   document.getElementById('rev-app-date').value = '';
-  document.getElementById('rev-remarks').value = '';
-  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="12" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
+  document.getElementById('rev-carrier').value  = '';
+  document.getElementById('rev-size').value     = '';
+  document.getElementById('rev-remarks').value  = '';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
+  document.getElementById('rev-total-row').style.display = 'none';
+  _revOrigData = {}; _revTrkTotal = 0;
 }
 
 async function saveRevise() {
   const eqNo = document.getElementById('rev-eq').value.trim();
   if (!eqNo) { toast('Vui lòng nhập Equipment No!'); return; }
   const lines = [];
-  document.querySelectorAll('#rev-rows tr').forEach(row => {
-    const appInput = row.querySelector('input[data-seq]');
-    const statusSel = row.querySelector('select[data-seq]');
-    const remarkInput = row.querySelectorAll('input')[1];
-    if (!appInput) return;
+  document.querySelectorAll('#rev-rows tr').forEach(function(row) {
+    const inputs = row.querySelectorAll('input');
+    const sel    = row.querySelector('select');
+    if (!inputs.length) return;
+    const seq   = row.dataset.seq;
+    const isNew = String(seq).indexOf('new_') === 0;
+    let lineStatus = sel?.value || 'Partially Approved';
+    if (!isNew && lineStatus !== 'Rejected') {
+      const orig = _revOrigData[seq];
+      if (orig) {
+        const changed =
+          inputs[0].value.trim().toUpperCase() !== (orig.dl||'').toUpperCase() ||
+          inputs[1].value.trim().toUpperCase() !== (orig.co||'').toUpperCase() ||
+          inputs[2].value.trim().toUpperCase() !== (orig.dt||'').toUpperCase() ||
+          inputs[3].value.trim().toUpperCase() !== (orig.rt||'').toUpperCase() ||
+          (parseFloat(inputs[7].value)||1) !== (parseFloat(orig.qty)||1);
+        lineStatus = changed ? 'Partially Approved' : 'Approved';
+      }
+    }
+    const isRej = lineStatus === 'Rejected';
     lines.push({
-      repair_seq: appInput.dataset.seq,
-      app_total_approved: parseFloat(appInput.value) || 0,
-      approval_status: statusSel?.value || 'Pending',
-      remark: remarkInput?.value || ''
+      repair_seq:            seq,
+      app_damage_location:   inputs[0].value.trim(),
+      app_component:         inputs[1].value.trim(),
+      app_damage_type:       inputs[2].value.trim(),
+      app_repair_type:       inputs[3].value.trim(),
+      app_length:            inputs[4].value,
+      app_width:             inputs[5].value,
+      app_unit:              inputs[6].value.trim(),
+      app_quantity:          parseFloat(inputs[7].value) || 1,
+      app_labour_hours:      isRej ? 0 : parseFloat(row.querySelector('.rv-h')?.textContent || 0),
+      app_material_cost:     isRej ? 0 : parseFloat(row.querySelector('.rv-m')?.textContent || 0),
+      app_labour_cost:       isRej ? 0 : parseFloat(row.querySelector('.rv-l')?.textContent || 0),
+      app_total_approved:    isRej ? 0 : parseFloat(row.querySelector('.rv-t')?.textContent || 0),
+      app_responsible_party: inputs[8]?.value.trim() || '',
+      approval_status:       lineStatus,
+      app_remark:            inputs[9]?.value || ''
     });
   });
+  if (!lines.length) { toast('Chưa có hạng mục!'); return; }
+  const contStatus = lines.every(l => l.approval_status === 'Approved') ? 'Approved' : 'Partially Approved';
   toast('Đang lưu Revise...');
   try {
     const res = await apiPost({
-      action: 'saveRevise',
-      container_no: eqNo,
-      approval_status: document.getElementById('rev-status').value,
+      action: 'saveRevise', container_no: eqNo,
+      approval_status: contStatus,
       approved_date: document.getElementById('rev-app-date').value,
-      remarks: document.getElementById('rev-remarks').value,
-      lines
+      remarks: document.getElementById('rev-remarks').value, lines
     });
     if (res.success) {
-      toast('Đã lưu Revise thành công! ' + res.message, 3000);
+      const trkRes = await apiGet({ action: 'getTracking' });
+      if (trkRes.success) state.tracking = trkRes.data;
+      toast('Đã lưu Revise! Status cont: ' + contStatus, 3000);
       resetRevise();
-    } else {
-      toast('Lỗi: ' + res.error, 4000);
-    }
-  } catch(e) {
-    toast('Lỗi kết nối: ' + e.message, 4000);
-  }
+    } else { toast('Lỗi: ' + res.error, 4000); }
+  } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
 }
 
 // ===================== OVM =====================
