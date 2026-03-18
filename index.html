@@ -2078,14 +2078,14 @@ async function exportBulkTemplate() {
       }
     }
 
-    // Format #,##0.00: H=7(Length), I=8(Width), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
-    // Quantity (L=11) để General
+    // Accounting format giống file EST gốc: H=7(Length), I=8(Width), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
+    var acctFmt = '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)';
     var numCols = [7, 8, 13, 14, 15];
     for (var R = 1; R <= range.e.r; R++) {
       numCols.forEach(function(C) {
         var addr = XLSX.utils.encode_cell({ r: R, c: C });
         if (ws[addr] && ws[addr].t === 'n') {
-          ws[addr].z = '#,##0.00';
+          ws[addr].z = acctFmt;
         }
       });
     }
