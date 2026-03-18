@@ -1839,9 +1839,10 @@ async function handleOvmFile(input) {
         if (ovmStatus === 'Sent for Approval') {
           newStatus = 'Sent for Approval';
         } else if (ovmStatus === 'Approved' || ovmStatus === 'Partially Approved') {
-          // So sánh total để quyết định
+          // So sánh total để quyết định — nếu không có est thì dùng OVM total làm base
+          var base = estTotal > 0 ? estTotal : ovmTotal;
           var diff = Math.abs(ovmTotal - estTotal);
-          var pct  = estTotal > 0 ? diff / estTotal : (ovmTotal > 0 ? 1 : 0);
+          var pct  = base > 0 ? diff / base : 0;
           newStatus = pct < 0.001 ? 'Approved' : 'Partially Approved';
         } else if (ovmStatus === 'Repair Pending') {
           newStatus = 'Repair Pending';
@@ -1861,18 +1862,18 @@ async function handleOvmFile(input) {
         // Check priority
         var newPri = PRIORITY[newStatus] || 0;
         var curPri = PRIORITY[curStatus] || 0;
-        var willSkip = newPri < curPri;
+        var willSkip = !!trk && newPri < curPri;
 
         // Note mô tả
         var note = '';
-        if (!trk)         note = '⚠ Không có trong Tracking';
+        if (!trk)          note = '⚠ Không có trong Tracking';
         else if (willSkip) note = '⏭ Bỏ qua — đã ở status cao hơn (' + curStatus + ')';
-        else if (newStatus === 'Repaired') note = 'PO: ' + (poNumber || '—');
-        else if (newStatus === 'Repair Pending') note = 'Repair Date: ' + (repairDate || '—');
-        else if (newStatus === 'Rejected') note = 'Lý do: ' + (rejType || '—');
-        else if (newStatus === 'Approved') note = 'Total khớp';
+        else if (newStatus === 'Repaired')           note = 'PO: ' + (poNumber || '—');
+        else if (newStatus === 'Repair Pending')     note = 'Repair Date: ' + (repairDate || '—');
+        else if (newStatus === 'Rejected')           note = 'Lý do: ' + (rejType || '—');
+        else if (newStatus === 'Approved')           note = 'Total khớp';
         else if (newStatus === 'Partially Approved') note = 'Total lệch ' + num(Math.abs(ovmTotal - estTotal));
-        else if (newStatus === 'Sent for Approval') note = 'Lấy Ref Number';
+        else if (newStatus === 'Sent for Approval')  note = 'Lấy Ref Number';
 
         _ovmData.push({
           cont_no: contNo, ref_no: refNo,
@@ -1949,7 +1950,7 @@ function renderOvmPreview() {
       <td style="text-align:right">${r.est_total ? num(r.est_total) : '—'}</td>
       <td style="text-align:right">${r.ovm_total ? num(r.ovm_total) : '—'}</td>
       <td style="text-align:right;${diffClr}">${diffStr}</td>
-      <td>${badge(r.new_status)}</td>
+      <td>${r.in_tracking ? badge(r.new_status) : '—'}</td>
       <td style="font-size:11px">${r.app_date||'—'}</td>
       <td style="font-size:10px;color:var(--gray)">${r.note}</td>
     </tr>`;
