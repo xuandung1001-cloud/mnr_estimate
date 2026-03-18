@@ -2079,8 +2079,8 @@ async function exportBulkTemplate() {
     }
 
     // Format #,##0.00 cho các cột số
-    // G=6(Length), H=7(Width), L=11(Quantity), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
-    var numCols = [6, 7, 11, 13, 14, 15];
+    // H=7(Length), I=8(Width), L=11(Quantity), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
+    var numCols = [7, 8, 11, 13, 14, 15];
     for (var R = 1; R <= range.e.r; R++) {
       numCols.forEach(function(C) {
         var addr = XLSX.utils.encode_cell({ r: R, c: C });
