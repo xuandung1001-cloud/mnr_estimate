@@ -441,10 +441,12 @@ td input:focus,td select:focus{background:#fffbeb}
         <div class="card">
           <div class="filter-bar">
             <input class="fi" id="trk-search" placeholder="Tìm Equipment No, Ref No..." oninput="filterTracking()" style="flex:1;min-width:160px">
-            <select class="fi" id="trk-status" onchange="filterTracking()" style="width:160px">
+            <select class="fi" id="trk-status" onchange="filterTracking()" style="width:200px">
               <option value="">Tất cả trạng thái</option>
               <option>Approved</option>
               <option>Partially Approved</option>
+              <option>Partially Approved - Revised</option>
+              <option>Sent for Approval</option>
               <option>Pending</option>
               <option>Rejected</option>
               <option>Canceled</option>
@@ -1918,18 +1920,23 @@ function renderTracking() {
 
 function calcTrackingStats(data) {
   return {
-    total: data.length,
+    total:   data.length,
     approved: data.filter(r => r.approval_status === 'Approved').length,
-    partial: data.filter(r => r.approval_status === 'Partially Approved').length,
-    pending: data.filter(r => !r.approval_status || r.approval_status === 'Pending').length
+    partial:  data.filter(r => r.approval_status === 'Partially Approved').length,
+    revised:  data.filter(r => r.approval_status === 'Partially Approved - Revised').length,
+    sent:     data.filter(r => r.approval_status === 'Sent for Approval').length,
+    pending:  data.filter(r => !r.approval_status || r.approval_status === 'Pending').length
   };
 }
 
 function renderTrackingStats(s) {
+  const pct = v => s.total ? Math.round(v/s.total*100) : 0;
   document.getElementById('tracking-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${s.total}</div></div>
-    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value" style="color:var(--green)">${s.approved}</div><div class="stat-sub">${s.total?Math.round(s.approved/s.total*100):0}%</div></div>
-    <div class="stat-card"><div class="stat-label">Partially</div><div class="stat-value" style="color:var(--amber)">${s.partial}</div><div class="stat-sub">${s.total?Math.round(s.partial/s.total*100):0}%</div></div>
+    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value" style="color:var(--green)">${s.approved}</div><div class="stat-sub">${pct(s.approved)}%</div></div>
+    <div class="stat-card"><div class="stat-label">Partially</div><div class="stat-value" style="color:var(--amber)">${s.partial}</div><div class="stat-sub">${pct(s.partial)}%</div></div>
+    ${s.revised ? `<div class="stat-card"><div class="stat-label">Revised</div><div class="stat-value" style="color:#3730a3">${s.revised}</div><div class="stat-sub">${pct(s.revised)}%</div></div>` : ''}
+    ${s.sent ? `<div class="stat-card"><div class="stat-label">Sent for Appr.</div><div class="stat-value" style="color:var(--blue)">${s.sent}</div><div class="stat-sub">${pct(s.sent)}%</div></div>` : ''}
     <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--gray)">${s.pending}</div></div>
   `;
 }
