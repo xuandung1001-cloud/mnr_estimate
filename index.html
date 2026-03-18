@@ -2110,17 +2110,25 @@ function exportSummary() {
 
 // ===================== STOCK =====================
 async function renderStock() {
-  // Luôn reload stock mới nhất từ Sheets khi vào màn hình này
   document.getElementById('stk-rows').innerHTML = '<tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   document.getElementById('stk-info').textContent = 'Đang tải...';
 
-  try {
-    const res = await apiGet({ action: 'getEmtyStock' });
-    if (res.success) {
-      state.stock = res.data;
+  // Dùng cache nếu đã có, không fetch lại
+  if (!state.stock || !state.stock.length) {
+    try {
+      const cached = localStorage.getItem('mnr_stock');
+      if (cached) {
+        state.stock = JSON.parse(cached);
+      } else {
+        const res = await apiGet({ action: 'getEmtyStock' });
+        if (res.success) {
+          state.stock = res.data;
+          localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+        }
+      }
+    } catch(e) {
+      console.error('Error loading stock:', e);
     }
-  } catch(e) {
-    console.error('Error loading stock:', e);
   }
 
   const data = state.stock;
@@ -3125,10 +3133,11 @@ async function handleStockUpload(input) {
       });
 
       if (res.success) {
-        // Reload stock data
+        // Reload stock data + cập nhật cache
         const stockRes = await apiGet({ action: 'getEmtyStock' });
         if (stockRes.success) {
           state.stock = stockRes.data;
+          localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
           renderStock();
         }
         toast('Import thành công! ' + res.message, 3000);
