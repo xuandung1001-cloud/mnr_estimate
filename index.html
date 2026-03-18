@@ -1834,14 +1834,24 @@ async function handleOvmFile(input) {
         var appDateStr  = parseDateStr(row[21]);
 
         // Map status từ OVM sang app
+        // Nếu OVM = Approved nhưng total lệch → Partially Approved
         var newStatus;
-        if      (ovmStatus === 'Sent for Approval') newStatus = 'Sent for Approval';
-        else if (ovmStatus === 'Approved')           newStatus = 'Approved';
-        else if (ovmStatus === 'Partially Approved') newStatus = 'Partially Approved';
-        else if (ovmStatus === 'Repair Pending')     newStatus = 'Repair Pending';
-        else if (ovmStatus === 'Repaired')           newStatus = 'Repaired';
-        else if (ovmStatus === 'Rejected')           newStatus = 'Rejected';
-        else newStatus = ovmStatus;
+        if (ovmStatus === 'Sent for Approval') {
+          newStatus = 'Sent for Approval';
+        } else if (ovmStatus === 'Approved' || ovmStatus === 'Partially Approved') {
+          // So sánh total để quyết định
+          var diff = Math.abs(ovmTotal - estTotal);
+          var pct  = estTotal > 0 ? diff / estTotal : (ovmTotal > 0 ? 1 : 0);
+          newStatus = pct < 0.001 ? 'Approved' : 'Partially Approved';
+        } else if (ovmStatus === 'Repair Pending') {
+          newStatus = 'Repair Pending';
+        } else if (ovmStatus === 'Repaired') {
+          newStatus = 'Repaired';
+        } else if (ovmStatus === 'Rejected') {
+          newStatus = 'Rejected';
+        } else {
+          newStatus = ovmStatus;
+        }
 
         // Lookup tracking
         var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
