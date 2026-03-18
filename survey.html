@@ -845,17 +845,17 @@ function setCont() {
 function handleFiles(input) {
   var files = Array.from(input.files);
   if (!files.length) return;
-  toast('Đang xử lý ' + files.length + ' ảnh...');
+  toast('Đang nén ' + files.length + ' ảnh...');
 
   var processed = 0;
   var pendingPhotos = [];
 
   files.forEach(function(file) {
-    resizeImage(file, 1200, 0.8, function(base64, dataUrl) {
+    resizeImage(file, 1024, 0.7, function(base64, dataUrl) {
       var photo = {
         name:    file.name || ('photo_' + Date.now() + '.jpg'),
         base64:  base64,
-        mime:    file.type || 'image/jpeg',
+        mime:    'image/jpeg',
         dataUrl: dataUrl,
         status:  'pending'
       };
@@ -866,7 +866,7 @@ function handleFiles(input) {
       pendingPhotos.push({ photo: photo, idx: idx2 });
       processed++;
       if (processed === files.length) {
-        toast('Đã load xong, đang upload tuần tự...');
+        toast('Nén xong ' + files.length + ' ảnh — đang upload...');
         uploadSequential(pendingPhotos, 0);
       }
     });
@@ -875,7 +875,11 @@ function handleFiles(input) {
 }
 
 async function uploadSequential(list, i) {
-  if (i >= list.length) return;
+  if (i >= list.length) {
+    toast('✅ Upload xong ' + list.length + ' ảnh!', 3000);
+    return;
+  }
+  toast('Đang upload ' + (i+1) + '/' + list.length + '...');
   await uploadPhoto(list[i].photo, list[i].idx);
   uploadSequential(list, i + 1);
 }
@@ -924,11 +928,12 @@ function removePhoto(idx) {
   updateCounter();
 }
 
-async function uploadPhoto(photo, idx) {
+async function uploadPhoto(photo, idx, retry) {
   if (!state.contNo) return;
+  retry = retry || 0;
 
   var badge = document.getElementById('badge-' + idx);
-  if (badge) { badge.textContent = 'Đang upload'; badge.className = 'status-badge status-uploading'; }
+  if (badge) { badge.textContent = retry > 0 ? 'Thử lại ' + retry + '/3' : 'Đang upload'; badge.className = 'status-badge status-uploading'; }
 
   var today = new Date();
   var dd = String(today.getDate()).padStart(2,'0');
@@ -951,18 +956,26 @@ async function uploadPhoto(photo, idx) {
     if (res.success) {
       if (badge) { badge.textContent = '✓ Xong'; badge.className = 'status-badge status-done'; }
       photo.status = 'done';
-      // Hiện drive link
       if (res.folder_url) {
         var driveDiv = document.getElementById('drive-link');
         document.getElementById('drive-link-a').href = res.folder_url;
         driveDiv.style.display = 'block';
       }
     } else {
+      if (retry < 3) {
+        // Chờ 2 giây rồi thử lại
+        await new Promise(r => setTimeout(r, 2000));
+        return uploadPhoto(photo, idx, retry + 1);
+      }
       if (badge) { badge.textContent = '✗ Lỗi'; badge.className = 'status-badge status-error'; }
       photo.status = 'error';
-      toast('Lỗi upload: ' + (res.error || 'Unknown'));
+      toast('Lỗi upload ảnh: ' + (res.error || 'Unknown'));
     }
   } catch(e) {
+    if (retry < 3) {
+      await new Promise(r => setTimeout(r, 2000));
+      return uploadPhoto(photo, idx, retry + 1);
+    }
     if (badge) { badge.textContent = '✗ Lỗi'; badge.className = 'status-badge status-error'; }
     photo.status = 'error';
     toast('Lỗi kết nối: ' + e.message);
