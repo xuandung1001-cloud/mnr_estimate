@@ -1671,11 +1671,14 @@ async function saveRevise() {
       const orig = _revOrigData[seq];
       if (orig) {
         const changed =
-          inputs[0].value.trim().toUpperCase() !== (orig.dl||'').toUpperCase() ||
-          inputs[1].value.trim().toUpperCase() !== (orig.co||'').toUpperCase() ||
-          inputs[2].value.trim().toUpperCase() !== (orig.dt||'').toUpperCase() ||
-          inputs[3].value.trim().toUpperCase() !== (orig.rt||'').toUpperCase() ||
-          (parseFloat(inputs[7].value)||1) !== (parseFloat(orig.qty)||1);
+          inputs[0].value.trim().toUpperCase() !== (orig.dl||'').toUpperCase()  ||
+          inputs[1].value.trim().toUpperCase() !== (orig.co||'').toUpperCase()  ||
+          inputs[2].value.trim().toUpperCase() !== (orig.dt||'').toUpperCase()  ||
+          inputs[3].value.trim().toUpperCase() !== (orig.rt||'').toUpperCase()  ||
+          (parseFloat(inputs[4].value)||0)     !== (parseFloat(orig.len)||0)    ||
+          (parseFloat(inputs[5].value)||0)     !== (parseFloat(orig.wid)||0)    ||
+          inputs[6].value.trim().toUpperCase() !== (orig.uni||'').toUpperCase() ||
+          (parseFloat(inputs[7].value)||1)     !== (parseFloat(orig.qty)||1);
         lineStatus = changed ? 'Partially Approved' : 'Approved';
       }
     }
