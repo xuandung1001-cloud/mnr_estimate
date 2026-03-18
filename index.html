@@ -1731,7 +1731,7 @@ function renderTrackingTable(data) {
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button><button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${r.approval_status === 'Partially Approved' ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
@@ -2071,24 +2071,18 @@ async function exportBulkTemplate() {
     // Force cột B (Estimate Date) là text
     var range = XLSX.utils.decode_range(ws['!ref']);
     for (var R = 1; R <= range.e.r; R++) {
-      var cellAddr = XLSX.utils.encode_cell({ r: R, c: 1 }); // col B = index 1
-      if (ws[cellAddr]) {
-        ws[cellAddr].t = 's';
-        ws[cellAddr].z = '@';
-      }
+      var cellAddr = XLSX.utils.encode_cell({ r: R, c: 1 });
+      if (ws[cellAddr]) { ws[cellAddr].t = 's'; ws[cellAddr].z = '@'; }
     }
 
-    // Accounting format giống file EST gốc: H=7(Length), I=8(Width), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
+    // Accounting format: H=7(Length), I=8(Width), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
     var acctFmt = '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)';
-    var numCols = [7, 8, 13, 14, 15];
-    for (var R = 1; R <= range.e.r; R++) {
-      numCols.forEach(function(C) {
+    [7, 8, 13, 14, 15].forEach(function(C) {
+      for (var R = 1; R <= range.e.r; R++) {
         var addr = XLSX.utils.encode_cell({ r: R, c: C });
-        if (ws[addr] && ws[addr].t === 'n') {
-          ws[addr].z = acctFmt;
-        }
-      });
-    }
+        if (ws[addr] && ws[addr].t === 'n') ws[addr].z = acctFmt;
+      }
+    });
 
     // Set column widths
     ws['!cols'] = [
@@ -2107,7 +2101,7 @@ async function exportBulkTemplate() {
     var yyyy = today.getFullYear();
     var filename = 'Estimated_Bulk_List_' + dd + mm + yyyy + '.xlsx';
 
-    XLSX.writeFile(wb, filename);
+    XLSX.writeFile(wb, filename, { bookSST: true });
     toast('Đã xuất ' + (rows.length-1) + ' dòng vào ' + filename, 3000);
 
   } catch(err) {
