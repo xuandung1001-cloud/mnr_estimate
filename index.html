@@ -1839,11 +1839,14 @@ async function handleOvmFile(input) {
         if (ovmStatus === 'Sent for Approval') {
           newStatus = 'Sent for Approval';
         } else if (ovmStatus === 'Approved' || ovmStatus === 'Partially Approved') {
-          // So sánh total để quyết định — nếu không có est thì dùng OVM total làm base
+          // So sánh total để quyết định
           var base = estTotal > 0 ? estTotal : ovmTotal;
           var diff = Math.abs(ovmTotal - estTotal);
           var pct  = base > 0 ? diff / base : 0;
-          newStatus = pct < 0.001 ? 'Approved' : 'Partially Approved';
+          console.log('Status check:', contNo, 'estTotal=', estTotal, 'ovmTotal=', ovmTotal, 'diff=', diff, 'pct=', pct);
+          newStatus = pct < 0.005 ? 'Approved' : 'Partially Approved'; // threshold 0.5%
+          // Debug
+          console.log('CHECK:', contNo, 'estTotal=', estTotal, 'ovmTotal=', ovmTotal, 'diff=', diff, 'pct=', pct, '→', newStatus);
         } else if (ovmStatus === 'Repair Pending') {
           newStatus = 'Repair Pending';
         } else if (ovmStatus === 'Repaired') {
@@ -1856,7 +1859,7 @@ async function handleOvmFile(input) {
 
         // Lookup tracking
         var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
-        var estTotal  = trk ? (parseFloat(trk.total_cost) || 0) : 0;
+        var estTotal  = trk ? (parseFloat(trk.total_cost) || parseFloat(trk.total_approved) || 0) : 0;
         var curStatus = trk ? (trk.approval_status || '') : '';
 
         // Check priority
