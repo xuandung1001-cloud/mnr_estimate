@@ -649,6 +649,9 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <input class="fi" id="trf-search" placeholder="Tìm Component, Dmg Type, Rep Type..." oninput="filterTariff()" style="flex:1;min-width:200px">
             <span id="trf-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
+            <button class="btn btn-sm" onclick="refreshCache()" title="Xóa cache và tải lại Tariff + Stock từ server">
+              🔄 Refresh Cache
+            </button>
             <button class="btn btn-sm btn-blue" onclick="document.getElementById('tariff-file').click()">
               + Import file Tariff
             </button>
@@ -944,17 +947,40 @@ async function loadInitialData() {
   const m = new Date().getMonth();
   document.getElementById('rpt-month').selectedIndex = m;
 
-  // Load từng API riêng — lỗi 1 cái không ảnh hưởng cái khác
   toast('Đang tải dữ liệu...');
 
-  try { var tariffRes = await apiGet({ action: 'getTariff' });
-    if (tariffRes && tariffRes.success) { state.tariff = tariffRes.data; console.log('Tariff loaded:', state.tariff.length); }
+  // Tariff & Stock: cache sessionStorage — chỉ fetch lần đầu mỗi session
+  try {
+    const cachedTariff = sessionStorage.getItem('mnr_tariff');
+    if (cachedTariff) {
+      state.tariff = JSON.parse(cachedTariff);
+      console.log('Tariff from cache:', state.tariff.length);
+    } else {
+      var tariffRes = await apiGet({ action: 'getTariff' });
+      if (tariffRes && tariffRes.success) {
+        state.tariff = tariffRes.data;
+        sessionStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
+        console.log('Tariff fetched:', state.tariff.length);
+      }
+    }
   } catch(e) { console.error('Tariff load error:', e); }
 
-  try { var stockRes = await apiGet({ action: 'getEmtyStock' });
-    if (stockRes && stockRes.success) { state.stock = stockRes.data; console.log('Stock loaded:', state.stock.length); }
+  try {
+    const cachedStock = sessionStorage.getItem('mnr_stock');
+    if (cachedStock) {
+      state.stock = JSON.parse(cachedStock);
+      console.log('Stock from cache:', state.stock.length);
+    } else {
+      var stockRes = await apiGet({ action: 'getEmtyStock' });
+      if (stockRes && stockRes.success) {
+        state.stock = stockRes.data;
+        sessionStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+        console.log('Stock fetched:', state.stock.length);
+      }
+    }
   } catch(e) { console.error('Stock load error:', e); }
 
+  // Tracking & Summary: luôn fetch mới vì thay đổi thường xuyên
   try { var trkRes = await apiGet({ action: 'getTracking' });
     if (trkRes && trkRes.success) { state.tracking = trkRes.data; }
   } catch(e) { console.error('Tracking load error:', e); }
@@ -2893,6 +2919,28 @@ function renderTariffScreen() {
     carriers.map(c => `<option>${c}</option>`).join('');
 
   filterTariff();
+}
+
+async function refreshCache() {
+  sessionStorage.removeItem('mnr_tariff');
+  sessionStorage.removeItem('mnr_stock');
+  toast('Đang tải lại Tariff + Stock...');
+  try {
+    var tariffRes = await apiGet({ action: 'getTariff' });
+    if (tariffRes && tariffRes.success) {
+      state.tariff = tariffRes.data;
+      sessionStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
+    }
+    var stockRes = await apiGet({ action: 'getEmtyStock' });
+    if (stockRes && stockRes.success) {
+      state.stock = stockRes.data;
+      sessionStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+    }
+    filterTariff();
+    toast('Đã tải lại: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 4000);
+  }
 }
 
 function filterTariff() {
