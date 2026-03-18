@@ -448,6 +448,7 @@ td input:focus,td select:focus{background:#fffbeb}
               <option>Partially Approved - Revised</option>
               <option>Sent for Approval</option>
               <option>Repair Pending</option>
+              <option>Repaired</option>
               <option>Pending</option>
               <option>Rejected</option>
               <option>Canceled</option>
@@ -1781,63 +1782,94 @@ async function handleOvmFile(input) {
       const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
       if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
 
-      // Cột cố định theo format file OVM hãng tàu
-      // A(0)=Equipment Number, C(2)=Reference Number, K(10)=Total Cost, Q(16)=Status, V(21)=Approved Date
+      // Cột cố định theo format file OVM:
+      // A(0)=Equipment Number, C(2)=Ref Number, K(10)=Total Cost
+      // N(13)=Repair Completion Date, O(14)=PO Number, P(15)=PO Date
+      // Q(16)=Status, R(17)=Rejection Type, V(21)=Approved Date
       _ovmData = [];
+
+      // Helper parse date string M/D/YYYY hoặc Date object → dd/MM/yyyy
+      function parseDateStr(val) {
+        if (!val) return '';
+        var s = (val instanceof Date)
+          ? (val.getMonth()+1) + '/' + val.getDate() + '/' + val.getFullYear()
+          : String(val).trim();
+        var datePart = s.split(' ')[0];
+        var parts = datePart.split('/');
+        if (parts.length === 3) {
+          var mo = parseInt(parts[0]), dy = parseInt(parts[1]), yr = parseInt(parts[2]);
+          if (yr < 100) yr += 2000;
+          return String(dy).padStart(2,'0') + '/' + String(mo).padStart(2,'0') + '/' + yr;
+        }
+        // Format dd-MMM-yy (ví dụ: 26-DEC-25)
+        var months = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+        var m2 = s.match(/^(\d+)-([A-Z]+)-(\d+)$/i);
+        if (m2) {
+          var dy2 = parseInt(m2[1]), mo2 = months[m2[2].toUpperCase()]||1, yr2 = parseInt(m2[3]);
+          if (yr2 < 100) yr2 += 2000;
+          return String(dy2).padStart(2,'0') + '/' + String(mo2).padStart(2,'0') + '/' + yr2;
+        }
+        return '';
+      }
+
+      // Priority table
+      var PRIORITY = {
+        'Pending': 0, 'Sent for Approval': 1,
+        'Approved': 2, 'Partially Approved': 2,
+        'Partially Approved - Revised': 3,
+        'Repair Pending': 4, 'Repaired': 5, 'Rejected': 6
+      };
+
       rows.slice(1).forEach(function(row) {
         var contNo = String(row[0] || '').trim().toUpperCase();
         if (!contNo) return;
 
-        var refNo     = String(row[2]  || '').trim();
-        var ovmTotal  = parseFloat(row[10]) || 0;
-        var appDate   = row[21];
-        var appDateStr = '';
-        if (appDate) {
-          // raw:false → SheetJS trả string "M/D/YYYY h:mm:ss AM" hoặc "M/D/YYYY"
-          var s = (appDate instanceof Date)
-            ? (appDate.getMonth()+1) + '/' + appDate.getDate() + '/' + appDate.getFullYear()
-            : String(appDate).trim();
-          var datePart = s.split(' ')[0];
-          var parts = datePart.split('/');
-          if (parts.length === 3) {
-            var mo = parseInt(parts[0]), dy = parseInt(parts[1]), yr = parseInt(parts[2]);
-            if (yr < 100) yr += 2000;
-            appDateStr = String(dy).padStart(2,'0') + '/' + String(mo).padStart(2,'0') + '/' + yr;
-          }
-        }
+        var refNo       = String(row[2]  || '').trim();
+        var ovmTotal    = parseFloat(row[10]) || 0;
+        var repairDate  = parseDateStr(row[13]);
+        var poNumber    = String(row[14] || '').trim();
+        var poDate      = parseDateStr(row[15]);
+        var ovmStatus   = String(row[16] || '').trim();
+        var rejType     = String(row[17] || '').trim();
+        var appDateStr  = parseDateStr(row[21]);
 
-        // Lookup est total + current status từ tracking
-        var trk      = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
-        var estTotal = trk ? (parseFloat(trk.total_cost) || 0) : 0;
+        // Map status từ OVM sang app
+        var newStatus;
+        if      (ovmStatus === 'Sent for Approval') newStatus = 'Sent for Approval';
+        else if (ovmStatus === 'Approved')           newStatus = 'Approved';
+        else if (ovmStatus === 'Partially Approved') newStatus = 'Partially Approved';
+        else if (ovmStatus === 'Repair Pending')     newStatus = 'Repair Pending';
+        else if (ovmStatus === 'Repaired')           newStatus = 'Repaired';
+        else if (ovmStatus === 'Rejected')           newStatus = 'Rejected';
+        else newStatus = ovmStatus;
+
+        // Lookup tracking
+        var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
+        var estTotal  = trk ? (parseFloat(trk.total_cost) || 0) : 0;
         var curStatus = trk ? (trk.approval_status || '') : '';
 
-        // Detect loại dựa trên approved date + so sánh total
-        var newStatus, note;
-        if (!appDateStr) {
-          newStatus = 'Sent for Approval';
-          note      = 'Lấy Ref Number';
-        } else {
-          var diff = Math.abs(ovmTotal - estTotal);
-          var pct  = estTotal > 0 ? diff / estTotal : 1;
-          if (pct < 0.001) {
-            newStatus = 'Approved';
-            note      = 'Total khớp';
-          } else {
-            newStatus = 'Partially Approved';
-            note      = 'Total lệch ' + num(diff);
-          }
-        }
-
         // Check priority
-        var priority = { 'Approved': 3, 'Partially Approved': 2, 'Sent for Approval': 1 };
-        var willSkip = (priority[newStatus] || 0) < (priority[curStatus] || 0);
-        if (willSkip) note = '⏭ Bỏ qua — đã ở status cao hơn (' + curStatus + ')';
-        if (!trk)     note = '⚠ Không có trong Tracking';
+        var newPri = PRIORITY[newStatus] || 0;
+        var curPri = PRIORITY[curStatus] || 0;
+        var willSkip = newPri < curPri;
+
+        // Note mô tả
+        var note = '';
+        if (!trk)         note = '⚠ Không có trong Tracking';
+        else if (willSkip) note = '⏭ Bỏ qua — đã ở status cao hơn (' + curStatus + ')';
+        else if (newStatus === 'Repaired') note = 'PO: ' + (poNumber || '—');
+        else if (newStatus === 'Repair Pending') note = 'Repair Date: ' + (repairDate || '—');
+        else if (newStatus === 'Rejected') note = 'Lý do: ' + (rejType || '—');
+        else if (newStatus === 'Approved') note = 'Total khớp';
+        else if (newStatus === 'Partially Approved') note = 'Total lệch ' + num(Math.abs(ovmTotal - estTotal));
+        else if (newStatus === 'Sent for Approval') note = 'Lấy Ref Number';
 
         _ovmData.push({
           cont_no: contNo, ref_no: refNo,
           est_total: estTotal, ovm_total: ovmTotal,
           app_date: appDateStr, new_status: newStatus,
+          repair_date: repairDate, po_number: poNumber, po_date: poDate,
+          rej_type: rejType,
           will_skip: willSkip, in_tracking: !!trk, note: note
         });
       });
@@ -1852,24 +1884,36 @@ async function handleOvmFile(input) {
 }
 
 function renderOvmPreview() {
-  var sentCount = _ovmData.filter(r => r.new_status === 'Sent for Approval' && !r.will_skip).length;
-  var appCount  = _ovmData.filter(r => r.new_status === 'Approved' && !r.will_skip).length;
-  var partCount = _ovmData.filter(r => r.new_status === 'Partially Approved' && !r.will_skip).length;
-  var skipCount = _ovmData.filter(r => r.will_skip).length;
-  var warnCount = _ovmData.filter(r => !r.in_tracking).length;
+  var sentCount    = _ovmData.filter(r => r.new_status === 'Sent for Approval'  && !r.will_skip).length;
+  var appCount     = _ovmData.filter(r => r.new_status === 'Approved'            && !r.will_skip).length;
+  var partCount    = _ovmData.filter(r => r.new_status === 'Partially Approved'  && !r.will_skip).length;
+  var repairCount  = _ovmData.filter(r => r.new_status === 'Repair Pending'      && !r.will_skip).length;
+  var repairedCount= _ovmData.filter(r => r.new_status === 'Repaired'            && !r.will_skip).length;
+  var rejCount     = _ovmData.filter(r => r.new_status === 'Rejected'            && !r.will_skip).length;
+  var skipCount    = _ovmData.filter(r => r.will_skip).length;
+  var warnCount    = _ovmData.filter(r => !r.in_tracking).length;
 
   document.getElementById('ovm-stats').innerHTML = `
     <div class="stat-card" style="padding:8px 12px">
       <div class="stat-label">Tổng dòng</div><div class="stat-value" style="font-size:18px">${_ovmData.length}</div>
     </div>
     ${sentCount ? `<div class="stat-card" style="padding:8px 12px">
-      <div class="stat-label">Sent for Approval</div><div class="stat-value" style="font-size:18px;color:var(--gray)">${sentCount}</div>
+      <div class="stat-label">Sent for Approval</div><div class="stat-value" style="font-size:18px;color:#1e40af">${sentCount}</div>
     </div>` : ''}
     ${appCount ? `<div class="stat-card" style="padding:8px 12px">
       <div class="stat-label">Approved</div><div class="stat-value" style="font-size:18px;color:var(--green)">${appCount}</div>
     </div>` : ''}
     ${partCount ? `<div class="stat-card" style="padding:8px 12px">
       <div class="stat-label">Partially Approved</div><div class="stat-value" style="font-size:18px;color:var(--amber)">${partCount}</div>
+    </div>` : ''}
+    ${repairCount ? `<div class="stat-card" style="padding:8px 12px">
+      <div class="stat-label">Repair Pending</div><div class="stat-value" style="font-size:18px;color:#0891b2">${repairCount}</div>
+    </div>` : ''}
+    ${repairedCount ? `<div class="stat-card" style="padding:8px 12px">
+      <div class="stat-label">Repaired</div><div class="stat-value" style="font-size:18px;color:var(--green)">${repairedCount}</div>
+    </div>` : ''}
+    ${rejCount ? `<div class="stat-card" style="padding:8px 12px;background:var(--red-light)">
+      <div class="stat-label" style="color:var(--red)">Rejected</div><div class="stat-value" style="font-size:18px;color:var(--red)">${rejCount}</div>
     </div>` : ''}
     ${skipCount ? `<div class="stat-card" style="padding:8px 12px;background:var(--bg)">
       <div class="stat-label">Bỏ qua (priority)</div><div class="stat-value" style="font-size:18px;color:var(--gray)">${skipCount}</div>
@@ -1957,6 +2001,8 @@ function calcTrackingStats(data) {
     revised:  data.filter(r => r.approval_status === 'Partially Approved - Revised').length,
     sent:     data.filter(r => r.approval_status === 'Sent for Approval').length,
     repair:   data.filter(r => r.approval_status === 'Repair Pending').length,
+    repaired: data.filter(r => r.approval_status === 'Repaired').length,
+    rejected: data.filter(r => r.approval_status === 'Rejected').length,
     pending:  data.filter(r => !r.approval_status || r.approval_status === 'Pending').length
   };
 }
@@ -1966,10 +2012,12 @@ function renderTrackingStats(s) {
   document.getElementById('tracking-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${s.total}</div></div>
     <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value" style="color:var(--green)">${s.approved}</div><div class="stat-sub">${pct(s.approved)}%</div></div>
+    ${s.repaired ? `<div class="stat-card"><div class="stat-label">Repaired</div><div class="stat-value" style="color:#065f46">${s.repaired}</div><div class="stat-sub">${pct(s.repaired)}%</div></div>` : ''}
     <div class="stat-card"><div class="stat-label">Partially</div><div class="stat-value" style="color:var(--amber)">${s.partial}</div><div class="stat-sub">${pct(s.partial)}%</div></div>
     ${s.revised ? `<div class="stat-card"><div class="stat-label">Revised</div><div class="stat-value" style="color:#3730a3">${s.revised}</div><div class="stat-sub">${pct(s.revised)}%</div></div>` : ''}
     ${s.sent ? `<div class="stat-card"><div class="stat-label">Sent for Appr.</div><div class="stat-value" style="color:var(--blue)">${s.sent}</div><div class="stat-sub">${pct(s.sent)}%</div></div>` : ''}
     ${s.repair ? `<div class="stat-card"><div class="stat-label">Repair Pending</div><div class="stat-value" style="color:#0891b2">${s.repair}</div><div class="stat-sub">${pct(s.repair)}%</div></div>` : ''}
+    ${s.rejected ? `<div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" style="color:var(--red)">${s.rejected}</div><div class="stat-sub">${pct(s.rejected)}%</div></div>` : ''}
     <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--gray)">${s.pending}</div></div>
   `;
 }
@@ -2893,6 +2941,7 @@ function todayStr() {
 function badge(status) {
   if (!status || status === 'Pending') return '<span class="badge b-gr">Pending</span>';
   if (status === 'Approved') return '<span class="badge b-ok">Approved</span>';
+  if (status === 'Repaired') return '<span class="badge b-ok" style="background:#d1fae5;color:#065f46">Repaired</span>';
   if (status === 'Partially Approved') return '<span class="badge b-wa">Partially Approved</span>';
   if (status === 'Partially Approved - Revised') return '<span class="badge b-wa" style="background:#e0e7ff;color:#3730a3">Partially Approved - Revised</span>';
   if (status === 'Sent for Approval') return '<span class="badge b-gr" style="background:#dbeafe;color:#1e40af">Sent for Approval</span>';
