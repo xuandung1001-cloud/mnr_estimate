@@ -1514,8 +1514,8 @@ async function handleOvmFile(input) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: false });
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
+      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
       if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
 
       // Cột cố định theo format file OVM hãng tàu
@@ -1530,18 +1530,11 @@ async function handleOvmFile(input) {
         var appDate   = row[21];
         var appDateStr = '';
         if (appDate) {
-          // raw:false → SheetJS trả string "M/D/YYYY h:mm:ss AM" hoặc Date object
-          var s = (appDate instanceof Date)
-            ? (appDate.getMonth()+1) + '/' + appDate.getDate() + '/' + appDate.getFullYear()
-            : String(appDate).trim();
-          var datePart = s.split(' ')[0]; // bỏ phần giờ
-          var parts = datePart.split('/');
-          if (parts.length === 3) {
-            var mo = parseInt(parts[0]), dy = parseInt(parts[1]), yr = parseInt(parts[2]);
-            if (yr < 100) yr += 2000;
-            // File OVM format Mỹ M/D/YYYY → convert dd/MM/yyyy
-            appDateStr = String(dy).padStart(2,'0') + '/' + String(mo).padStart(2,'0') + '/' + yr;
-          }
+          if (appDate instanceof Date) {
+            appDateStr = String(appDate.getDate()).padStart(2,'0') + '/' +
+                         String(appDate.getMonth()+1).padStart(2,'0') + '/' +
+                         appDate.getFullYear();
+          } else appDateStr = String(appDate);
         }
 
         // Lookup est total + current status từ tracking
@@ -1738,7 +1731,7 @@ function renderTrackingTable(data) {
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${r.approval_status === 'Partially Approved' ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button><button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
@@ -2083,6 +2076,18 @@ async function exportBulkTemplate() {
         ws[cellAddr].t = 's';
         ws[cellAddr].z = '@';
       }
+    }
+
+    // Format #,##0.00 cho các cột số
+    // G=6(Length), H=7(Width), L=11(Quantity), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
+    var numCols = [6, 7, 11, 13, 14, 15];
+    for (var R = 1; R <= range.e.r; R++) {
+      numCols.forEach(function(C) {
+        var addr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[addr] && ws[addr].t === 'n') {
+          ws[addr].z = '#,##0.00';
+        }
+      });
     }
 
     // Set column widths
