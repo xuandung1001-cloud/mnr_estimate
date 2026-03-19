@@ -456,6 +456,9 @@ td input:focus,td select:focus{background:#fffbeb}
             <select class="fi" id="trk-carrier" onchange="filterTracking()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
+            <label style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="trk-show-po" onchange="filterTracking()"> Hiện cont đã có PO
+            </label>
             <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
           <div class="tbl-wrap">
@@ -491,18 +494,11 @@ td input:focus,td select:focus{background:#fffbeb}
         <div class="stats-row" id="sum-stats"></div>
         <div class="card">
           <div class="filter-bar">
-            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No..." oninput="filterSummary()" style="flex:1;min-width:160px">
-            <select class="fi" id="sum-status" onchange="filterSummary()" style="width:160px">
-              <option value="">Tất cả trạng thái</option>
-              <option>Approved</option>
-              <option>Partially Approved</option>
-              <option>Pending</option>
-              <option>Rejected</option>
-            </select>
+            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No, PO Number..." oninput="filterSummary()" style="flex:1;min-width:160px">
             <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
-            <span style="font-size:11px;color:var(--gray);padding:0 8px;align-self:center">✓ Tự động từ Tracking</span>
+            <span style="font-size:11px;color:var(--green);padding:0 8px;align-self:center">✓ Cont đã có PO Number</span>
             <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
           </div>
           <div class="tbl-wrap">
@@ -2036,7 +2032,9 @@ function filterTracking() {
   const q = document.getElementById('trk-search').value.toLowerCase();
   const st = document.getElementById('trk-status').value;
   const ca = document.getElementById('trk-carrier').value;
+  const showPO = document.getElementById('trk-show-po').checked;
   const filtered = state.tracking.filter(r => {
+    if (!showPO && r.po_number) return false; // ẩn cont đã có PO Number
     const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
     const matchSt = !st || r.approval_status === st;
     const matchCa = !ca || r.carrier === ca;
@@ -2078,22 +2076,21 @@ function exportTracking() {
 
 // ===================== SUMMARY =====================
 function renderSummary() {
-  const data = state.tracking; // dùng thẳng state.tracking
+  const data = state.tracking.filter(r => r.po_number); // chỉ cont đã có PO
 
   // Stats
   const total = data.length;
-  const approved = data.filter(r => r.approval_status === 'Approved').length;
-  const repaired = data.filter(r => r.repair_date).length;
+  const totalCost = data.reduce((s, r) => s + (parseFloat(r.total_cost)||0), 0);
   const totalApp = data.reduce((s, r) => s + (parseFloat(r.total_approved)||0), 0);
+  const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
 
   document.getElementById('sum-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${total}</div></div>
-    <div class="stat-card"><div class="stat-label">Đã Approved</div><div class="stat-value" style="color:var(--green)">${approved}</div><div class="stat-sub">${total?Math.round(approved/total*100):0}%</div></div>
-    <div class="stat-card"><div class="stat-label">Đã Repair</div><div class="stat-value" style="color:var(--blue)">${repaired}</div><div class="stat-sub">${total?Math.round(repaired/total*100):0}%</div></div>
-    <div class="stat-card"><div class="stat-label">Total Approved (USD)</div><div class="stat-value" style="font-size:16px">${totalApp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    <div class="stat-card"><div class="stat-label">Tổng containers có PO</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Số Carrier</div><div class="stat-value" style="color:var(--blue)">${carriers.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Cost (USD)</div><div class="stat-value" style="font-size:16px">${totalCost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Approved (USD)</div><div class="stat-value" style="font-size:16px;color:var(--green)">${totalApp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
   `;
 
-  const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
   document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
   document.getElementById('rpt-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
 
@@ -2102,13 +2099,12 @@ function renderSummary() {
 
 function filterSummary() {
   const q = document.getElementById('sum-search').value.toLowerCase();
-  const st = document.getElementById('sum-status').value;
   const ca = document.getElementById('sum-carrier').value;
   const filtered = state.tracking.filter(r => {
-    const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
-    const matchSt = !st || r.approval_status === st;
+    if (!r.po_number) return false; // chỉ cont có PO
+    const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q) || (r.po_number||'').toLowerCase().includes(q);
     const matchCa = !ca || r.carrier === ca;
-    return matchQ && matchSt && matchCa;
+    return matchQ && matchCa;
   });
   renderSummaryTable(filtered);
 }
