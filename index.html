@@ -576,19 +576,19 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="screen" id="screen-bulk">
         <div class="card">
           <div class="mode-tabs">
-            <div class="mode-tab active" onclick="setBulkMode('A',this)">A — Tất cả Estimate</div>
-            <div class="mode-tab" onclick="setBulkMode('B',this)">B — Chỉ Approved/Partially</div>
+            <div class="mode-tab active" onclick="setBulkMode('A',this)">A — Estimate Detail</div>
+            <div class="mode-tab" onclick="setBulkMode('B',this)">B — Approve Detail</div>
           </div>
           <div class="filter-bar">
             <input class="fi" id="bulk-search" placeholder="Tìm Equipment No..." style="flex:1">
             <button class="btn btn-blue btn-sm" onclick="loadBulk()">Tải danh sách</button>
-            <button class="btn btn-sm" onclick="exportBulkTemplate()">Export Bulk Template</button>
+            <button class="btn btn-sm" id="btn-export-bulk" onclick="exportBulkTemplate()">Export Bulk Template</button>
             <button class="btn btn-sm" onclick="exportEstList()">Export Est. List</button>
             <button class="btn btn-sm" onclick="exportAppList()">Export Approved List</button>
           </div>
           <div class="tbl-wrap">
             <table>
-              <thead>
+              <thead id="bulk-thead">
                 <tr>
                   <th style="width:32px">STT</th>
                   <th style="width:105px">Equipment No</th>
@@ -1177,8 +1177,11 @@ function loadEstPhotos(contNo, carrier) {
 
       label.textContent = contNo + ' / ' + carrier + ' — ' + res.photos.length + ' ảnh';
       grid.innerHTML = res.photos.map(function(p, idx) {
+        var fallback1 = 'https://drive.google.com/thumbnail?id=' + p.id + '&sz=w400';
+        var fallback2 = 'https://drive.google.com/uc?export=view&id=' + p.id;
         return '<div class="est-photo-item" data-idx="' + idx + '" style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--bg);cursor:zoom-in">'
-          + '<img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+          + '<img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"'
+          + ' onerror="if(this.dataset.retry===\'1\'){this.dataset.retry=\'2\';this.src=\'' + fallback2 + '\';}else if(!this.dataset.retry){this.dataset.retry=\'1\';this.src=\'' + fallback1 + '\';}">'
           + '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>'
           + '</div>';
       }).join('');
@@ -1209,7 +1212,13 @@ function openLightboxIdx(idx) {
   var idMatch = p.url.match(/\/d\/([a-zA-Z0-9_-]{10,})\//);
   if (!idMatch) idMatch = p.url.match(/id=([a-zA-Z0-9_-]{10,})/);
   var imgUrl = idMatch ? 'https://lh3.googleusercontent.com/d/' + idMatch[1] : p.url;
-  document.getElementById('lightbox-img').src = imgUrl;
+  var fileId = idMatch ? idMatch[1] : '';
+  var lb = document.getElementById('lightbox-img');
+  lb.src = imgUrl;
+  lb.onerror = fileId ? function() {
+    if (!this.dataset.retry) { this.dataset.retry='1'; this.src='https://drive.google.com/thumbnail?id='+fileId+'&sz=w1600'; }
+    else if (this.dataset.retry==='1') { this.dataset.retry='2'; this.src='https://drive.google.com/uc?export=view&id='+fileId; }
+  } : null;
   document.getElementById('lightbox-name').textContent = p.name || '';
   document.getElementById('lightbox-counter').textContent = (_lightboxIdx + 1) + ' / ' + photos.length;
   document.getElementById('lightbox').style.display = 'flex';
@@ -2295,6 +2304,48 @@ function setBulkMode(mode, el) {
   state.bulkMode = mode;
   document.querySelectorAll('#screen-bulk .mode-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+
+  // Đổi thead theo mode
+  var thead = document.getElementById('bulk-thead');
+  if (mode === 'A') {
+    thead.innerHTML = `<tr>
+      <th style="width:32px">STT</th>
+      <th style="width:105px">Equipment No</th>
+      <th style="width:78px">Est. Date</th>
+      <th style="width:50px">Carrier</th>
+      <th style="width:65px">Dmg Loc</th>
+      <th style="width:70px">Component</th>
+      <th style="width:55px">Rep Type</th>
+      <th style="width:38px">Qty</th>
+      <th style="width:62px;text-align:right">Total</th>
+      <th style="width:70px;text-align:right">Total App.</th>
+      <th style="width:115px">Status</th>
+    </tr>`;
+    document.getElementById('btn-export-bulk').textContent = 'Export Bulk Template';
+    document.getElementById('btn-export-bulk').onclick = exportBulkTemplate;
+  } else {
+    thead.innerHTML = `<tr>
+      <th style="width:32px">STT</th>
+      <th style="width:105px">Equipment No</th>
+      <th style="width:78px">Est. Date</th>
+      <th style="width:50px">Carrier</th>
+      <th style="width:65px">App Dmg Loc</th>
+      <th style="width:70px">App Component</th>
+      <th style="width:55px">App Rep Type</th>
+      <th style="width:38px">App Qty</th>
+      <th style="width:60px;text-align:right">App Hours</th>
+      <th style="width:65px;text-align:right">App Material</th>
+      <th style="width:65px;text-align:right">App Labour</th>
+      <th style="width:70px;text-align:right">Total App.</th>
+      <th style="width:115px">Status</th>
+    </tr>`;
+    document.getElementById('btn-export-bulk').textContent = 'Export Approve Template';
+    document.getElementById('btn-export-bulk').onclick = exportApproveTemplate;
+  }
+
+  // Reset tbody
+  var cols = mode === 'A' ? 11 : 13;
+  document.getElementById('bulk-rows').innerHTML = '<tr><td colspan="' + cols + '" class="loading">Nhấn "Tải danh sách" để xem dữ liệu</td></tr>';
 }
 
 // Lưu danh sách cont đang filter để dùng khi export
@@ -2330,21 +2381,45 @@ function loadBulk() {
 
   var tbody = document.getElementById('bulk-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy container nào — kiểm tra lại số cont</td></tr>';
+    var cols = state.bulkMode === 'B' ? 13 : 11;
+    tbody.innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy container nào — kiểm tra lại số cont</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map(function(r, i) { return `
-    <tr>
-      <td>${i+1}</td>
-      <td>${r.container_no||''}</td>
-      <td>${formatDate(r.est_date)}</td>
-      <td>${r.carrier||''}</td>
-      <td>—</td><td>—</td><td>—</td><td>—</td>
-      <td style="text-align:right">${num(r.total_cost)}</td>
-      <td style="text-align:right;color:var(--green)">${r.total_approved?num(r.total_approved):'—'}</td>
-      <td>${badge(r.approval_status)}</td>
-    </tr>
-  `; }).join('');
+
+  if (state.bulkMode === 'B') {
+    // Mode B: hiển thị cột app_*
+    tbody.innerHTML = data.map(function(r, i) { return `
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.container_no||''}</td>
+        <td>${formatDate(r.est_date)}</td>
+        <td>${r.carrier||''}</td>
+        <td>${r.app_damage_location||'—'}</td>
+        <td>${r.app_component||'—'}</td>
+        <td>${r.app_repair_type||'—'}</td>
+        <td>${r.app_quantity||'—'}</td>
+        <td style="text-align:right">${r.app_labour_hours?num(r.app_labour_hours):'—'}</td>
+        <td style="text-align:right">${r.app_material_cost?num(r.app_material_cost):'—'}</td>
+        <td style="text-align:right">${r.app_labour_cost?num(r.app_labour_cost):'—'}</td>
+        <td style="text-align:right;color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
+        <td>${badge(r.approval_status)}</td>
+      </tr>
+    `; }).join('');
+  } else {
+    // Mode A: giữ nguyên
+    tbody.innerHTML = data.map(function(r, i) { return `
+      <tr>
+        <td>${i+1}</td>
+        <td>${r.container_no||''}</td>
+        <td>${formatDate(r.est_date)}</td>
+        <td>${r.carrier||''}</td>
+        <td>—</td><td>—</td><td>—</td><td>—</td>
+        <td style="text-align:right">${num(r.total_cost)}</td>
+        <td style="text-align:right;color:var(--green)">${r.total_approved?num(r.total_approved):'—'}</td>
+        <td>${badge(r.approval_status)}</td>
+      </tr>
+    `; }).join('');
+  }
   toast('Đã tải ' + data.length + ' containers', 2000);
 }
 
@@ -2491,6 +2566,89 @@ async function exportBulkTemplate() {
 }
 function exportEstList() { exportTableToCSV('bulk-rows','estimated_list.csv'); toast('Đã export!', 2000); }
 function exportAppList() { exportTableToCSV('bulk-rows','approved_list.csv'); toast('Đã export!', 2000); }
+
+// ===================== APPROVE TEMPLATE EXPORT =====================
+async function exportApproveTemplate() {
+  toast('Đang tải dữ liệu approve...');
+  try {
+    if (typeof XLSX === 'undefined') {
+      await new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    if (typeof bulkFilteredConts === 'undefined' || bulkFilteredConts.length === 0) {
+      toast('Nhấn "Tải danh sách" trước rồi mới export!', 3000); return;
+    }
+    var res = await apiGet({ action: 'getAllEstimates' });
+    if (!res.success || !res.data || !res.data.length) { toast('Không có dữ liệu!', 3000); return; }
+
+    var header = [
+      'Equipment Number','Estimate Date & Time (DD/MM/YYYY HH:MM:SS)',
+      'Repair Sequence','Damage Location','Component','Damage Type',
+      'Repair Type','Length','Width','Unit','Part Number','Quantity',
+      'Currency','Labour Hours','Labour Cost','Material Cost','Tax',
+      'Responsible Party','Upgrade Code','Material Type','Repair Remarks',
+      'Header Remarks','Grade Code','Associate Container','Lumpsum Code',
+      'Old Part Serial No','New Part Serial No','Damage Level','Old Part No'
+    ];
+    var rows = [header];
+    var exportData = res.data.filter(function(r) { return bulkFilteredConts.indexOf(r.equipment_number) !== -1; });
+
+    exportData.forEach(function(r) {
+      if (!r.app_damage_location && !r.app_component && !r.app_repair_type) return;
+      var dt = r.estimate_datetime || '';
+      if (dt) {
+        var parts = dt.split(' ')[0];
+        if (parts && parts.includes('-')) { var p = parts.split('-'); if (p.length===3) dt = p[2]+'/'+p[1]+'/'+p[0]; }
+      }
+      rows.push([
+        r.equipment_number       || '',
+        { t:'s', v:dt, z:'@' },
+        r.repair_seq             || '',
+        r.app_damage_location    || r.damage_location   || '',
+        r.app_component          || r.component         || '',
+        r.app_damage_type        || r.damage_type       || '',
+        r.app_repair_type        || r.repair_type       || '',
+        r.app_length             || r.length            || '',
+        r.app_width              || r.width             || '',
+        r.app_unit               || r.unit              || '',
+        r.part_number            || '',
+        r.app_quantity           || r.quantity          || 1,
+        r.currency               || 'USD',
+        r.app_labour_hours       || 0,
+        r.app_labour_cost        || 0,
+        r.app_material_cost      || 0,
+        r.tax                    || '',
+        r.app_responsible_party  || r.responsible_party || '',
+        r.upgrade_code           || '',
+        r.app_material_type      || r.material_type     || 'SK',
+        r.app_remark_details     || '',
+        '', '', r.associate_container||'', r.lumpsum_code||'', '','','',''
+      ]);
+    });
+
+    if (rows.length <= 1) { toast('Không có dòng approve nào để xuất!', 3000); return; }
+
+    var wb = XLSX.utils.book_new();
+    wb.Props = { Title:'Approved Bulk List', Author:'MNR Estimate', CreatedDate:new Date() };
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    for (var R=1; R<=range.e.r; R++) {
+      var ca = XLSX.utils.encode_cell({r:R,c:1}); if(ws[ca]){ws[ca].t='s';ws[ca].z='@';}
+    }
+    var acctFmt = '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)';
+    [7,8,13,14,15].forEach(function(C){ for(var R=1;R<=range.e.r;R++){ var addr=XLSX.utils.encode_cell({r:R,c:C}); if(ws[addr]&&ws[addr].t==='n') ws[addr].z=acctFmt; }});
+    ws['!cols']=[{wch:14},{wch:22},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:10},{wch:8},{wch:8},{wch:10},{wch:10},{wch:10},{wch:6},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12},{wch:10},{wch:14},{wch:14},{wch:10},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+    var today=new Date(), dd=String(today.getDate()).padStart(2,'0'), mm=String(today.getMonth()+1).padStart(2,'0'), yyyy=today.getFullYear();
+    XLSX.writeFile(wb, 'Approved_Bulk_List_'+dd+mm+yyyy+'.xlsx', {bookSST:true});
+    toast('Đã xuất '+(rows.length-1)+' dòng!', 3000);
+  } catch(err) { toast('Lỗi: '+err.message, 4000); console.error(err); }
+}
 
 // ===================== REPORT =====================
 function genSummaryReport() {
