@@ -1782,12 +1782,18 @@ async function handleOvmFile(input) {
   } catch(e) { console.error('Reload tracking error:', e); }
 
   toast('Đang đọc file...');
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: false });
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
-      if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
+  // Đọc file bằng Promise để await được
+  const fileBuffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+
+  try {
+    const wb   = XLSX.read(new Uint8Array(fileBuffer), { type: 'array', cellDates: false });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
+    if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
 
       // Cột cố định theo format file OVM:
       // A(0)=Equipment Number, C(2)=Ref Number, K(10)=Total Cost
@@ -1919,11 +1925,9 @@ async function handleOvmFile(input) {
 
       if (!_ovmData.length) { toast('Không đọc được dữ liệu!', 3000); return; }
       renderOvmPreview();
-    } catch(err) {
-      toast('Lỗi đọc file: ' + err.message, 4000);
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  } catch(err) {
+    toast('Lỗi đọc file: ' + err.message, 4000);
+  }
 }
 
 function renderOvmPreview() {
