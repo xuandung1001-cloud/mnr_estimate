@@ -1868,6 +1868,13 @@ async function handleOvmFile(input) {
           return cn.toString().toUpperCase() === contNo;
         });
 
+        // DEBUG: xem key tracking lần đầu
+        if (state.tracking.length > 0 && !window._trkLogged) {
+          window._trkLogged = true;
+          console.log('TRACKING KEYS:', Object.keys(state.tracking[0]));
+          console.log('TRACKING ROW 0:', JSON.stringify(state.tracking[0]));
+        }
+
         // Lấy field value không phụ thuộc key name
         function getField(obj, aliases) {
           if (!obj) return '';
