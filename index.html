@@ -1774,6 +1774,13 @@ async function handleOvmFile(input) {
     });
   }
 
+  // Reload tracking mới nhất trước khi parse — đảm bảo key đúng và data mới
+  toast('Đang tải tracking...');
+  try {
+    const trkRes = await apiGet({ action: 'getTracking' });
+    if (trkRes && trkRes.success) state.tracking = trkRes.data;
+  } catch(e) { console.error('Reload tracking error:', e); }
+
   toast('Đang đọc file...');
   const reader = new FileReader();
   reader.onload = function(e) {
