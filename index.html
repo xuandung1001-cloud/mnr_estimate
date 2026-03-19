@@ -1757,7 +1757,6 @@ async function saveRevise() {
 }
 
 // ===================== OVM =====================
-// ===================== OVM =====================
 var _ovmData = [];
 
 async function handleOvmFile(input) {
@@ -1774,15 +1773,13 @@ async function handleOvmFile(input) {
     });
   }
 
-  // Reload tracking mới nhất trước khi parse — đảm bảo key đúng và data mới
   toast('Đang tải tracking...');
   try {
     const trkRes = await apiGet({ action: 'getTracking' });
     if (trkRes && trkRes.success) state.tracking = trkRes.data;
-  } catch(e) { console.error('Reload tracking error:', e); }
+  } catch(e) { console.error('Tracking reload error:', e); }
 
   toast('Đang đọc file...');
-  // Đọc file bằng Promise để await được
   const fileBuffer = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => resolve(e.target.result);
@@ -1795,136 +1792,101 @@ async function handleOvmFile(input) {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
     if (rows.length < 2) { toast('File không có dữ liệu!', 3000); return; }
 
-      // Cột cố định theo format file OVM:
-      // A(0)=Equipment Number, C(2)=Ref Number, K(10)=Total Cost
-      // N(13)=Repair Completion Date, O(14)=PO Number, P(15)=PO Date
-      // Q(16)=Status, R(17)=Rejection Type, V(21)=Approved Date
-      _ovmData = [];
+    _ovmData = [];
 
-      // Helper parse date string M/D/YYYY hoặc Date object → dd/MM/yyyy
-      function parseDateStr(val) {
-        if (!val) return '';
-        var s = (val instanceof Date)
-          ? (val.getMonth()+1) + '/' + val.getDate() + '/' + val.getFullYear()
-          : String(val).trim();
-        var datePart = s.split(' ')[0];
-        var parts = datePart.split('/');
-        if (parts.length === 3) {
-          var mo = parseInt(parts[0]), dy = parseInt(parts[1]), yr = parseInt(parts[2]);
-          if (yr < 100) yr += 2000;
-          return String(dy).padStart(2,'0') + '/' + String(mo).padStart(2,'0') + '/' + yr;
+    function parseDateStr(val) {
+      if (!val) return '';
+      var s = String(val).trim();
+      var datePart = s.split(' ')[0];
+      var parts = datePart.split('/');
+      if (parts.length === 3) {
+        var mo = parseInt(parts[0]), dy = parseInt(parts[1]), yr = parseInt(parts[2]);
+        if (yr < 100) yr += 2000;
+        return String(dy).padStart(2,'0') + '/' + String(mo).padStart(2,'0') + '/' + yr;
+      }
+      var months = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+      var m2 = s.match(/^(\d+)-([A-Z]+)-(\d+)$/i);
+      if (m2) {
+        var dy2=parseInt(m2[1]), mo2=months[m2[2].toUpperCase()]||1, yr2=parseInt(m2[3]);
+        if (yr2 < 100) yr2 += 2000;
+        return String(dy2).padStart(2,'0')+'/'+String(mo2).padStart(2,'0')+'/'+yr2;
+      }
+      return '';
+    }
+
+    var PRIORITY = {
+      'Pending':0,'Sent for Approval':1,
+      'Approved':2,'Partially Approved':2,
+      'Partially Approved - Revised':3,
+      'Repair Pending':4,'Repaired':5,'Rejected':6
+    };
+
+    rows.slice(1).forEach(function(row) {
+      var contNo     = String(row[0]  || '').trim().toUpperCase();
+      if (!contNo) return;
+      var refNo      = String(row[2]  || '').trim();
+      var ovmTotal   = parseFloat(row[10]) || 0;
+      var repairDate = parseDateStr(row[13]);
+      var poNumber   = String(row[14] || '').trim();
+      var poDate     = parseDateStr(row[15]);
+      var ovmStatus  = String(row[16] || '').trim();
+      var rejType    = String(row[17] || '').trim();
+      var appDateStr = parseDateStr(row[21]);
+
+      // === BƯỚC 1: Tìm tracking ===
+      var trk = null;
+      for (var i = 0; i < state.tracking.length; i++) {
+        if ((state.tracking[i].container_no || '').toString().trim().toUpperCase() === contNo) {
+          trk = state.tracking[i]; break;
         }
-        // Format dd-MMM-yy (ví dụ: 26-DEC-25)
-        var months = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
-        var m2 = s.match(/^(\d+)-([A-Z]+)-(\d+)$/i);
-        if (m2) {
-          var dy2 = parseInt(m2[1]), mo2 = months[m2[2].toUpperCase()]||1, yr2 = parseInt(m2[3]);
-          if (yr2 < 100) yr2 += 2000;
-          return String(dy2).padStart(2,'0') + '/' + String(mo2).padStart(2,'0') + '/' + yr2;
-        }
-        return '';
       }
 
-      // Priority table
-      var PRIORITY = {
-        'Pending': 0, 'Sent for Approval': 1,
-        'Approved': 2, 'Partially Approved': 2,
-        'Partially Approved - Revised': 3,
-        'Repair Pending': 4, 'Repaired': 5, 'Rejected': 6
-      };
+      // === BƯỚC 2: Lấy est total và cur status ===
+      var estTotal  = trk ? (parseFloat(trk.total_cost) || 0) : 0;
+      var curStatus = trk ? (trk.approval_status || '') : '';
 
-      rows.slice(1).forEach(function(row) {
-        var contNo = String(row[0] || '').trim().toUpperCase();
-        if (!contNo) return;
-
-        var refNo       = String(row[2]  || '').trim();
-        var ovmTotal    = parseFloat(row[10]) || 0;
-        var repairDate  = parseDateStr(row[13]);
-        var poNumber    = String(row[14] || '').trim();
-        var poDate      = parseDateStr(row[15]);
-        var ovmStatus   = String(row[16] || '').trim();
-        var rejType     = String(row[17] || '').trim();
-        var appDateStr  = parseDateStr(row[21]);
-
-        // Map status từ OVM sang app
-        // Nếu OVM = Approved nhưng total lệch → Partially Approved
-        var newStatus;
-        if (ovmStatus === 'Sent for Approval') {
-          newStatus = 'Sent for Approval';
-        } else if (ovmStatus === 'Approved' || ovmStatus === 'Partially Approved') {
-          if (!trk) {
-            // Không có trong tracking → tin vào OVM status
-            newStatus = ovmStatus;
-          } else {
-            // Có trong tracking → so sánh total
-            var diff = Math.abs(ovmTotal - estTotal);
-            console.log('DIFF CHECK:', contNo, 'est=', estTotal, 'ovm=', ovmTotal, 'diff=', diff);
-            newStatus = diff < 0.01 ? 'Approved' : 'Partially Approved';
-          }
-        } else if (ovmStatus === 'Repair Pending') {
-          newStatus = 'Repair Pending';
-        } else if (ovmStatus === 'Repaired') {
-          newStatus = 'Repaired';
-        } else if (ovmStatus === 'Rejected') {
-          newStatus = 'Rejected';
+      // === BƯỚC 3: Detect new status ===
+      var newStatus;
+      if (ovmStatus === 'Sent for Approval') {
+        newStatus = 'Sent for Approval';
+      } else if (ovmStatus === 'Approved' || ovmStatus === 'Partially Approved') {
+        if (!trk) {
+          newStatus = ovmStatus; // không có tracking → tin OVM
         } else {
-          newStatus = ovmStatus;
+          var diff = Math.abs(ovmTotal - estTotal);
+          newStatus = diff < 0.01 ? 'Approved' : 'Partially Approved';
         }
+      } else if (ovmStatus === 'Repair Pending')  { newStatus = 'Repair Pending'; }
+      else if (ovmStatus === 'Repaired')           { newStatus = 'Repaired'; }
+      else if (ovmStatus === 'Rejected')           { newStatus = 'Rejected'; }
+      else { newStatus = ovmStatus; }
 
-        // Lookup tracking - thử tất cả field name có thể
+      // === BƯỚC 4: Check priority ===
+      var willSkip = !!trk && (PRIORITY[newStatus]||0) < (PRIORITY[curStatus]||0) && newStatus !== 'Rejected';
 
-        var trk = null;
-        for (var ti = 0; ti < state.tracking.length; ti++) {
-          var t = state.tracking[ti];
-          var tkeys = Object.keys(t);
-          var cnKey = tkeys.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === 'containerno'; });
-          var cn = cnKey ? String(t[cnKey]||'').trim().toUpperCase() : '';
-          if (cn === contNo) { trk = t; break; }
-        }
+      // === BƯỚC 5: Note ===
+      var note = '';
+      if (!trk)           note = '⚠ Không có trong Tracking';
+      else if (willSkip)  note = '⏭ Bỏ qua — status cao hơn (' + curStatus + ')';
+      else if (newStatus === 'Repaired')           note = 'PO: ' + (poNumber || '—');
+      else if (newStatus === 'Repair Pending')     note = 'Repair Date: ' + (repairDate || '—');
+      else if (newStatus === 'Rejected')           note = 'Lý do: ' + (rejType || '—');
+      else if (newStatus === 'Approved')           note = 'Total khớp (' + num(ovmTotal) + ')';
+      else if (newStatus === 'Partially Approved') note = 'Total lệch ' + num(Math.abs(ovmTotal - estTotal));
+      else if (newStatus === 'Sent for Approval')  note = 'Lấy Ref Number';
 
-        // Lấy total_cost từ tracking
-        var estTotal = 0;
-        if (trk) {
-          var tkeys2 = Object.keys(trk);
-          var tcKey = tkeys2.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === 'totalcost'; });
-          estTotal = tcKey ? (parseFloat(trk[tcKey]) || 0) : 0;
-        }
-
-        var curStatus = '';
-        if (trk) {
-          var tkeys3 = Object.keys(trk);
-          var stKey = tkeys3.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === 'approvalstatus'; });
-          curStatus = stKey ? (trk[stKey] || '') : '';
-        }
-
-        // Check priority
-        var newPri = PRIORITY[newStatus] || 0;
-        var curPri = PRIORITY[curStatus] || 0;
-        var willSkip = !!trk && newPri < curPri;
-
-        // Note mô tả
-        var note = '';
-        if (!trk)          note = '⚠ Không có trong Tracking';
-        else if (willSkip) note = '⏭ Bỏ qua — đã ở status cao hơn (' + curStatus + ')';
-        else if (newStatus === 'Repaired')           note = 'PO: ' + (poNumber || '—');
-        else if (newStatus === 'Repair Pending')     note = 'Repair Date: ' + (repairDate || '—');
-        else if (newStatus === 'Rejected')           note = 'Lý do: ' + (rejType || '—');
-        else if (newStatus === 'Approved')           note = 'Total khớp';
-        else if (newStatus === 'Partially Approved') note = 'Total lệch ' + num(Math.abs(ovmTotal - estTotal));
-        else if (newStatus === 'Sent for Approval')  note = 'Lấy Ref Number';
-
-        _ovmData.push({
-          cont_no: contNo, ref_no: refNo,
-          est_total: estTotal, ovm_total: ovmTotal,
-          app_date: appDateStr, new_status: newStatus,
-          repair_date: repairDate, po_number: poNumber, po_date: poDate,
-          rej_type: rejType,
-          will_skip: willSkip, in_tracking: !!trk, note: note
-        });
+      _ovmData.push({
+        cont_no: contNo, ref_no: refNo,
+        est_total: estTotal, ovm_total: ovmTotal,
+        app_date: appDateStr, new_status: newStatus,
+        repair_date: repairDate, po_number: poNumber, po_date: poDate,
+        rej_type: rejType,
+        will_skip: willSkip, in_tracking: !!trk, note: note
       });
+    });
 
-      if (!_ovmData.length) { toast('Không đọc được dữ liệu!', 3000); return; }
-      renderOvmPreview();
+    if (!_ovmData.length) { toast('Không đọc được dữ liệu!', 3000); return; }
+    renderOvmPreview();
   } catch(err) {
     toast('Lỗi đọc file: ' + err.message, 4000);
   }
