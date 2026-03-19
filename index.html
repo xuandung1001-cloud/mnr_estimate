@@ -1852,12 +1852,16 @@ async function handleOvmFile(input) {
         if (ovmStatus === 'Sent for Approval') {
           newStatus = 'Sent for Approval';
         } else if (ovmStatus === 'Approved' || ovmStatus === 'Partially Approved') {
-          var base = estTotal > 0 ? estTotal : ovmTotal;
-          var diff = Math.abs(ovmTotal - estTotal);
-          var pct  = base > 0 ? diff / base : 0;
-          newStatus = pct < 0.005 ? 'Approved' : 'Partially Approved';
-          // Debug
-          console.log('CHECK:', contNo, 'estTotal=', estTotal, 'ovmTotal=', ovmTotal, 'diff=', diff, 'pct=', pct, '→', newStatus);
+          if (!trk) {
+            // Không có trong tracking → tin vào OVM status
+            newStatus = ovmStatus;
+          } else {
+            // Có trong tracking → so sánh total
+            var base = estTotal > 0 ? estTotal : ovmTotal;
+            var diff = Math.abs(ovmTotal - estTotal);
+            var pct  = base > 0 ? diff / base : 0;
+            newStatus = pct < 0.005 ? 'Approved' : 'Partially Approved';
+          }
         } else if (ovmStatus === 'Repair Pending') {
           newStatus = 'Repair Pending';
         } else if (ovmStatus === 'Repaired') {
@@ -1869,10 +1873,7 @@ async function handleOvmFile(input) {
         }
 
         // Lookup tracking - thử tất cả field name có thể
-        if (!window._trkDone && state.tracking.length > 0) {
-          window._trkDone = true;
-          console.log('=== TRACKING[0] RAW ===', JSON.stringify(state.tracking[0]));
-        }
+
         var trk = null;
         for (var ti = 0; ti < state.tracking.length; ti++) {
           var t = state.tracking[ti];
