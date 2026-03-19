@@ -576,8 +576,8 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="screen" id="screen-bulk">
         <div class="card">
           <div class="mode-tabs">
-            <div class="mode-tab active" onclick="setBulkMode('A',this)">A — Estimate Detail</div>
-            <div class="mode-tab" onclick="setBulkMode('B',this)">B — Approve Detail</div>
+            <div class="mode-tab active" onclick="setBulkMode('A',this)">Estimate Detail</div>
+            <div class="mode-tab" onclick="setBulkMode('B',this)">Approve Detail</div>
           </div>
           <div class="filter-bar">
             <input class="fi" id="bulk-search" placeholder="Tìm Equipment No..." style="flex:1">
@@ -593,18 +593,25 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:32px">STT</th>
                   <th style="width:105px">Equipment No</th>
                   <th style="width:78px">Est. Date</th>
-                  <th style="width:50px">Carrier</th>
-                  <th style="width:65px">Dmg Loc</th>
-                  <th style="width:70px">Component</th>
+                  <th style="width:46px">Carrier</th>
+                  <th style="width:60px">Dmg Loc</th>
+                  <th style="width:75px">Component</th>
+                  <th style="width:55px">Dmg Type</th>
                   <th style="width:55px">Rep Type</th>
-                  <th style="width:38px">Qty</th>
+                  <th style="width:48px">Length</th>
+                  <th style="width:48px">Width</th>
+                  <th style="width:40px">Unit</th>
+                  <th style="width:35px">Qty</th>
+                  <th style="width:55px;text-align:right">Labour H.</th>
+                  <th style="width:58px;text-align:right">Labour $</th>
+                  <th style="width:62px;text-align:right">Material</th>
                   <th style="width:62px;text-align:right">Total</th>
-                  <th style="width:70px;text-align:right">Total App.</th>
+                  <th style="width:60px">Resp.</th>
                   <th style="width:115px">Status</th>
                 </tr>
               </thead>
               <tbody id="bulk-rows">
-                <tr><td colspan="11" class="loading">Nhấn "Tải danh sách" để xem dữ liệu</td></tr>
+                <tr><td colspan="18" class="loading">Nhấn "Tải danh sách" để xem dữ liệu</td></tr>
               </tbody>
             </table>
           </div>
@@ -2312,13 +2319,20 @@ function setBulkMode(mode, el) {
       <th style="width:32px">STT</th>
       <th style="width:105px">Equipment No</th>
       <th style="width:78px">Est. Date</th>
-      <th style="width:50px">Carrier</th>
-      <th style="width:65px">Dmg Loc</th>
-      <th style="width:70px">Component</th>
+      <th style="width:46px">Carrier</th>
+      <th style="width:60px">Dmg Loc</th>
+      <th style="width:75px">Component</th>
+      <th style="width:55px">Dmg Type</th>
       <th style="width:55px">Rep Type</th>
-      <th style="width:38px">Qty</th>
+      <th style="width:48px">Length</th>
+      <th style="width:48px">Width</th>
+      <th style="width:40px">Unit</th>
+      <th style="width:35px">Qty</th>
+      <th style="width:55px;text-align:right">Labour H.</th>
+      <th style="width:58px;text-align:right">Labour $</th>
+      <th style="width:62px;text-align:right">Material</th>
       <th style="width:62px;text-align:right">Total</th>
-      <th style="width:70px;text-align:right">Total App.</th>
+      <th style="width:60px">Resp.</th>
       <th style="width:115px">Status</th>
     </tr>`;
     document.getElementById('btn-export-bulk').textContent = 'Export Bulk Template';
@@ -2344,7 +2358,7 @@ function setBulkMode(mode, el) {
   }
 
   // Reset tbody
-  var cols = mode === 'A' ? 11 : 13;
+  var cols = mode === 'A' ? 18 : 13;
   document.getElementById('bulk-rows').innerHTML = '<tr><td colspan="' + cols + '" class="loading">Nhấn "Tải danh sách" để xem dữ liệu</td></tr>';
 }
 
@@ -2407,61 +2421,50 @@ async function loadBulk() {
     return;
   }
 
-  // Mode A: dùng state.tracking như cũ
-  var data = state.tracking;
-
-  // Filter theo danh sách cont nếu có
-  if (searchList.length > 0) {
-    data = data.filter(function(r) {
-      return searchList.includes((r.container_no || '').toUpperCase().trim());
-    });
-  }
-
-  // Lưu lại để export
-  bulkFilteredConts = data.map(function(r) { return r.container_no; });
-
+  // Mode A: fetch getAllEstimates, hiển thị chi tiết từng dòng
   var tbody = document.getElementById('bulk-rows');
-  if (!data.length) {
-    var cols = state.bulkMode === 'B' ? 13 : 11;
-    tbody.innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy container nào — kiểm tra lại số cont</td></tr>';
-    return;
-  }
-
-  if (state.bulkMode === 'B') {
-    // Mode B: hiển thị cột app_*
+  tbody.innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  try {
+    var res = await apiGet({ action: 'getAllEstimates' });
+    if (!res.success || !res.data || !res.data.length) {
+      tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+      return;
+    }
+    var data = res.data;
+    if (searchList.length > 0) {
+      data = data.filter(function(r) { return searchList.includes((r.equipment_number||'').toUpperCase().trim()); });
+    }
+    bulkFilteredConts = [...new Set(data.map(function(r) { return r.equipment_number; }))];
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy container nào</td></tr>';
+      return;
+    }
     tbody.innerHTML = data.map(function(r, i) { return `
       <tr>
         <td>${i+1}</td>
-        <td>${r.container_no||''}</td>
-        <td>${formatDate(r.est_date)}</td>
+        <td>${r.equipment_number||''}</td>
+        <td>${r.estimate_datetime ? r.estimate_datetime.toString().split(' ')[0] : '—'}</td>
         <td>${r.carrier||''}</td>
-        <td>${r.app_damage_location||'—'}</td>
-        <td>${r.app_component||'—'}</td>
-        <td>${r.app_repair_type||'—'}</td>
-        <td>${r.app_quantity||'—'}</td>
-        <td style="text-align:right">${r.app_labour_hours?num(r.app_labour_hours):'—'}</td>
-        <td style="text-align:right">${r.app_material_cost?num(r.app_material_cost):'—'}</td>
-        <td style="text-align:right">${r.app_labour_cost?num(r.app_labour_cost):'—'}</td>
-        <td style="text-align:right;color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
+        <td>${r.damage_location||'—'}</td>
+        <td>${r.component||'—'}</td>
+        <td>${r.damage_type||'—'}</td>
+        <td>${r.repair_type||'—'}</td>
+        <td>${r.length||'—'}</td>
+        <td>${r.width||'—'}</td>
+        <td>${r.unit||'—'}</td>
+        <td>${r.quantity||'—'}</td>
+        <td style="text-align:right">${r.labour_hours?num(r.labour_hours):'—'}</td>
+        <td style="text-align:right">${r.labour_cost?num(r.labour_cost):'—'}</td>
+        <td style="text-align:right">${r.material_cost?num(r.material_cost):'—'}</td>
+        <td style="text-align:right">${r.total_cost?num(r.total_cost):'—'}</td>
+        <td>${r.responsible_party||'—'}</td>
         <td>${badge(r.approval_status)}</td>
       </tr>
     `; }).join('');
-  } else {
-    // Mode A: giữ nguyên
-    tbody.innerHTML = data.map(function(r, i) { return `
-      <tr>
-        <td>${i+1}</td>
-        <td>${r.container_no||''}</td>
-        <td>${formatDate(r.est_date)}</td>
-        <td>${r.carrier||''}</td>
-        <td>—</td><td>—</td><td>—</td><td>—</td>
-        <td style="text-align:right">${num(r.total_cost)}</td>
-        <td style="text-align:right;color:var(--green)">${r.total_approved?num(r.total_approved):'—'}</td>
-        <td>${badge(r.approval_status)}</td>
-      </tr>
-    `; }).join('');
+    toast('Đã tải ' + data.length + ' dòng', 2000);
+  } catch(err) {
+    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + err.message + '</td></tr>';
   }
-  toast('Đã tải ' + data.length + ' containers', 2000);
 }
 
 async function exportBulkTemplate() {
@@ -2639,7 +2642,7 @@ async function exportApproveTemplate() {
     var exportData = res.data.filter(function(r) { return bulkFilteredConts.indexOf(r.equipment_number) !== -1; });
 
     exportData.forEach(function(r) {
-      if (!r.app_damage_location && !r.app_component && !r.app_repair_type) return;
+      // Xuất tất cả dòng, dùng app_* nếu có, fallback về est
       var dt = r.estimate_datetime || '';
       if (dt) {
         var parts = dt.split(' ')[0];
