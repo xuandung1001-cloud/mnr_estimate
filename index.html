@@ -1863,9 +1863,29 @@ async function handleOvmFile(input) {
         }
 
         // Lookup tracking
-        var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
-        var estTotal  = trk ? (parseFloat(trk.total_cost) || 0) : 0;
-        var curStatus = trk ? (trk.approval_status || '') : '';
+        var trk = state.tracking.find(r => {
+          var cn = r.container_no || r['container_no'] || r['Container No'] || r['CONTAINER_NO'] || '';
+          return cn.toString().toUpperCase() === contNo;
+        });
+
+        // Lấy field value không phụ thuộc key name
+        function getField(obj, aliases) {
+          if (!obj) return '';
+          for (var a of aliases) {
+            if (obj[a] !== undefined && obj[a] !== null && obj[a] !== '') return obj[a];
+          }
+          // Fallback: tìm theo normalize (lowercase, bỏ space)
+          var keys = Object.keys(obj);
+          for (var alias of aliases) {
+            var norm = alias.toLowerCase().replace(/[\s_]/g,'');
+            var k = keys.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === norm; });
+            if (k && obj[k] !== undefined && obj[k] !== '') return obj[k];
+          }
+          return '';
+        }
+
+        var estTotal  = trk ? (parseFloat(getField(trk, ['total_cost','Total Cost','TOTAL_COST','totalcost'])) || 0) : 0;
+        var curStatus = trk ? (getField(trk, ['approval_status','Approval Status','APPROVAL_STATUS']) || '') : '';
 
         // Check priority
         var newPri = PRIORITY[newStatus] || 0;
