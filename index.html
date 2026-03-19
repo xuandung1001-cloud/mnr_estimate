@@ -2072,15 +2072,49 @@ function calcTrackingStats(data) {
 function renderTrackingStats(s) {
   const pct = v => s.total ? Math.round(v/s.total*100) : 0;
   document.getElementById('tracking-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${s.total}</div></div>
-    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value" style="color:var(--green)">${s.approved}</div><div class="stat-sub">${pct(s.approved)}%</div></div>
-    ${s.repaired ? `<div class="stat-card"><div class="stat-label">Repaired</div><div class="stat-value" style="color:#065f46">${s.repaired}</div><div class="stat-sub">${pct(s.repaired)}%</div></div>` : ''}
-    <div class="stat-card"><div class="stat-label">Partially</div><div class="stat-value" style="color:var(--amber)">${s.partial}</div><div class="stat-sub">${pct(s.partial)}%</div></div>
-    ${s.revised ? `<div class="stat-card"><div class="stat-label">Revised</div><div class="stat-value" style="color:#3730a3">${s.revised}</div><div class="stat-sub">${pct(s.revised)}%</div></div>` : ''}
-    ${s.sent ? `<div class="stat-card"><div class="stat-label">Sent for Appr.</div><div class="stat-value" style="color:var(--blue)">${s.sent}</div><div class="stat-sub">${pct(s.sent)}%</div></div>` : ''}
-    ${s.repair ? `<div class="stat-card"><div class="stat-label">Repair Pending</div><div class="stat-value" style="color:#0891b2">${s.repair}</div><div class="stat-sub">${pct(s.repair)}%</div></div>` : ''}
-    ${s.rejected ? `<div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" style="color:var(--red)">${s.rejected}</div><div class="stat-sub">${pct(s.rejected)}%</div></div>` : ''}
-    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--gray)">${s.pending}</div></div>
+    <div class="stat-card" style="background:#f0f4f8;border-left:3px solid #94a3b8">
+      <div class="stat-label" style="color:#64748b">Tổng containers</div>
+      <div class="stat-value" style="color:#1e293b">${s.total}</div>
+    </div>
+    ${s.repaired ? `<div class="stat-card" style="background:#f0fdf4;border-left:3px solid #22c55e">
+      <div class="stat-label" style="color:#15803d">Repaired</div>
+      <div class="stat-value" style="color:#15803d">${s.repaired}</div>
+      <div class="stat-sub" style="color:#4ade80">${pct(s.repaired)}%</div>
+    </div>` : ''}
+    ${s.repair ? `<div class="stat-card" style="background:#ecfeff;border-left:3px solid #06b6d4">
+      <div class="stat-label" style="color:#0e7490">Repair Pending</div>
+      <div class="stat-value" style="color:#0e7490">${s.repair}</div>
+      <div class="stat-sub" style="color:#67e8f9">${pct(s.repair)}%</div>
+    </div>` : ''}
+    ${s.approved ? `<div class="stat-card" style="background:#f0fdf4;border-left:3px solid #16a34a">
+      <div class="stat-label" style="color:#15803d">Approved</div>
+      <div class="stat-value" style="color:#15803d">${s.approved}</div>
+      <div class="stat-sub" style="color:#4ade80">${pct(s.approved)}%</div>
+    </div>` : ''}
+    ${s.partial ? `<div class="stat-card" style="background:#fffbeb;border-left:3px solid #f59e0b">
+      <div class="stat-label" style="color:#b45309">Partially</div>
+      <div class="stat-value" style="color:#b45309">${s.partial}</div>
+      <div class="stat-sub" style="color:#fcd34d">${pct(s.partial)}%</div>
+    </div>` : ''}
+    ${s.revised ? `<div class="stat-card" style="background:#eef2ff;border-left:3px solid #6366f1">
+      <div class="stat-label" style="color:#4338ca">Revised</div>
+      <div class="stat-value" style="color:#4338ca">${s.revised}</div>
+      <div class="stat-sub" style="color:#a5b4fc">${pct(s.revised)}%</div>
+    </div>` : ''}
+    ${s.sent ? `<div class="stat-card" style="background:#eff6ff;border-left:3px solid #3b82f6">
+      <div class="stat-label" style="color:#1d4ed8">Sent for Appr.</div>
+      <div class="stat-value" style="color:#1d4ed8">${s.sent}</div>
+      <div class="stat-sub" style="color:#93c5fd">${pct(s.sent)}%</div>
+    </div>` : ''}
+    ${s.pending ? `<div class="stat-card" style="background:#f8fafc;border-left:3px solid #94a3b8">
+      <div class="stat-label" style="color:#64748b">Pending</div>
+      <div class="stat-value" style="color:#94a3b8">${s.pending}</div>
+    </div>` : ''}
+    ${s.rejected ? `<div class="stat-card" style="background:#fff1f2;border-left:3px solid #f43f5e">
+      <div class="stat-label" style="color:#be123c">Rejected</div>
+      <div class="stat-value" style="color:#be123c">${s.rejected}</div>
+      <div class="stat-sub" style="color:#fda4af">${pct(s.rejected)}%</div>
+    </div>` : ''}
   `;
 }
 
@@ -2141,10 +2175,22 @@ function renderSummary() {
   const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
 
   document.getElementById('sum-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Tổng containers có PO</div><div class="stat-value">${total}</div></div>
-    <div class="stat-card"><div class="stat-label">Số Carrier</div><div class="stat-value" style="color:var(--blue)">${carriers.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Total Cost (USD)</div><div class="stat-value" style="font-size:16px">${totalCost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-    <div class="stat-card"><div class="stat-label">Total Approved (USD)</div><div class="stat-value" style="font-size:16px;color:var(--green)">${totalApp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border-left:3px solid #38bdf8">
+      <div class="stat-label" style="color:#0369a1">Tổng containers có PO</div>
+      <div class="stat-value" style="color:#0c4a6e">${total}</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#ede9fe,#f5f3ff);border-left:3px solid #8b5cf6">
+      <div class="stat-label" style="color:#6d28d9">Số Carrier</div>
+      <div class="stat-value" style="color:#4c1d95">${carriers.length}</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#fef9c3,#fefce8);border-left:3px solid #facc15">
+      <div class="stat-label" style="color:#854d0e">Total Cost (USD)</div>
+      <div class="stat-value" style="color:#713f12;font-size:16px">${totalCost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#dcfce7,#f0fdf4);border-left:3px solid #4ade80">
+      <div class="stat-label" style="color:#15803d">Total Approved (USD)</div>
+      <div class="stat-value" style="color:#14532d;font-size:16px">${totalApp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
   `;
 
   document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
