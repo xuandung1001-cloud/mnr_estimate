@@ -1863,6 +1863,10 @@ async function handleOvmFile(input) {
         }
 
         // Lookup tracking - thử tất cả field name có thể
+        if (!window._trkDone && state.tracking.length > 0) {
+          window._trkDone = true;
+          console.log('=== TRACKING[0] ===', JSON.stringify(state.tracking[0]));
+        }
         var trk = null;
         for (var ti = 0; ti < state.tracking.length; ti++) {
           var t = state.tracking[ti];
