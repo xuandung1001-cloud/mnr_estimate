@@ -2351,7 +2351,7 @@ function setBulkMode(mode, el) {
 // Lưu danh sách cont đang filter để dùng khi export
 var bulkFilteredConts = [];
 
-function loadBulk() {
+async function loadBulk() {
   var searchVal = document.getElementById('bulk-search').value.trim();
 
   // Tách danh sách cont từ ô tìm kiếm (space, comma, newline)
@@ -2360,14 +2360,55 @@ function loadBulk() {
     searchList = searchVal.toUpperCase().replace(/[,;]+/g, ' ').split(' ').filter(function(s) { return s.length > 3; });
   }
 
-  var data = state.tracking;
-
-  // Filter theo mode A/B
+  // Mode B: lấy từ estimates (có cột app_*)
   if (state.bulkMode === 'B') {
-    data = data.filter(function(r) {
-      return r.approval_status === 'Approved' || r.approval_status === 'Partially Approved';
-    });
+    var tbody = document.getElementById('bulk-rows');
+    tbody.innerHTML = '<tr><td colspan="13" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+    try {
+      var res = await apiGet({ action: 'getAllEstimates' });
+      if (!res.success || !res.data || !res.data.length) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu estimates</td></tr>';
+        return;
+      }
+      // Chỉ lấy dòng có app data
+      var data = res.data.filter(function(r) {
+        return r.app_damage_location || r.app_component || r.app_repair_type;
+      });
+      // Filter theo cont search nếu có
+      if (searchList.length > 0) {
+        data = data.filter(function(r) { return searchList.includes((r.equipment_number||'').toUpperCase().trim()); });
+      }
+      bulkFilteredConts = [...new Set(data.map(function(r) { return r.equipment_number; }))];
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu approve</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(function(r, i) { return `
+        <tr>
+          <td>${i+1}</td>
+          <td>${r.equipment_number||''}</td>
+          <td>${r.estimate_datetime ? r.estimate_datetime.split(' ')[0] : '—'}</td>
+          <td>${r.carrier||''}</td>
+          <td>${r.app_damage_location||'—'}</td>
+          <td>${r.app_component||'—'}</td>
+          <td>${r.app_repair_type||'—'}</td>
+          <td>${r.app_quantity||'—'}</td>
+          <td style="text-align:right">${r.app_labour_hours?num(r.app_labour_hours):'—'}</td>
+          <td style="text-align:right">${r.app_material_cost?num(r.app_material_cost):'—'}</td>
+          <td style="text-align:right">${r.app_labour_cost?num(r.app_labour_cost):'—'}</td>
+          <td style="text-align:right;color:var(--green);font-weight:500">${r.app_total_approved?num(r.app_total_approved):'—'}</td>
+          <td>${badge(r.approval_status)}</td>
+        </tr>
+      `; }).join('');
+      toast('Đã tải ' + data.length + ' dòng approve', 2000);
+    } catch(err) {
+      tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + err.message + '</td></tr>';
+    }
+    return;
   }
+
+  // Mode A: dùng state.tracking như cũ
+  var data = state.tracking;
 
   // Filter theo danh sách cont nếu có
   if (searchList.length > 0) {
