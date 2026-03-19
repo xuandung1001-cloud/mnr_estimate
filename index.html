@@ -1996,7 +1996,7 @@ function renderTracking() {
   const sel = document.getElementById('trk-carrier');
   sel.innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
 
-  renderTrackingTable(data);
+  filterTracking();
 }
 
 function calcTrackingStats(data) {
