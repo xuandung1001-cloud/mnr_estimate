@@ -1858,6 +1858,7 @@ async function handleOvmFile(input) {
           } else {
             // Có trong tracking → so sánh total
             var diff = Math.abs(ovmTotal - estTotal);
+            console.log('DIFF CHECK:', contNo, 'est=', estTotal, 'ovm=', ovmTotal, 'diff=', diff);
             newStatus = diff < 0.01 ? 'Approved' : 'Partially Approved';
           }
         } else if (ovmStatus === 'Repair Pending') {
