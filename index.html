@@ -502,7 +502,7 @@ td input:focus,td select:focus{background:#fffbeb}
             <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
-            <button class="btn btn-sm" onclick="syncSummary()">Sync Summary</button>
+            <span style="font-size:11px;color:var(--gray);padding:0 8px;align-self:center">✓ Tự động từ Tracking</span>
             <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
           </div>
           <div class="tbl-wrap">
@@ -2078,7 +2078,7 @@ function exportTracking() {
 
 // ===================== SUMMARY =====================
 function renderSummary() {
-  const data = state.summary;
+  const data = state.tracking; // dùng thẳng state.tracking
 
   // Stats
   const total = data.length;
@@ -2104,7 +2104,7 @@ function filterSummary() {
   const q = document.getElementById('sum-search').value.toLowerCase();
   const st = document.getElementById('sum-status').value;
   const ca = document.getElementById('sum-carrier').value;
-  const filtered = state.summary.filter(r => {
+  const filtered = state.tracking.filter(r => {
     const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
     const matchSt = !st || r.approval_status === st;
     const matchCa = !ca || r.carrier === ca;
@@ -2136,7 +2136,7 @@ function renderSummaryTable(data) {
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
-      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${r.remarks||'—'}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${r.remarks2||r.remarks||'—'}</td>
     </tr>
   `).join('');
 
@@ -2462,7 +2462,7 @@ function genSummaryReport() {
   const carrier = document.getElementById('rpt-carrier').value;
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
 
-  const filtered = state.summary.filter(r => {
+  const filtered = state.tracking.filter(r => {
     const d = r.po_date ? new Date(r.po_date) : null;
     const matchMonth = !d ? false : (d.getMonth() === monthIdx && d.getFullYear() == year);
     const matchCarrier = !carrier || r.carrier === carrier;
@@ -2548,7 +2548,7 @@ function genDetailedReport() {
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
-  const filtered = state.summary.filter(r => {
+  const filtered = state.tracking.filter(r => {
     const d = r.po_date ? new Date(r.po_date) : null;
     return d && d.getMonth() === monthIdx && d.getFullYear() == year;
   });
@@ -2915,7 +2915,6 @@ async function deleteEstimate(containerNo) {
     var res = await apiPost({ action: 'deleteEstimate', container_no: containerNo });
     if (res && res.success) {
       state.tracking = state.tracking.filter(function(r) { return r.container_no !== containerNo; });
-      state.summary  = state.summary.filter(function(r) { return r.container_no !== containerNo; });
       renderTracking();
       toast(res.message, 3000);
     } else { toast('Lỗi: ' + (res ? res.error : 'No response'), 4000); }
