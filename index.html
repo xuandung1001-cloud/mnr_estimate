@@ -1862,37 +1862,30 @@ async function handleOvmFile(input) {
           newStatus = ovmStatus;
         }
 
-        // Lookup tracking
-        var trk = state.tracking.find(r => {
-          var cn = r.container_no || r['container_no'] || r['Container No'] || r['CONTAINER_NO'] || '';
-          return cn.toString().toUpperCase() === contNo;
-        });
-
-        // DEBUG: xem key tracking lần đầu
-        if (state.tracking.length > 0 && !window._trkLogged) {
-          window._trkLogged = true;
-          console.log('TRACKING KEYS:', Object.keys(state.tracking[0]));
-          console.log('TRACKING ROW 0:', JSON.stringify(state.tracking[0]));
+        // Lookup tracking - thử tất cả field name có thể
+        var trk = null;
+        for (var ti = 0; ti < state.tracking.length; ti++) {
+          var t = state.tracking[ti];
+          var tkeys = Object.keys(t);
+          var cnKey = tkeys.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === 'containerno'; });
+          var cn = cnKey ? String(t[cnKey]||'').trim().toUpperCase() : '';
+          if (cn === contNo) { trk = t; break; }
         }
 
-        // Lấy field value không phụ thuộc key name
-        function getField(obj, aliases) {
-          if (!obj) return '';
-          for (var a of aliases) {
-            if (obj[a] !== undefined && obj[a] !== null && obj[a] !== '') return obj[a];
-          }
-          // Fallback: tìm theo normalize (lowercase, bỏ space)
-          var keys = Object.keys(obj);
-          for (var alias of aliases) {
-            var norm = alias.toLowerCase().replace(/[\s_]/g,'');
-            var k = keys.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === norm; });
-            if (k && obj[k] !== undefined && obj[k] !== '') return obj[k];
-          }
-          return '';
+        // Lấy total_cost từ tracking
+        var estTotal = 0;
+        if (trk) {
+          var tkeys2 = Object.keys(trk);
+          var tcKey = tkeys2.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === 'totalcost'; });
+          estTotal = tcKey ? (parseFloat(trk[tcKey]) || 0) : 0;
         }
 
-        var estTotal  = trk ? (parseFloat(getField(trk, ['total_cost','Total Cost','TOTAL_COST','totalcost'])) || 0) : 0;
-        var curStatus = trk ? (getField(trk, ['approval_status','Approval Status','APPROVAL_STATUS']) || '') : '';
+        var curStatus = '';
+        if (trk) {
+          var tkeys3 = Object.keys(trk);
+          var stKey = tkeys3.find(function(k){ return k.toLowerCase().replace(/[\s_]/g,'') === 'approvalstatus'; });
+          curStatus = stKey ? (trk[stKey] || '') : '';
+        }
 
         // Check priority
         var newPri = PRIORITY[newStatus] || 0;
