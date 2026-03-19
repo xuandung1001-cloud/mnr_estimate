@@ -464,21 +464,22 @@ td input:focus,td select:focus{background:#fffbeb}
                 <tr>
                   <th style="width:32px">STT</th>
                   <th style="width:105px">Equipment No</th>
-                  <th style="width:48px">Carrier</th>
-                  <th style="width:48px">Size</th>
-                  <th style="width:78px">Est Date</th>
-                  <th style="width:110px">Ref No</th>
-                  <th style="width:70px;text-align:right">Total Est.</th>
-                  <th style="width:70px;text-align:right">Total App.</th>
-                  <th style="width:80px">App. Date</th>
-                  <th style="width:120px">Status</th>
-                  <th style="width:85px">Repair Date</th>
-                  <th style="width:85px">PO Number</th>
-                  <th style="width:80px"></th>
+                  <th style="width:46px">Carrier</th>
+                  <th style="width:40px">Size</th>
+                  <th style="width:76px">Est Date</th>
+                  <th style="width:105px">Ref No</th>
+                  <th style="width:68px;text-align:right">Total Est.</th>
+                  <th style="width:68px;text-align:right">Total App.</th>
+                  <th style="width:78px">App. Date</th>
+                  <th style="width:115px">Status</th>
+                  <th style="width:78px">Repair Date</th>
+                  <th style="width:105px">PO Number</th>
+                  <th style="width:78px">PO Date</th>
+                  <th style="width:90px"></th>
                 </tr>
               </thead>
               <tbody id="trk-rows">
-                <tr><td colspan="12" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="14" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -2047,7 +2048,7 @@ function filterTracking() {
 function renderTrackingTable(data) {
   const tbody = document.getElementById('trk-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
   tbody.innerHTML = data.map((r, i) => `
@@ -2064,6 +2065,7 @@ function renderTrackingTable(data) {
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
+      <td>${formatDate(r.po_date)||'—'}</td>
       <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
