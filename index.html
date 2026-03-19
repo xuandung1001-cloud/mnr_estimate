@@ -546,24 +546,25 @@ td input:focus,td select:focus{background:#fffbeb}
                 <tr>
                   <th style="width:32px">STT</th>
                   <th style="width:105px">Equipment No</th>
-                  <th style="width:48px">Carrier</th>
-                  <th style="width:48px">Size</th>
-                  <th style="width:78px">Est Date</th>
-                  <th style="width:110px">Ref No</th>
-                  <th style="width:80px">App. Date</th>
-                  <th style="width:80px">Repair Date</th>
-                  <th style="width:80px">PO Number</th>
-                  <th style="width:65px;text-align:right">Labour H.</th>
-                  <th style="width:70px;text-align:right">Labour $</th>
-                  <th style="width:70px;text-align:right">Material</th>
-                  <th style="width:70px;text-align:right">Total Cost</th>
-                  <th style="width:72px;text-align:right" class="td-auto">Total App.</th>
-                  <th style="width:120px">Status</th>
-                  <th style="width:130px">Remarks</th>
+                  <th style="width:46px">Carrier</th>
+                  <th style="width:40px">Size</th>
+                  <th style="width:76px">Est Date</th>
+                  <th style="width:130px">Ref No</th>
+                  <th style="width:76px">App. Date</th>
+                  <th style="width:76px">Repair Date</th>
+                  <th style="width:130px">PO Number</th>
+                  <th style="width:76px">PO Date</th>
+                  <th style="width:60px;text-align:right">Labour H.</th>
+                  <th style="width:62px;text-align:right">Labour $</th>
+                  <th style="width:65px;text-align:right">Material</th>
+                  <th style="width:68px;text-align:right">Total Cost</th>
+                  <th style="width:70px;text-align:right" class="td-auto">Total App.</th>
+                  <th style="width:110px">Status</th>
+                  <th style="width:110px">Remarks</th>
                 </tr>
               </thead>
               <tbody id="sum-rows">
-                <tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="17" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -2151,7 +2152,7 @@ function filterSummary() {
 function renderSummaryTable(data) {
   const tbody = document.getElementById('sum-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="17" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
   tbody.innerHTML = data.map((r, i) => `
@@ -2165,13 +2166,14 @@ function renderSummaryTable(data) {
       <td>${formatDate(r.approved_date)||'—'}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
+      <td>${formatDate(r.po_date)||'—'}</td>
       <td style="text-align:right">${num(r.labour_hours)}</td>
       <td style="text-align:right">${num(r.labour_cost)}</td>
       <td style="text-align:right">${num(r.material_cost)}</td>
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
-      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${r.remarks2||r.remarks||'—'}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">${r.remarks2||r.remarks||'—'}</td>
     </tr>
   `).join('');
 
