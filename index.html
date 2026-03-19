@@ -1857,10 +1857,8 @@ async function handleOvmFile(input) {
             newStatus = ovmStatus;
           } else {
             // Có trong tracking → so sánh total
-            var base = estTotal > 0 ? estTotal : ovmTotal;
             var diff = Math.abs(ovmTotal - estTotal);
-            var pct  = base > 0 ? diff / base : 0;
-            newStatus = pct < 0.005 ? 'Approved' : 'Partially Approved';
+            newStatus = diff < 0.01 ? 'Approved' : 'Partially Approved';
           }
         } else if (ovmStatus === 'Repair Pending') {
           newStatus = 'Repair Pending';
