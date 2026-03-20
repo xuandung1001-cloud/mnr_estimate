@@ -2574,15 +2574,20 @@ function setBulkMode(mode, el) {
       <th style="width:32px">STT</th>
       <th style="width:105px">Equipment No</th>
       <th style="width:78px">Est. Date</th>
-      <th style="width:50px">Carrier</th>
-      <th style="width:65px">App Dmg Loc</th>
-      <th style="width:70px">App Component</th>
+      <th style="width:46px">Carrier</th>
+      <th style="width:60px">App Dmg Loc</th>
+      <th style="width:75px">App Component</th>
+      <th style="width:55px">App Dmg Type</th>
       <th style="width:55px">App Rep Type</th>
-      <th style="width:38px">App Qty</th>
-      <th style="width:60px;text-align:right">App Hours</th>
+      <th style="width:48px">App Length</th>
+      <th style="width:48px">App Width</th>
+      <th style="width:40px">App Unit</th>
+      <th style="width:35px">App Qty</th>
+      <th style="width:55px;text-align:right">App Hours</th>
+      <th style="width:62px;text-align:right">App Labour $</th>
       <th style="width:65px;text-align:right">App Material</th>
-      <th style="width:65px;text-align:right">App Labour</th>
-      <th style="width:70px;text-align:right">Total App.</th>
+      <th style="width:65px;text-align:right">Total App.</th>
+      <th style="width:60px">Resp.</th>
       <th style="width:115px">Status</th>
     </tr>`;
     document.getElementById('btn-export-bulk').textContent = 'Export Approve Template';
@@ -2590,7 +2595,7 @@ function setBulkMode(mode, el) {
   }
 
   // Reset tbody
-  var cols = mode === 'A' ? 18 : 13;
+  var cols = mode === 'A' ? 18 : 18;
   document.getElementById('bulk-rows').innerHTML = '<tr><td colspan="' + cols + '" class="loading">Nhấn "Tải danh sách" để xem dữ liệu</td></tr>';
 }
 
@@ -2626,7 +2631,7 @@ async function loadBulk() {
       }
       bulkFilteredConts = [...new Set(data.map(function(r) { return r.equipment_number; }))];
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu approve</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu approve</td></tr>';
         return;
       }
       tbody.innerHTML = data.map(function(r, i) { return `
@@ -2637,18 +2642,23 @@ async function loadBulk() {
           <td>${r.carrier||''}</td>
           <td>${r.app_damage_location||'—'}</td>
           <td>${r.app_component||'—'}</td>
+          <td>${r.app_damage_type||'—'}</td>
           <td>${r.app_repair_type||'—'}</td>
-          <td>${r.app_quantity||'—'}</td>
+          <td>${r.app_length||'—'}</td>
+          <td>${r.app_width||'—'}</td>
+          <td style="text-align:center">${r.app_unit||'—'}</td>
+          <td style="text-align:center">${r.app_quantity||'—'}</td>
           <td style="text-align:right">${r.app_labour_hours?num(r.app_labour_hours):'—'}</td>
-          <td style="text-align:right">${r.app_material_cost?num(r.app_material_cost):'—'}</td>
           <td style="text-align:right">${r.app_labour_cost?num(r.app_labour_cost):'—'}</td>
-          <td style="text-align:right;color:var(--green);font-weight:500">${r.app_total_approved?num(r.app_total_approved):'—'}</td>
+          <td style="text-align:right">${r.app_material_cost?num(r.app_material_cost):'—'}</td>
+          <td style="text-align:right;color:var(--blue);font-weight:600">${r.app_total_approved?num(r.app_total_approved):'—'}</td>
+          <td style="text-align:center">${r.app_responsible_party||'—'}</td>
           <td>${badge(r.approval_status)}</td>
         </tr>
       `; }).join('');
       toast('Đã tải ' + data.length + ' dòng approve', 2000);
     } catch(err) {
-      tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + err.message + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + err.message + '</td></tr>';
     }
     return;
   }
