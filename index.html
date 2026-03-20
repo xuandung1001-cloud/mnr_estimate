@@ -1699,11 +1699,22 @@ function toggleCompare() {
 function renderCompare() {
   var tbody = document.getElementById('rev-compare-rows');
   if (!_revRawData || !_revRawData.length) {
-    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:16px">Không có dữ liệu để so sánh</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:16px">Không có dữ liệu để so sánh</td></tr>';
     return;
   }
 
-  // Lấy repair_seq đang có trong bảng revise (app)
+  function makeCell(orig, app, isDeleted) {
+    var o = String(orig||'—'); var a = String(app||'—');
+    if (isDeleted) return '<td style="text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
+    if (String(orig||'').trim() !== String(app||'').trim())
+      return '<td style="background:#fef9c3"><span style="color:#9a3412;text-decoration:line-through;font-size:10px">' + o + '</span><br><span style="color:#15803d;font-weight:600">' + a + '</span></td>';
+    return '<td>' + a + '</td>';
+  }
+
+  function emptyCell(isDeleted) {
+    return '<td style="' + (isDeleted ? 'background:#fff1f2' : '') + '"></td>';
+  }
+
   var appSeqs = new Set();
   document.querySelectorAll('#rev-rows tr').forEach(function(tr) {
     if (tr.dataset.seq) appSeqs.add(String(tr.dataset.seq));
@@ -1711,49 +1722,48 @@ function renderCompare() {
 
   var rows = [];
 
-  // Duyệt est gốc — tìm thay đổi hoặc xoá
   _revRawData.forEach(function(r, idx) {
     var seq = String(r.repair_seq);
     var isDeleted = !appSeqs.has(seq);
 
-    var fields = [
-      { key: 'dl',  orig: r.damage_location,  app: r.app_damage_location  || r.damage_location  },
-      { key: 'co',  orig: r.component,         app: r.app_component        || r.component         },
-      { key: 'dt',  orig: r.damage_type,       app: r.app_damage_type      || r.damage_type       },
-      { key: 'rt',  orig: r.repair_type,       app: r.app_repair_type      || r.repair_type       },
-      { key: 'len', orig: String(r.length||''),  app: String(r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length||'')) },
-      { key: 'wid', orig: String(r.width||''),   app: String(r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width ||'')) },
-      { key: 'uni', orig: r.unit,              app: r.app_unit             || r.unit              },
-      { key: 'qty', orig: String(r.quantity||''),  app: String(r.app_quantity || r.quantity || '') },
-      { key: 'h',   orig: parseFloat(r.labour_hours ||0).toFixed(2), app: parseFloat(r.app_labour_hours  ||r.labour_hours  ||0).toFixed(2) },
-      { key: 'm',   orig: parseFloat(r.material_cost||0).toFixed(2), app: parseFloat(r.app_material_cost ||r.material_cost ||0).toFixed(2) },
-      { key: 'l',   orig: parseFloat(r.labour_cost  ||0).toFixed(2), app: parseFloat(r.app_labour_cost   ||r.labour_cost   ||0).toFixed(2) },
-      { key: 'est', orig: parseFloat(r.total_cost   ||0).toFixed(2), app: parseFloat(r.total_cost         ||0).toFixed(2) },
-      { key: 'tot', orig: parseFloat(r.app_total_approved||r.total_cost||0).toFixed(2), app: parseFloat(r.app_total_approved||r.total_cost||0).toFixed(2) },
-      { key: 'rsp', orig: r.responsible_party, app: r.app_responsible_party || r.responsible_party },
-    ];
+    var dl  = [r.damage_location,  r.app_damage_location  || r.damage_location];
+    var co  = [r.component,        r.app_component        || r.component];
+    var dt  = [r.damage_type,      r.app_damage_type      || r.damage_type];
+    var rt  = [r.repair_type,      r.app_repair_type      || r.repair_type];
+    var len = [String(r.length||''), String(r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length||''))];
+    var wid = [String(r.width||''),  String(r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width ||''))];
+    var uni = [r.unit,             r.app_unit  || r.unit];
+    var qty = [String(r.quantity||''), String(r.app_quantity || r.quantity || '')];
+    var h   = [parseFloat(r.labour_hours ||0).toFixed(2), parseFloat(r.app_labour_hours  ||r.labour_hours  ||0).toFixed(2)];
+    var m   = [parseFloat(r.material_cost||0).toFixed(2), parseFloat(r.app_material_cost ||r.material_cost ||0).toFixed(2)];
+    var l   = [parseFloat(r.labour_cost  ||0).toFixed(2), parseFloat(r.app_labour_cost   ||r.labour_cost   ||0).toFixed(2)];
+    var est = [parseFloat(r.total_cost||0).toFixed(2), parseFloat(r.total_cost||0).toFixed(2)];
+    var tot = [parseFloat(r.app_total_approved||r.total_cost||0).toFixed(2), parseFloat(r.app_total_approved||r.total_cost||0).toFixed(2)];
+    var rsp = [r.responsible_party, r.app_responsible_party || r.responsible_party];
 
-    var hasChange = !isDeleted && fields.some(function(f) { return String(f.orig||'').trim() !== String(f.app||'').trim(); });
-    var rowType = isDeleted ? 'deleted' : (hasChange ? 'changed' : 'same');
-
-    function cell(f) {
-      var orig = String(f.orig||'—'); var app = String(f.app||'—');
-      if (isDeleted) return '<td style="text-decoration:line-through;color:#f87171;background:#fff1f2">' + orig + '</td>';
-      if (String(f.orig||'') !== String(f.app||'')) {
-        return '<td style="background:#fef9c3"><span style="color:#9a3412;text-decoration:line-through;font-size:10px">' + orig + '</span><br><span style="color:#15803d;font-weight:600">' + app + '</span></td>';
-      }
-      return '<td>' + app + '</td>';
-    }
+    var allPairs = [dl,co,dt,rt,len,wid,uni,qty,h,m,l,rsp];
+    var hasChange = !isDeleted && allPairs.some(function(p){ return String(p[0]||'').trim() !== String(p[1]||'').trim(); });
 
     var rowBg = isDeleted ? 'background:#fff1f2' : (hasChange ? 'background:#fefce8' : '');
+    var staBg = isDeleted ? 'text-decoration:line-through;color:#f87171;background:#fff1f2' : '';
 
     rows.push('<tr style="' + rowBg + '">'
       + '<td>' + (idx+1) + '</td>'
-      + cell(fields[0]) + cell(fields[1]) + cell(fields[2]) + cell(fields[3])
-      + cell(fields[4]) + cell(fields[5]) + cell(fields[6]) + cell(fields[7])
-      + cell(fields[8]) + cell(fields[9]) + cell(fields[10]) + cell(fields[11])
-      + cell(fields[12]) + cell(fields[13]) + cell(fields[14])
-      + '<td style="' + (isDeleted?'text-decoration:line-through;color:#f87171;background:#fff1f2':'') + '">' + (r.approval_status||'—') + '</td>'
+      + makeCell(dl[0],  dl[1],  isDeleted)
+      + makeCell(co[0],  co[1],  isDeleted)
+      + makeCell(dt[0],  dt[1],  isDeleted)
+      + makeCell(rt[0],  rt[1],  isDeleted)
+      + makeCell(len[0], len[1], isDeleted)
+      + makeCell(wid[0], wid[1], isDeleted)
+      + makeCell(uni[0], uni[1], isDeleted)
+      + makeCell(qty[0], qty[1], isDeleted)
+      + makeCell(h[0],   h[1],   isDeleted)
+      + makeCell(m[0],   m[1],   isDeleted)
+      + makeCell(l[0],   l[1],   isDeleted)
+      + makeCell(est[0], est[1], isDeleted)
+      + makeCell(tot[0], tot[1], isDeleted)
+      + makeCell(rsp[0], rsp[1], isDeleted)
+      + '<td style="' + staBg + '">' + (r.approval_status||'—') + '</td>'
       + '<td style="color:var(--gray);font-style:italic;' + (isDeleted?'background:#fff1f2':'') + '">' + (r.app_remark_details||'') + '</td>'
       + '<td></td>'
       + '</tr>');
@@ -1767,7 +1777,6 @@ function renderCompare() {
       var sel = tr.querySelector('select');
       rows.push('<tr style="background:#f0fdf4">'
         + '<td>+</td>'
-        + '<td style="font-size:10px;font-weight:600;background:#f0fdf4;color:#15803d;text-align:center">🟢 Mới</td>'
         + '<td style="color:#15803d;font-weight:500">' + (inputs[0]?inputs[0].value:'') + '</td>'
         + '<td style="color:#15803d;font-weight:500">' + (inputs[1]?inputs[1].value:'') + '</td>'
         + '<td style="color:#15803d;font-weight:500">' + (inputs[2]?inputs[2].value:'') + '</td>'
@@ -1778,7 +1787,7 @@ function renderCompare() {
         + '<td style="color:#15803d;font-weight:500">' + (inputs[7]?inputs[7].value:'') + '</td>'
         + '<td colspan="4" style="color:#64748b;font-size:10px;text-align:center">— tính sau khi lưu —</td>'
         + '<td style="color:#15803d">' + (inputs[8]?inputs[8].value:'') + '</td>'
-        + '<td style="color:var(--gray);font-style:italic">' + (inputs[9]?inputs[9].value:'') + '</td>'
+        + '<td style="color:#64748b;font-style:italic">' + (inputs[9]?inputs[9].value:'') + '</td>'
         + '<td></td>'
         + '</tr>');
     }
@@ -1786,6 +1795,7 @@ function renderCompare() {
 
   tbody.innerHTML = rows.join('');
 }
+
 
 function addReviseRow() {
   const tbody = document.getElementById('rev-rows');
