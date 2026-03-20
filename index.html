@@ -2616,7 +2616,8 @@ async function loadBulk() {
     var tbody = document.getElementById('bulk-rows');
     tbody.innerHTML = '<tr><td colspan="13" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
     try {
-      var res = await apiGet({ action: 'getAllEstimates' });
+      var contNosB = searchList.length > 0 ? searchList.join(',') : state.tracking.map(function(t){return t.container_no;}).join(',');
+      var res = await apiGet({ action: 'getAllEstimates', container_nos: contNosB });
       if (!res.success || !res.data || !res.data.length) {
         tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu estimates</td></tr>';
         return;
@@ -2667,7 +2668,8 @@ async function loadBulk() {
   var tbody = document.getElementById('bulk-rows');
   tbody.innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
-    var res = await apiGet({ action: 'getAllEstimates' });
+    var contNosA = searchList.length > 0 ? searchList.join(',') : state.tracking.map(function(t){return t.container_no;}).join(',');
+    var res = await apiGet({ action: 'getAllEstimates', container_nos: contNosA });
     if (!res.success || !res.data || !res.data.length) {
       tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
       return;
@@ -2729,8 +2731,8 @@ async function exportBulkTemplate() {
     }
     var filterConts = bulkFilteredConts;
 
-    // Load estimates
-    var res = await apiGet({ action: 'getAllEstimates' });
+    // Load estimates - chỉ lấy cont đang filter
+    var res = await apiGet({ action: 'getAllEstimates', container_nos: filterConts.join(',') });
     if (!res.success || !res.data || !res.data.length) {
       toast('Không có dữ liệu estimates!', 3000);
       return;
@@ -2868,7 +2870,7 @@ async function exportApproveTemplate() {
     if (typeof bulkFilteredConts === 'undefined' || bulkFilteredConts.length === 0) {
       toast('Nhấn "Tải danh sách" trước rồi mới export!', 3000); return;
     }
-    var res = await apiGet({ action: 'getAllEstimates' });
+    var res = await apiGet({ action: 'getAllEstimates', container_nos: bulkFilteredConts.join(',') });
     if (!res.success || !res.data || !res.data.length) { toast('Không có dữ liệu!', 3000); return; }
 
     var header = [
