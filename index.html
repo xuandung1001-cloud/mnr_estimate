@@ -1721,10 +1721,9 @@ function renderCompare() {
       { key: 'l',   orig: parseFloat(r.labour_cost  ||0).toFixed(2), app: parseFloat(r.app_labour_cost   ||r.labour_cost   ||0).toFixed(2) },
       { key: 'tot', orig: parseFloat(r.total_cost   ||0).toFixed(2), app: parseFloat(r.app_total_approved||r.total_cost    ||0).toFixed(2) },
       { key: 'rsp', orig: r.responsible_party, app: r.app_responsible_party || r.responsible_party },
-      { key: 'sta', orig: '',                   app: r.approval_status || '' },
     ];
 
-    var hasChange = !isDeleted && fields.some(function(f) { return String(f.orig||'') !== String(f.app||''); });
+    var hasChange = !isDeleted && fields.some(function(f) { return String(f.orig||'').trim() !== String(f.app||'').trim(); });
     var rowType = isDeleted ? 'deleted' : (hasChange ? 'changed' : 'same');
 
     function cell(f) {
@@ -1745,7 +1744,8 @@ function renderCompare() {
       + cell(fields[0]) + cell(fields[1]) + cell(fields[2]) + cell(fields[3])
       + cell(fields[4]) + cell(fields[5]) + cell(fields[6]) + cell(fields[7])
       + cell(fields[8]) + cell(fields[9]) + cell(fields[10]) + cell(fields[11])
-      + cell(fields[12]) + cell(fields[13])
+      + cell(fields[12])
+      + '<td>' + (isDeleted ? '<span style="text-decoration:line-through;color:#f87171">' + (r.approval_status||'') + '</span>' : (r.approval_status||'—')) + '</td>'
       + '</tr>');
   });
 
