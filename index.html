@@ -1703,13 +1703,20 @@ function renderCompare() {
     return;
   }
 
-  function makeCell(orig, app, isDeleted, center) {
+  function makeCell(orig, app, isDeleted, center, cls) {
     var o = String(orig||'—'); var a = String(app||'—');
     var cx = center ? 'text-align:center;' : '';
-    if (isDeleted) return '<td style="' + cx + 'text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
-    if (String(orig||'').trim() !== String(app||'').trim())
-      return '<td style="' + cx + 'background:#fef9c3"><span style="color:#9a3412;text-decoration:line-through;font-size:10px">' + o + '</span><br><span style="color:#15803d;font-weight:600">' + a + '</span></td>';
-    return '<td style="' + cx + '">' + a + '</td>';
+    // cls: 'auto' = td-auto style, 'total' = td-total style, 'est' = grey right
+    var baseCls = cls === 'auto' ? 'background:var(--green-light);color:var(--green);text-align:right;'
+                : cls === 'total' ? 'background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right;'
+                : cls === 'est' ? 'text-align:right;color:var(--gray);font-size:11px;'
+                : cx;
+    if (isDeleted) return '<td style="' + baseCls + 'text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
+    if (String(orig||'').trim() !== String(app||'').trim()) {
+      var bgOverride = cls === 'auto' ? 'background:#d1fae5;' : cls === 'total' ? 'background:#dbeafe;' : 'background:#fef9c3;';
+      return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;font-size:10px;opacity:.7">' + o + '</span><br><span style="font-weight:600">' + a + '</span></td>';
+    }
+    return '<td style="' + baseCls + '">' + a + '</td>';
   }
 
   function emptyCell(isDeleted) {
@@ -1758,11 +1765,11 @@ function renderCompare() {
       + makeCell(wid[0], wid[1], isDeleted)
       + makeCell(uni[0], uni[1], isDeleted, true)
       + makeCell(qty[0], qty[1], isDeleted, true)
-      + makeCell(h[0],   h[1],   isDeleted)
-      + makeCell(m[0],   m[1],   isDeleted)
-      + makeCell(l[0],   l[1],   isDeleted)
-      + makeCell(est[0], est[1], isDeleted)
-      + makeCell(tot[0], tot[1], isDeleted)
+      + makeCell(h[0],   h[1],   isDeleted, false, 'auto')
+      + makeCell(m[0],   m[1],   isDeleted, false, 'auto')
+      + makeCell(l[0],   l[1],   isDeleted, false, 'auto')
+      + makeCell(est[0], est[1], isDeleted, false, 'est')
+      + makeCell(tot[0], tot[1], isDeleted, false, 'total')
       + makeCell(rsp[0], rsp[1], isDeleted, true)
       + '<td style="' + staBg + '">' + (r.approval_status||'—') + '</td>'
       + '<td style="color:var(--gray);font-style:italic;' + (isDeleted?'background:#fff1f2':'') + '">' + (r.app_remark_details||'') + '</td>'
