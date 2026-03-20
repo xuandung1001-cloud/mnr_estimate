@@ -434,7 +434,15 @@ td input:focus,td select:focus{background:#fffbeb}
               </span>
             </div>
             <div class="tbl-wrap">
-              <table>
+              <table style="table-layout:fixed">
+                <colgroup>
+                  <col style="width:32px"><col style="width:70px"><col style="width:75px">
+                  <col style="width:62px"><col style="width:62px"><col style="width:48px">
+                  <col style="width:48px"><col style="width:50px"><col style="width:40px">
+                  <col style="width:52px"><col style="width:60px"><col style="width:58px">
+                  <col style="width:65px"><col style="width:65px"><col style="width:70px">
+                  <col style="width:110px"><col style="width:90px"><col style="width:28px">
+                </colgroup>
                 <thead>
                   <tr>
                     <th style="width:32px">STT</th>
@@ -452,6 +460,9 @@ td input:focus,td select:focus{background:#fffbeb}
                     <th style="width:65px">Total Est.</th>
                     <th style="width:65px" class="td-total">Total App.</th>
                     <th style="width:70px">Resp. Party</th>
+                    <th style="width:110px">Status</th>
+                    <th style="width:90px">Remark</th>
+                    <th style="width:28px"></th>
                   </tr>
                 </thead>
                 <tbody id="rev-compare-rows"></tbody>
@@ -1741,6 +1752,9 @@ function renderCompare() {
       + cell(fields[4]) + cell(fields[5]) + cell(fields[6]) + cell(fields[7])
       + cell(fields[8]) + cell(fields[9]) + cell(fields[10]) + cell(fields[11])
       + cell(fields[12])
+      + '<td style="' + (isDeleted?'text-decoration:line-through;color:#f87171;background:#fff1f2':'') + '">' + (r.approval_status||'—') + '</td>'
+      + '<td style="color:var(--gray);font-style:italic;' + (isDeleted?'background:#fff1f2':'') + '">' + (r.app_remark_details||'') + '</td>'
+      + '<td></td>'
       + '</tr>');
   });
 
@@ -1763,6 +1777,8 @@ function renderCompare() {
         + '<td style="color:#15803d;font-weight:500">' + (inputs[7]?inputs[7].value:'') + '</td>'
         + '<td colspan="4" style="color:#64748b;font-size:10px;text-align:center">— tính sau khi lưu —</td>'
         + '<td style="color:#15803d">' + (inputs[8]?inputs[8].value:'') + '</td>'
+        + '<td style="color:var(--gray);font-style:italic">' + (inputs[9]?inputs[9].value:'') + '</td>'
+        + '<td></td>'
         + '</tr>');
     }
   });
