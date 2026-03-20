@@ -376,8 +376,9 @@ td input:focus,td select:focus{background:#fffbeb}
             Chi tiết hạng mục — chỉnh sửa rồi lưu
             <span style="font-size:10px;color:var(--gray);font-weight:400">Ô xanh lá = giá tự lookup từ Tariff</span>
           </div>
-          <div style="margin-bottom:8px">
+          <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
             <button class="btn btn-sm" onclick="addReviseRow()">+ Thêm dòng</button>
+            <button class="btn btn-sm" id="btn-compare" onclick="toggleCompare()" style="background:#f0fdf4;color:#15803d;border-color:#86efac;display:none">🔍 So sánh thay đổi</button>
           </div>
           <div class="tbl-wrap">
             <table id="rev-table">
@@ -422,10 +423,45 @@ td input:focus,td select:focus{background:#fffbeb}
               <span id="rev-match-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px"></span>
             </div>
           </div>
+          <!-- COMPARE PANEL -->
+          <div id="rev-compare-panel" style="display:none;margin-top:12px">
+            <div style="font-size:12px;font-weight:600;color:#2d3748;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+              So sánh thay đổi
+              <span style="font-size:10px;font-weight:400;display:flex;gap:10px;align-items:center">
+                <span style="background:#fef9c3;border:1px solid #fbbf24;padding:1px 7px;border-radius:3px">🟡 Sửa giá trị</span>
+                <span style="background:#f0fdf4;border:1px solid #4ade80;padding:1px 7px;border-radius:3px">🟢 Dòng mới</span>
+                <span style="background:#fff1f2;border:1px solid #f87171;padding:1px 7px;border-radius:3px;text-decoration:line-through">🔴 Bị xoá</span>
+                <span style="background:#f8fafc;border:1px solid #cbd5e1;padding:1px 7px;border-radius:3px">⬜ Không đổi</span>
+              </span>
+            </div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:32px">STT</th>
+                    <th style="width:55px">Trạng thái</th>
+                    <th style="width:70px">Dmg Loc</th>
+                    <th style="width:75px">Component</th>
+                    <th style="width:62px">Dmg Type</th>
+                    <th style="width:62px">Rep Type</th>
+                    <th style="width:55px">Length</th>
+                    <th style="width:55px">Width</th>
+                    <th style="width:48px">Unit</th>
+                    <th style="width:38px">Qty</th>
+                    <th style="width:58px;text-align:right">Hours</th>
+                    <th style="width:65px;text-align:right">Material</th>
+                    <th style="width:62px;text-align:right">Labour</th>
+                    <th style="width:65px;text-align:right">Total App.</th>
+                    <th style="width:60px">Resp.</th>
+                    <th style="width:110px">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="rev-compare-rows"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-
-      <!-- OVM -->
       <div class="screen" id="screen-ovm">
         <div class="card">
           <div class="card-title">Import file OVM từ hãng tàu</div>
@@ -1603,6 +1639,7 @@ async function onReviseInput(val) {
     document.getElementById('rev-carrier').value  = first.carrier   || '';
     document.getElementById('rev-size').value     = first.size_type || '';
     _revOrigData = {};
+    _revRawData = res.data;
     res.data.forEach(r => {
       _revOrigData[r.repair_seq] = {
         dl: r.damage_location, co: r.component, dt: r.damage_type,
@@ -1615,11 +1652,128 @@ async function onReviseInput(val) {
     tbody.innerHTML = '';
     res.data.forEach((r, i) => tbody.appendChild(makeReviseRow(i, r)));
     document.getElementById('rev-total-row').style.display = 'block';
+    document.getElementById('btn-compare').style.display = 'inline-block';
+    document.getElementById('rev-compare-panel').style.display = 'none';
+    _compareVisible = false;
     calcReviseTotal();
   } else {
     document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
     document.getElementById('rev-total-row').style.display = 'none';
+    document.getElementById('btn-compare').style.display = 'none';
   }
+}
+
+// ===================== REVISE COMPARE =====================
+var _compareVisible = false;
+var _revRawData = []; // lưu data gốc để compare
+
+function toggleCompare() {
+  _compareVisible = !_compareVisible;
+  var panel = document.getElementById('rev-compare-panel');
+  var btn = document.getElementById('btn-compare');
+  if (_compareVisible) {
+    renderCompare();
+    panel.style.display = 'block';
+    btn.textContent = '✕ Đóng so sánh';
+    btn.style.background = '#fff1f2';
+    btn.style.color = '#be123c';
+    btn.style.borderColor = '#fca5a5';
+  } else {
+    panel.style.display = 'none';
+    btn.textContent = '🔍 So sánh thay đổi';
+    btn.style.background = '#f0fdf4';
+    btn.style.color = '#15803d';
+    btn.style.borderColor = '#86efac';
+  }
+}
+
+function renderCompare() {
+  var tbody = document.getElementById('rev-compare-rows');
+  if (!_revRawData || !_revRawData.length) {
+    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:16px">Không có dữ liệu để so sánh</td></tr>';
+    return;
+  }
+
+  // Lấy repair_seq đang có trong bảng revise (app)
+  var appSeqs = new Set();
+  document.querySelectorAll('#rev-rows tr').forEach(function(tr) {
+    if (tr.dataset.seq) appSeqs.add(String(tr.dataset.seq));
+  });
+
+  var rows = [];
+
+  // Duyệt est gốc — tìm thay đổi hoặc xoá
+  _revRawData.forEach(function(r, idx) {
+    var seq = String(r.repair_seq);
+    var isDeleted = !appSeqs.has(seq);
+
+    var fields = [
+      { key: 'dl',  orig: r.damage_location,  app: r.app_damage_location  || r.damage_location  },
+      { key: 'co',  orig: r.component,         app: r.app_component        || r.component         },
+      { key: 'dt',  orig: r.damage_type,       app: r.app_damage_type      || r.damage_type       },
+      { key: 'rt',  orig: r.repair_type,       app: r.app_repair_type      || r.repair_type       },
+      { key: 'len', orig: String(r.length||''),  app: String(r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length||'')) },
+      { key: 'wid', orig: String(r.width||''),   app: String(r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width ||'')) },
+      { key: 'uni', orig: r.unit,              app: r.app_unit             || r.unit              },
+      { key: 'qty', orig: String(r.quantity||''),  app: String(r.app_quantity || r.quantity || '') },
+      { key: 'h',   orig: parseFloat(r.labour_hours ||0).toFixed(2), app: parseFloat(r.app_labour_hours  ||r.labour_hours  ||0).toFixed(2) },
+      { key: 'm',   orig: parseFloat(r.material_cost||0).toFixed(2), app: parseFloat(r.app_material_cost ||r.material_cost ||0).toFixed(2) },
+      { key: 'l',   orig: parseFloat(r.labour_cost  ||0).toFixed(2), app: parseFloat(r.app_labour_cost   ||r.labour_cost   ||0).toFixed(2) },
+      { key: 'tot', orig: parseFloat(r.total_cost   ||0).toFixed(2), app: parseFloat(r.app_total_approved||r.total_cost    ||0).toFixed(2) },
+      { key: 'rsp', orig: r.responsible_party, app: r.app_responsible_party || r.responsible_party },
+      { key: 'sta', orig: '',                   app: r.approval_status || '' },
+    ];
+
+    var hasChange = !isDeleted && fields.some(function(f) { return String(f.orig||'') !== String(f.app||''); });
+    var rowType = isDeleted ? 'deleted' : (hasChange ? 'changed' : 'same');
+
+    function cell(f) {
+      var orig = String(f.orig||'—'); var app = String(f.app||'—');
+      if (isDeleted) return '<td style="text-decoration:line-through;color:#f87171;background:#fff1f2">' + orig + '</td>';
+      if (String(f.orig||'') !== String(f.app||'')) {
+        return '<td style="background:#fef9c3"><span style="color:#9a3412;text-decoration:line-through;font-size:10px">' + orig + '</span><br><span style="color:#15803d;font-weight:600">' + app + '</span></td>';
+      }
+      return '<td>' + app + '</td>';
+    }
+
+    var statusBg = isDeleted ? 'background:#fff1f2;color:#be123c' : (hasChange ? 'background:#fef9c3;color:#92400e' : 'background:#f8fafc;color:#64748b');
+    var statusLabel = isDeleted ? '🔴 Xoá' : (hasChange ? '🟡 Sửa' : '⬜ OK');
+
+    rows.push('<tr>'
+      + '<td>' + (idx+1) + '</td>'
+      + '<td style="font-size:10px;font-weight:600;' + statusBg + ';text-align:center;padding:2px 4px">' + statusLabel + '</td>'
+      + cell(fields[0]) + cell(fields[1]) + cell(fields[2]) + cell(fields[3])
+      + cell(fields[4]) + cell(fields[5]) + cell(fields[6]) + cell(fields[7])
+      + cell(fields[8]) + cell(fields[9]) + cell(fields[10]) + cell(fields[11])
+      + cell(fields[12]) + cell(fields[13])
+      + '</tr>');
+  });
+
+  // Dòng mới trong app (seq dạng new_xxx)
+  document.querySelectorAll('#rev-rows tr').forEach(function(tr) {
+    var seq = tr.dataset.seq || '';
+    if (seq.startsWith('new_')) {
+      var inputs = tr.querySelectorAll('input');
+      var sel = tr.querySelector('select');
+      rows.push('<tr style="background:#f0fdf4">'
+        + '<td>+</td>'
+        + '<td style="font-size:10px;font-weight:600;background:#f0fdf4;color:#15803d;text-align:center">🟢 Mới</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[0]?inputs[0].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[1]?inputs[1].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[2]?inputs[2].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[3]?inputs[3].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[4]?inputs[4].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[5]?inputs[5].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[6]?inputs[6].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + (inputs[7]?inputs[7].value:'') + '</td>'
+        + '<td colspan="4" style="color:#64748b;font-size:10px;text-align:center">— tính sau khi lưu —</td>'
+        + '<td style="color:#15803d">' + (inputs[8]?inputs[8].value:'') + '</td>'
+        + '<td style="color:#15803d">' + (sel?sel.value:'') + '</td>'
+        + '</tr>');
+    }
+  });
+
+  tbody.innerHTML = rows.join('');
 }
 
 function addReviseRow() {
@@ -1739,6 +1893,9 @@ function resetRevise() {
   document.getElementById('rev-remarks').value  = '';
   document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
   document.getElementById('rev-total-row').style.display = 'none';
+  document.getElementById('btn-compare').style.display = 'none';
+  document.getElementById('rev-compare-panel').style.display = 'none';
+  _compareVisible = false; _revRawData = [];
   _revOrigData = {}; _revTrkTotal = 0;
 }
 
