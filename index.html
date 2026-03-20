@@ -1714,7 +1714,7 @@ function renderCompare() {
     if (isDeleted) return '<td style="' + baseCls + 'text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
     if (String(orig||'').trim() !== String(app||'').trim()) {
       var bgOverride = cls === 'auto' ? 'background:#d1fae5;' : cls === 'total' ? 'background:#dbeafe;' : 'background:#fef9c3;';
-      return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;font-size:10px;opacity:.7">' + o + '</span><br><span style="font-weight:600">' + a + '</span></td>';
+      return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;font-size:10px;color:#6b7280">' + o + '</span><br><span style="font-weight:600;color:#dc2626">' + a + '</span></td>';
     }
     return '<td style="' + baseCls + '">' + a + '</td>';
   }
