@@ -1071,7 +1071,7 @@ async function loadInitialData() {
     if (trkRes && trkRes.success) { state.tracking = trkRes.data; }
   } catch(e) { console.error('Tracking load error:', e); }
 
-  try { var sumRes = await apiGet({ action: 'getTổng hợp' });
+  try { var sumRes = await apiGet({ action: 'getSummary' });
     if (sumRes && sumRes.success) { state.summary = sumRes.data; }
   } catch(e) { console.error('Tổng hợp load error:', e); }
 
@@ -2473,7 +2473,7 @@ async function syncSummary() {
   toast('Đang sync Tổng hợp...');
   const res = await apiPost({ action: 'syncSummary' });
   if (res.success) {
-    const sumRes = await apiGet({ action: 'getTổng hợp' });
+    const sumRes = await apiGet({ action: 'getSummary' });
     if (sumRes.success) state.summary = sumRes.data;
     renderSummary();
     toast('Sync xong! ' + res.synced + ' containers', 3000);
