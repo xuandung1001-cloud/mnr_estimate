@@ -860,7 +860,7 @@ td input:focus,td select:focus{background:#fffbeb}
 
           <div style="display:flex;gap:8px;align-items:center">
             <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">📂 Export lên Drive</button>
-            <span style="font-size:11px;color:var(--gray)">Copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_bulk_DDMMYYYY/</code></span>
+            <span style="font-size:11px;color:var(--gray)">Copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_bulk_DDMMYYYY_HHmm/</code></span>
           </div>
         </div>
 
@@ -3142,7 +3142,7 @@ function setPicMode(mode, el) {
     'Loại ảnh: <strong>' + loai + '</strong> &nbsp;|&nbsp; ' +
     'Tên file: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">' +
     mode + '_CONTNO_REFNO_001.jpg</code> &nbsp;|&nbsp; ' +
-    'Folder: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">Export_bulk_DDMMYYYY/</code>';
+    'Folder: <code style="background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:3px">Export_bulk_DDMMYYYY_HHmm/</code>';
   previewRefNos();
 }
 
