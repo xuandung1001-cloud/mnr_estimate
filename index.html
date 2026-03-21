@@ -1354,6 +1354,24 @@ function addEstRow() {
   updateEstNumbers();
 }
 
+// Helper: kiểm tra giá trị có trong chuỗi phân cách / không
+function inList(tariffVal, input) {
+  const tv = (tariffVal || '').toString().toUpperCase().trim();
+  const iv = input.trim();
+  if (!tv || !iv) return false;
+  if (tv.includes(iv)) return true;
+  return tv.split('/').map(s => s.trim()).some(s => s === iv);
+}
+
+function getLenRange(t) {
+  const lenText = (t.length || '').toString().toLowerCase().trim();
+  if (lenText.includes('-')) {
+    const p = lenText.split('-');
+    return (parseFloat(p[1])||999) - (parseFloat(p[0])||0);
+  }
+  return 999;
+}
+
 function lookupTariff(row) {
   // Lấy giá trị từ header form
   const carrier = document.getElementById('carrier').value.trim().toUpperCase();
@@ -1384,17 +1402,7 @@ function lookupTariff(row) {
     return;
   }
 
-  // Helper: kiểm tra giá trị có trong chuỗi phân cách / không
-  // Giống VBA: Like "*" & value & "*"
-  function inList(tariffVal, input) {
-    const tv = (tariffVal || '').toString().toUpperCase().trim();
-    const iv = input.trim();
-    if (!tv || !iv) return false;
-    // Direct includes (giống Like *value*)
-    if (tv.includes(iv)) return true;
-    // Tách / so từng phần exact
-    return tv.split('/').map(s => s.trim()).some(s => s === iv);
-  }
+
 
   const _allMatches = state.tariff.filter(t => {
     // A - Carrier: exact match (nếu có carrier trong tariff)
@@ -1457,14 +1465,7 @@ function lookupTariff(row) {
   });
 
   // Nếu có nhiều match (length overlap), chọn dòng có range nhỏ nhất
-  function getLenRange(t) {
-    const lenText = (t.length || '').toString().toLowerCase().trim();
-    if (lenText.includes('-')) {
-      const p = lenText.split('-');
-      return (parseFloat(p[1])||999) - (parseFloat(p[0])||0);
-    }
-    return 999;
-  }
+
   // Sort: range nhỏ nhất trước → match chính xác hơn
   _allMatches.sort((a, b) => getLenRange(a) - getLenRange(b));
   const match = _allMatches[0] || null;
