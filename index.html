@@ -2972,7 +2972,7 @@ function genSummaryReport() {
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
 
   const filtered = state.tracking.filter(r => {
-    const d = r.po_date ? new Date(r.po_date) : null;
+    const d = parseReportDate(r.po_date);
     const matchMonth = !d ? false : (d.getMonth() === monthIdx && d.getFullYear() == year);
     const matchCarrier = !carrier || r.carrier === carrier;
     return matchMonth && matchCarrier;
@@ -3058,7 +3058,7 @@ function genDetailedReport() {
   const year = document.getElementById('rpt-year').value;
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
   const filtered = state.tracking.filter(r => {
-    const d = r.po_date ? new Date(r.po_date) : null;
+    const d = parseReportDate(r.po_date);
     return d && d.getMonth() === monthIdx && d.getFullYear() == year;
   });
   if (!filtered.length) {
@@ -3452,6 +3452,22 @@ function formatDate(d) {
   const dt = new Date(d);
   if (isNaN(dt)) return d || '';
   return dt.toLocaleDateString('vi-VN');
+}
+
+// Parse dd/MM/yyyy hoặc các format khác → Date object
+function parseReportDate(val) {
+  if (!val) return null;
+  var s = String(val).trim();
+  if (!s) return null;
+  // dd/MM/yyyy
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  // yyyy-MM-dd
+  var m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m2) return new Date(parseInt(m2[1]), parseInt(m2[2])-1, parseInt(m2[3]));
+  // fallback
+  var d = new Date(s);
+  return isNaN(d) ? null : d;
 }
 
 function todayStr() {
