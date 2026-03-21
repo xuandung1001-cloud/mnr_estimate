@@ -571,12 +571,12 @@ td input:focus,td select:focus{background:#fffbeb}
         <div class="stats-row" id="sum-stats"></div>
         <div class="card">
           <div class="filter-bar">
-            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No, PO Number..." oninput="filterTổng hợp()" style="flex:1;min-width:160px">
-            <select class="fi" id="sum-carrier" onchange="filterTổng hợp()" style="width:120px">
+            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No, PO Number..." oninput="filterSummary()" style="flex:1;min-width:160px">
+            <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
             <span style="font-size:11px;color:var(--green);padding:0 8px;align-self:center">✓ Cont đã có PO Number</span>
-            <button class="btn btn-sm" onclick="exportTổng hợp()">Export Excel</button>
+            <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
           </div>
           <div class="tbl-wrap">
             <table>
@@ -713,7 +713,7 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <select class="fi" id="rpt-year" style="width:90px"></select>
             <select class="fi" id="rpt-carrier" style="width:120px"><option value="">Tất cả Carrier</option></select>
-            <button class="btn btn-sm btn-blue" onclick="genTổng hợpReport()">Tổng hợp Report</button>
+            <button class="btn btn-sm btn-blue" onclick="genSummaryReport()">Summary Report</button>
             <button class="btn btn-sm" onclick="genDetailedReport()">Detailed Statement</button>
             <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
           </div>
@@ -1114,7 +1114,7 @@ function nav(screen, el) {
   setTopbar(cfg.title, cfg.actions);
 
   if (screen === 'tracking') renderTracking();
-  if (screen === 'summary') renderTổng hợp();
+  if (screen === 'summary') renderSummary();
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
   if (screen === 'pictures') initPicturesScreen();
@@ -2383,7 +2383,7 @@ function exportTracking() {
 }
 
 // ===================== SUMMARY =====================
-function renderTổng hợp() {
+function renderSummary() {
   const data = state.tracking.filter(r => r.po_number); // chỉ cont đã có PO
 
   // Stats
@@ -2414,10 +2414,10 @@ function renderTổng hợp() {
   document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
   document.getElementById('rpt-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
 
-  filterTổng hợp();
+  filterSummary();
 }
 
-function filterTổng hợp() {
+function filterSummary() {
   const q = document.getElementById('sum-search').value.toLowerCase();
   const ca = document.getElementById('sum-carrier').value;
   const filtered = state.tracking.filter(r => {
@@ -2426,10 +2426,10 @@ function filterTổng hợp() {
     const matchCa = !ca || r.carrier === ca;
     return matchQ && matchCa;
   });
-  renderTổng hợpTable(filtered);
+  renderSummaryTable(filtered);
 }
 
-function renderTổng hợpTable(data) {
+function renderSummaryTable(data) {
   const tbody = document.getElementById('sum-rows');
   if (!data.length) {
     tbody.innerHTML = '<tr><td colspan="17" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
@@ -2469,20 +2469,20 @@ function renderTổng hợpTable(data) {
   `;
 }
 
-async function syncTổng hợp() {
+async function syncSummary() {
   toast('Đang sync Tổng hợp...');
-  const res = await apiPost({ action: 'syncTổng hợp' });
+  const res = await apiPost({ action: 'syncSummary' });
   if (res.success) {
     const sumRes = await apiGet({ action: 'getTổng hợp' });
     if (sumRes.success) state.summary = sumRes.data;
-    renderTổng hợp();
+    renderSummary();
     toast('Sync xong! ' + res.synced + ' containers', 3000);
   } else {
     toast('Lỗi: ' + res.error, 4000);
   }
 }
 
-function exportTổng hợp() {
+function exportSummary() {
   exportTableToCSV('sum-rows', 'summary_' + todayStr().replace(/\//g,'-') + '.csv');
   toast('Đã export CSV!', 2000);
 }
@@ -2971,7 +2971,7 @@ async function exportApproveTemplate() {
 }
 
 // ===================== REPORT =====================
-function genTổng hợpReport() {
+function genSummaryReport() {
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
   const carrier = document.getElementById('rpt-carrier').value;
@@ -3021,7 +3021,7 @@ function genTổng hợpReport() {
   }));
 
   document.getElementById('rpt-result').innerHTML = `
-    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Tổng hợp Report — ${month} ${year}</div>
+    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Summary Report — ${month} ${year}</div>
     <div class="tbl-wrap">
     <table style="table-layout:fixed">
       <colgroup>
