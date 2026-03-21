@@ -1872,18 +1872,8 @@ function lookupRevise(row) {
   if (sel && sel.value === 'Rejected') { calcReviseTotal(); return; }
   if (!szType || !dmgLoc || !comp || !dmgType || !repType || !unit) { calcReviseTotal(); return; }
 
-  function inList(tariffVal, input) {
-    const tv = (tariffVal || '').toString().toUpperCase().trim();
-    const iv = input.trim();
-    if (!tv || !iv) return false;
-    if (tv.includes(iv)) return true;
-    return tv.split('/').map(s => s.trim()).some(s => s === iv);
-  }
-  function getLenRange(t) {
-    const lt = (t.length || '').toString().toLowerCase().trim();
-    if (lt.includes('-')) { const p = lt.split('-'); return (parseFloat(p[1])||999) - (parseFloat(p[0])||0); }
-    return 999;
-  }
+  
+  
 
   const allMatches = state.tariff.filter(function(t) {
     if (carrier && t.carrier && t.carrier.toUpperCase() !== carrier) return false;
