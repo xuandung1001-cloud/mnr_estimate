@@ -1663,6 +1663,19 @@ function onReviseStatusChange(sel) {
 async function onReviseInput(val, estDate) {
   val = val.trim().toUpperCase();
   if (val.length < 4) return;
+
+  // Kiểm tra tracking status — chỉ cho Revise khi Partially Approved hoặc Partially Approved - Revised
+  var REVISE_ALLOWED = ['Partially Approved', 'Partially Approved - Revised'];
+  var trkRow = state.tracking.find(function(t) {
+    return (t.container_no||'').toUpperCase() === val && !['Repaired','Rejected'].includes(t.approval_status);
+  });
+  if (trkRow && !REVISE_ALLOWED.includes(trkRow.approval_status)) {
+    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" style="text-align:center;padding:20px"><div class="alert alert-warn">Container <strong>' + val + '</strong> đang có status <strong>' + trkRow.approval_status + '</strong> — chỉ Partially Approved mới có thể Revise.</div></td></tr>';
+    document.getElementById('rev-total-row').style.display = 'none';
+    document.getElementById('btn-compare').style.display = 'none';
+    return;
+  }
+
   document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   const res = await apiGet({ action: 'getEstimates', container_no: val, est_date: estDate || '' });
   if (res.success && res.data.length > 0) {
