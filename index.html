@@ -77,7 +77,7 @@ table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
 th{background:var(--gray-light);padding:6px 7px;text-align:center;font-weight:700;color:#1e40af;border:1px solid var(--border);font-size:10px;white-space:nowrap;overflow:hidden;text-transform:uppercase;letter-spacing:.03em}
 td{padding:5px 7px;border:1px solid var(--border);color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 tr:hover td{background:#f7fafc}
-td input,td select{border:none;background:transparent;font-size:11px;width:100%;color:#1a202c;outline:none;font-family:inherit}
+td input,td select{border:none;background:transparent;font-size:11px;width:100%;color:#1a202c;outline:none;font-family:inherit;text-align:center}
 td input:focus,td select:focus{background:#fffbeb}
 .td-auto{background:var(--green-light);color:var(--green);text-align:right}
 .td-auto-warn{background:var(--amber-light);color:var(--amber);text-align:right}
@@ -292,7 +292,7 @@ td input:focus,td select:focus{background:#fffbeb}
           <div style="margin-bottom:10px">
             <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 12px;border:1px solid #fca5a5;border-radius:6px;background:#fff1f2">
               <input type="checkbox" id="est-infestation" style="width:14px;height:14px;cursor:pointer">
-              <span style="font-size:12px;color:#be123c;font-weight:500">🪲 Mối mọt (Infestation)</span>
+              <span style="font-size:12px;color:#be123c;font-weight:500">🪲 Termite Attack</span>
             </label>
           </div>
         </div>
@@ -539,11 +539,8 @@ td input:focus,td select:focus{background:#fffbeb}
             <select class="fi" id="trk-carrier" onchange="filterTracking()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
-            <label style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
-              <input type="checkbox" id="trk-show-po" onchange="filterTracking()"> Hiện cont đã có PO
-            </label>
             <label style="font-size:11px;color:#be123c;display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
-              <input type="checkbox" id="trk-infestation" onchange="filterTracking()"> 🪲 Mối mọt
+              <input type="checkbox" id="trk-infestation" onchange="filterTracking()"> 🪲 Termite Attack
             </label>
             <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
@@ -584,7 +581,6 @@ td input:focus,td select:focus{background:#fffbeb}
             <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
-            <span style="font-size:11px;color:var(--green);padding:0 8px;align-self:center">✓ Cont đã có PO Number</span>
             <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
           </div>
           <div class="tbl-wrap">
@@ -1336,19 +1332,19 @@ function addEstRow() {
   const trigger = "onblur='lookupTariff(this.closest(\"tr\"))'";
   tr.innerHTML = `
     <td>${rowNum}</td>
-    <td><input placeholder="IXXX" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="MCO" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="DY" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="WP" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="QTY" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input placeholder="1" type="number" min="0" step="0.01" value="1" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="IXXX" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="MCO" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="DY" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="WP" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="QTY" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center" placeholder="1" type="number" min="0" step="0.01" value="1" onblur="lookupTariff(this.closest('tr'))"></td>
     <td class="td-auto"><span class="h-val">—</span></td>
     <td class="td-auto"><span class="m-val">—</span></td>
     <td class="td-auto"><span class="l-val">—</span></td>
     <td class="td-auto"><span class="t-val">—</span></td>
-    <td><input placeholder="MSC"></td>
+    <td><input style="text-align:center" placeholder="MSC"></td>
     <td style="text-align:center"><button onclick="this.closest('tr').remove();updateEstNumbers();calcEstTotal()" style="border:none;background:none;color:#fc8181;cursor:pointer;font-size:14px">×</button></td>
   `;
   tbody.appendChild(tr);
@@ -1585,7 +1581,7 @@ async function saveEstimate() {
       currency: document.getElementById('currency').value || 'USD',
       grade: document.getElementById('grade').value,
       remarks: document.getElementById('est-remarks').value,
-      special_flag: document.getElementById('est-infestation').checked ? 'Infestation' : '',
+      special_flag: document.getElementById('est-infestation').checked ? 'Termite Attack' : '',
       lines
     });
     if (res.success) {
@@ -2351,11 +2347,11 @@ function filterTracking() {
   const q = document.getElementById('trk-search').value.toLowerCase();
   const st = document.getElementById('trk-status').value;
   const ca = document.getElementById('trk-carrier').value;
-  const showPO = document.getElementById('trk-show-po').checked;
+  const showPO = false;
   const showInfestation = document.getElementById('trk-infestation') && document.getElementById('trk-infestation').checked;
   const filtered = state.tracking.filter(r => {
     if (!showPO && r.po_number) return false; // ẩn cont đã có PO Number
-    if (showInfestation && r.special_flag !== 'Infestation') return false; // chỉ hiện mối mọt
+    if (showInfestation && r.special_flag !== 'Termite Attack') return false; // chỉ hiện mối mọt
     const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
     const matchSt = !st || r.approval_status === st;
     const matchCa = !ca || r.carrier === ca;
@@ -2373,7 +2369,7 @@ function renderTrackingTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Infestation' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
+      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
@@ -2451,7 +2447,7 @@ function renderSummaryTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Infestation' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
+      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
