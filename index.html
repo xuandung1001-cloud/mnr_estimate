@@ -741,6 +741,9 @@ td input:focus,td select:focus{background:#fffbeb}
             <button class="btn btn-sm" onclick="refreshCache()" title="Xóa cache và tải lại Tariff + Stock từ server">
               🔄 Refresh Cache
             </button>
+            <button class="btn btn-sm" onclick="runSetupHeaders()" title="Thêm các cột mới vào Google Sheet nếu thiếu" style="background:#f0fdf4;color:#15803d;border-color:#86efac">
+              ⚙️ Setup Cột Sheet
+            </button>
             <button class="btn btn-sm btn-blue" onclick="document.getElementById('tariff-file').click()">
               + Import file Tariff
             </button>
@@ -3560,7 +3563,21 @@ function renderTariffScreen() {
   filterTariff();
 }
 
-async function refreshCache() {
+async async function runSetupHeaders() {
+  toast('Đang setup cột sheet...');
+  try {
+    var res = await apiPost({ action: 'setupHeaders' });
+    if (res.success) {
+      toast('Setup xong! ' + (res.results || []).join(' | '), 5000);
+    } else {
+      toast('Lỗi: ' + (res.error || 'unknown'), 4000);
+    }
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 4000);
+  }
+}
+
+function refreshCache() {
   localStorage.removeItem('mnr_tariff');
   localStorage.removeItem('mnr_stock');
   toast('Đang tải lại Tariff + Stock...');
