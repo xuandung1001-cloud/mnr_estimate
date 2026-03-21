@@ -300,26 +300,26 @@ td input:focus,td select:focus{background:#fffbeb}
         <div class="card">
           <div class="sec-div">
             Chi tiết hạng mục sửa chữa
-            <span style="font-size:10px;color:var(--gray);font-weight:400">Ô xanh lá = giá tự lookup từ Tariff</span>
+            
           </div>
           <div class="tbl-wrap">
             <table id="est-table">
               <thead>
                 <tr>
-                  <th style="width:32px">STT</th>
-                  <th style="width:70px">Dmg Loc</th>
-                  <th style="width:75px">Component</th>
-                  <th style="width:62px">Dmg Type</th>
-                  <th style="width:62px">Rep Type</th>
-                  <th style="width:48px">Length</th>
-                  <th style="width:48px">Width</th>
-                  <th style="width:50px;text-align:center">Unit</th>
-                  <th style="width:40px;text-align:center">Qty</th>
-                  <th style="width:52px" class="td-auto">Hours</th>
-                  <th style="width:60px" class="td-auto">Material</th>
-                  <th style="width:58px" class="td-auto">Labour</th>
-                  <th style="width:62px" class="td-auto">Total</th>
-                  <th style="width:70px;text-align:center">Resp. Party</th>
+                  <th style="width:36px">STT</th>
+                  <th style="width:80px">Dmg Loc</th>
+                  <th style="width:90px">Component</th>
+                  <th style="width:72px">Dmg Type</th>
+                  <th style="width:72px">Rep Type</th>
+                  <th style="width:58px">Length</th>
+                  <th style="width:58px">Width</th>
+                  <th style="width:58px;text-align:center">Unit</th>
+                  <th style="width:48px;text-align:center">Qty</th>
+                  <th style="width:60px" class="td-auto">Hours</th>
+                  <th style="width:72px" class="td-auto">Material</th>
+                  <th style="width:68px" class="td-auto">Labour</th>
+                  <th style="width:70px" class="td-auto">Total</th>
+                  <th style="width:80px;text-align:center">Resp. Party</th>
                   <th style="width:28px"></th>
                 </tr>
               </thead>
@@ -356,7 +356,7 @@ td input:focus,td select:focus{background:#fffbeb}
         <div class="card">
           <div class="form-grid grid-4">
             <div class="fg">
-              <div class="fl">Equipment No * (nhập để load)</div>
+              <div class="fl">Equipment No *</div>
               <input class="fi" id="rev-eq" placeholder="Nhập số cont..." oninput="onReviseInput(this.value)">
             </div>
             <div class="fg">
@@ -380,7 +380,7 @@ td input:focus,td select:focus{background:#fffbeb}
         <div class="card">
           <div class="sec-div">
             Chi tiết hạng mục — chỉnh sửa rồi lưu
-            <span style="font-size:10px;color:var(--gray);font-weight:400">Ô xanh lá = giá tự lookup từ Tariff</span>
+            
           </div>
           <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
             <button class="btn btn-sm" onclick="addReviseRow()">+ Thêm dòng</button>
@@ -390,23 +390,23 @@ td input:focus,td select:focus{background:#fffbeb}
             <table id="rev-table">
               <thead>
                 <tr>
-                  <th style="width:32px">STT</th>
-                  <th style="width:70px">Dmg Loc</th>
-                  <th style="width:75px">Component</th>
-                  <th style="width:62px">Dmg Type</th>
-                  <th style="width:62px">Rep Type</th>
-                  <th style="width:48px">Length</th>
-                  <th style="width:48px">Width</th>
-                  <th style="width:50px;text-align:center">Unit</th>
-                  <th style="width:40px;text-align:center">Qty</th>
-                  <th style="width:52px" class="td-auto">Hours</th>
-                  <th style="width:60px" class="td-auto">Material</th>
-                  <th style="width:58px" class="td-auto">Labour</th>
-                  <th style="width:65px">Total Est.</th>
-                  <th style="width:65px" class="td-total">Total App.</th>
-                  <th style="width:70px;text-align:center">Resp. Party</th>
-                  <th style="width:110px">Status</th>
-                  <th style="width:90px">Remark</th>
+                  <th style="width:36px">STT</th>
+                  <th style="width:80px">Dmg Loc</th>
+                  <th style="width:90px">Component</th>
+                  <th style="width:72px">Dmg Type</th>
+                  <th style="width:72px">Rep Type</th>
+                  <th style="width:58px">Length</th>
+                  <th style="width:58px">Width</th>
+                  <th style="width:58px;text-align:center">Unit</th>
+                  <th style="width:48px;text-align:center">Qty</th>
+                  <th style="width:60px" class="td-auto">Hours</th>
+                  <th style="width:72px" class="td-auto">Material</th>
+                  <th style="width:68px" class="td-auto">Labour</th>
+                  <th style="width:70px">Total Est.</th>
+                  <th style="width:70px" class="td-total">Total App.</th>
+                  <th style="width:80px;text-align:center">Resp. Party</th>
+                  <th style="width:120px">Status</th>
+                  <th style="width:100px">Remark</th>
                   <th style="width:28px"></th>
                 </tr>
               </thead>
@@ -718,8 +718,8 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <select class="fi" id="rpt-year" style="width:90px"></select>
             <select class="fi" id="rpt-carrier" style="width:120px"><option value="">Tất cả Carrier</option></select>
-            <button class="btn btn-sm btn-blue" onclick="genSummaryReport()">Summary Report</button>
-            <button class="btn btn-sm" onclick="genDetailedReport()">Detailed Statement</button>
+            <button class="btn btn-sm" id="btn-summary-report" onclick="genSummaryReport()">Summary Report</button>
+            <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Detailed Statement</button>
             <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
           </div>
           <div class="stats-row" id="rpt-stats" style="margin-bottom:12px"></div>
@@ -823,8 +823,8 @@ td input:focus,td select:focus{background:#fffbeb}
           <div class="card-title">Xuất hình ảnh → Google Drive</div>
 
           <div class="mode-tabs" style="margin-bottom:14px">
-            <div class="mode-tab active" id="pic-tab-b" onclick="setPicMode('B',this)">B — Trước Sửa Chữa</div>
-            <div class="mode-tab" id="pic-tab-a" onclick="setPicMode('A',this)">A — Sau Sửa Chữa</div>
+            <div class="mode-tab active" id="pic-tab-b" onclick="setPicMode('B',this)">Trước Sửa Chữa</div>
+            <div class="mode-tab" id="pic-tab-a" onclick="setPicMode('A',this)">Sau Sửa Chữa</div>
           </div>
 
           <div id="pic-mode-info" class="alert alert-info" style="margin-bottom:12px">
@@ -868,7 +868,7 @@ td input:focus,td select:focus{background:#fffbeb}
 
           <div style="display:flex;gap:8px;align-items:center">
             <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">📂 Export lên Drive</button>
-            <span style="font-size:11px;color:var(--gray)">Copy vào <code style="background:var(--bg);padding:1px 5px;border-radius:3px">MNR_Estimate/Export/Export_bulk_DDMMYYYY_HHmm/</code></span>
+            
           </div>
         </div>
 
