@@ -3441,6 +3441,7 @@ async function saveEditEstimate(containerNo, estDate) {
       currency:     document.getElementById('currency').value || 'USD',
       grade:        document.getElementById('grade').value,
       remarks:      document.getElementById('est-remarks').value,
+      special_flag: document.getElementById('est-infestation') && document.getElementById('est-infestation').checked ? 'Termite Attack' : '',
       lines:        lines
     });
     if (res && res.success) {
