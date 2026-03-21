@@ -1144,6 +1144,29 @@ function onEquipmentInput(val) {
       (r.equipment_no || '').toString().toUpperCase().trim() === val
     );
     if (found) {
+      // Check xem cont có job đã đóng không (Repaired/Rejected)
+      var CLOSED_FRONT = ['Repaired', 'Rejected'];
+      var closedJobs = state.tracking.filter(function(t) {
+        return (t.container_no||'').toUpperCase() === val && CLOSED_FRONT.includes(t.approval_status);
+      });
+      var activeJob = state.tracking.find(function(t) {
+        return (t.container_no||'').toUpperCase() === val && !CLOSED_FRONT.includes(t.approval_status);
+      });
+      if (closedJobs.length > 0 && !activeJob) {
+        // Có job đã đóng, không có job active → popup hỏi
+        var jobList = closedJobs.map(function(j) { return j.est_date + ' (' + j.approval_status + ')'; }).join('\n');
+        var choice = confirm(
+          'Container ' + val + ' đã có ' + closedJobs.length + ' job trước:\n' + jobList +
+          '\n\nBấm OK để tạo JOB MỚI\nBấm Cancel để huỷ'
+        );
+        if (!choice) {
+          document.getElementById('eq-no').value = '';
+          clearAutoFields();
+          clearEstPhotos();
+          return;
+        }
+        // Tiếp tục tạo job mới
+      }
       document.getElementById('size-type').value = found.size_type || '';
       document.getElementById('carrier').value    = found.carrier   || '';
 
@@ -1637,11 +1660,11 @@ function onReviseStatusChange(sel) {
   calcReviseTotal();
 }
 
-async function onReviseInput(val) {
+async function onReviseInput(val, estDate) {
   val = val.trim().toUpperCase();
   if (val.length < 4) return;
   document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
-  const res = await apiGet({ action: 'getEstimates', container_no: val });
+  const res = await apiGet({ action: 'getEstimates', container_no: val, est_date: estDate || '' });
   if (res.success && res.data.length > 0) {
     const first = res.data[0];
     document.getElementById('rev-app-date').value = formatDate(first.approval_date) || '';
@@ -2072,11 +2095,14 @@ async function handleOvmFile(input) {
       var rejType    = String(row[17] || '').trim();
       var appDateStr = parseDateStr(row[21]);
 
-      // === BƯỚC 1: Tìm tracking ===
+      // === BƯỚC 1: Tìm tracking — ưu tiên dòng active, tránh dòng Repaired/Rejected ===
+      var CLOSED_OVM_F = ['Repaired', 'Rejected'];
       var trk = null;
       for (var i = 0; i < state.tracking.length; i++) {
         if ((state.tracking[i].container_no || '').toString().trim().toUpperCase() === contNo) {
-          trk = state.tracking[i]; break;
+          var stF = state.tracking[i].approval_status || '';
+          if (!CLOSED_OVM_F.includes(stF)) { trk = state.tracking[i]; break; }
+          if (!trk) trk = state.tracking[i]; // fallback: lấy dòng đầu nếu không có active
         }
       }
 
@@ -2340,7 +2366,7 @@ function renderTrackingTable(data) {
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td>${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
@@ -3232,7 +3258,7 @@ async function doExportPictures() {
 
 
 // GO REVISE — chuyển sang màn hình Revise và điền cont số
-function goRevise(containerNo) {
+function goRevise(containerNo, estDate) {
   // Chuyển nav sang Revise Estimate
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -3248,16 +3274,16 @@ function goRevise(containerNo) {
   var revEq = document.getElementById('rev-eq');
   if (revEq) {
     revEq.value = containerNo;
-    onReviseInput(containerNo);
+    onReviseInput(containerNo, estDate || '');
   }
   toast('Đã chuyển sang Revise — ' + containerNo, 2000);
 }
 
 // EDIT
-async function editEstimate(containerNo) {
+async function editEstimate(containerNo, estDate) {
   toast('Đang tải ' + containerNo + '...');
   try {
-    var res = await apiGet({ action: 'getEstimates', container_no: containerNo });
+    var res = await apiGet({ action: 'getEstimates', container_no: containerNo, est_date: estDate || '' });
     if (!res.success || !res.data || !res.data.length) {
       toast('Không tìm thấy dữ liệu!', 3000);
       return;
@@ -3279,7 +3305,7 @@ async function editEstimate(containerNo) {
     var btnSave = document.createElement('button');
     btnSave.className = 'btn btn-sm btn-blue';
     btnSave.textContent = 'L\u01b0u ch\u1ec9nh s\u1eeda';
-    btnSave.onclick = function() { saveEditEstimate(containerNo); };
+    btnSave.onclick = function() { saveEditEstimate(containerNo, estDate); };
     tbEl.appendChild(btnCancel);
     tbEl.appendChild(btnSave);
     document.getElementById('eq-no').value       = containerNo;
@@ -3337,7 +3363,7 @@ function cancelEditEstimate() {
   ]);
 }
 
-async function saveEditEstimate(containerNo) {
+async function saveEditEstimate(containerNo, estDate) {
   var eqNo = document.getElementById('eq-no').value.trim();
   if (!eqNo) { toast('Không có Equipment No!'); return; }
   var lines = [];
@@ -3373,6 +3399,7 @@ async function saveEditEstimate(containerNo) {
     var res = await apiPost({
       action:       'updateEstimate',
       container_no: eqNo,
+      est_date:     estDate || '',
       carrier:      document.getElementById('carrier').value,
       size_type:    document.getElementById('size-type').value,
       currency:     document.getElementById('currency').value || 'USD',
@@ -3391,11 +3418,11 @@ async function saveEditEstimate(containerNo) {
   } catch(err) { toast('Lỗi: ' + err.message, 4000); }
 }
 
-async function deleteEstimate(containerNo) {
+async function deleteEstimate(containerNo, estDate) {
   if (!confirm('Xoá estimate của ' + containerNo + '?\nKhông thể hoàn tác!')) return;
   toast('Đang xoá...');
   try {
-    var res = await apiPost({ action: 'deleteEstimate', container_no: containerNo });
+    var res = await apiPost({ action: 'deleteEstimate', container_no: containerNo, est_date: estDate || '' });
     if (res && res.success) {
       state.tracking = state.tracking.filter(function(r) { return r.container_no !== containerNo; });
       renderTracking();
