@@ -289,6 +289,12 @@ td input:focus,td select:focus{background:#fffbeb}
             <div class="fl">Remarks</div>
             <input class="fi" id="est-remarks" placeholder="Ghi chú nếu có...">
           </div>
+          <div style="margin-bottom:10px">
+            <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 12px;border:1px solid #fca5a5;border-radius:6px;background:#fff1f2">
+              <input type="checkbox" id="est-infestation" style="width:14px;height:14px;cursor:pointer">
+              <span style="font-size:12px;color:#be123c;font-weight:500">🪲 Mối mọt (Infestation)</span>
+            </label>
+          </div>
         </div>
 
         <div class="card">
@@ -535,6 +541,9 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <label style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
               <input type="checkbox" id="trk-show-po" onchange="filterTracking()"> Hiện cont đã có PO
+            </label>
+            <label style="font-size:11px;color:#be123c;display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="trk-infestation" onchange="filterTracking()"> 🪲 Mối mọt
             </label>
             <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
@@ -1525,6 +1534,7 @@ function updateEstNumbers() {
 function resetEstimate() {
   document.getElementById('eq-no').value = '';
   document.getElementById('est-remarks').value = '';
+  if (document.getElementById('est-infestation')) document.getElementById('est-infestation').checked = false;
   clearAutoFields();
   clearEstPhotos();
   document.getElementById('est-date').value = todayStr();
@@ -1575,6 +1585,7 @@ async function saveEstimate() {
       currency: document.getElementById('currency').value || 'USD',
       grade: document.getElementById('grade').value,
       remarks: document.getElementById('est-remarks').value,
+      special_flag: document.getElementById('est-infestation').checked ? 'Infestation' : '',
       lines
     });
     if (res.success) {
@@ -2341,8 +2352,10 @@ function filterTracking() {
   const st = document.getElementById('trk-status').value;
   const ca = document.getElementById('trk-carrier').value;
   const showPO = document.getElementById('trk-show-po').checked;
+  const showInfestation = document.getElementById('trk-infestation') && document.getElementById('trk-infestation').checked;
   const filtered = state.tracking.filter(r => {
     if (!showPO && r.po_number) return false; // ẩn cont đã có PO Number
+    if (showInfestation && r.special_flag !== 'Infestation') return false; // chỉ hiện mối mọt
     const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
     const matchSt = !st || r.approval_status === st;
     const matchCa = !ca || r.carrier === ca;
@@ -2360,7 +2373,7 @@ function renderTrackingTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center">${r.container_no||''}</td>
+      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Infestation' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
@@ -2438,7 +2451,7 @@ function renderSummaryTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center">${r.container_no||''}</td>
+      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Infestation' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
@@ -3340,6 +3353,7 @@ async function editEstimate(containerNo, estDate) {
     document.getElementById('est-date').value    = formatDate(first.estimate_datetime) || todayStr();
     document.getElementById('currency').value    = first.currency  || 'USD';
     document.getElementById('est-remarks').value = '';
+  if (document.getElementById('est-infestation')) document.getElementById('est-infestation').checked = false;
     document.getElementById('grade').value       = '';
     document.getElementById('cont-status').value = '';
     document.getElementById('mfg-date').value    = '';
