@@ -185,7 +185,7 @@ td input:focus,td select:focus{background:#fffbeb}
       </div>
       <div class="nav-item" onclick="nav('ovm',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Update OVM/OVD
+        Cập nhật OVM
       </div>
     </div>
     <div class="nav-section">
@@ -473,15 +473,8 @@ td input:focus,td select:focus{background:#fffbeb}
       </div>
       <div class="screen" id="screen-ovm">
         <div class="card">
-          <div class="card-title">Import file OVM từ hãng tàu</div>
-          <div class="alert alert-info" style="margin-bottom:12px">
-            Upload file OVM bất kỳ — app tự detect loại và cập nhật đúng fields:<br>
-            <span style="font-size:11px">
-              • <strong>Sent for Approval</strong> → lấy Ref Number &nbsp;|&nbsp;
-              • <strong>Approved</strong> (total khớp est) → Approved Date + Total Approved &nbsp;|&nbsp;
-              • <strong>Partially Approved</strong> (total lệch est) → Approved Date + Total Approved
-            </span>
-          </div>
+          <div class="card-title">Cập nhật OVM</div>
+
           <div class="upload-area" onclick="document.getElementById('ovm-file').click()">
             <div class="upload-title">Upload file OVM (.xlsx)</div>
             <div class="upload-sub">Click để chọn file — hỗ trợ tất cả loại file OVM</div>
@@ -1107,7 +1100,7 @@ function nav(screen, el) {
       { label: 'Xoá form', fn: 'resetRevise()' },
       { label: 'Lưu Revise', cls: 'btn-blue', fn: 'saveRevise()' }
     ]},
-    ovm:      { title: 'Update OVM/OVD', actions: [] },
+    ovm:      { title: 'Cập nhật OVM', actions: [] },
     tariff:   { title: 'Quản lý Tariff', actions: [] },
     tracking: { title: 'Estimate Tracking', actions: [] },
     summary:  { title: 'Summary', actions: [] },
