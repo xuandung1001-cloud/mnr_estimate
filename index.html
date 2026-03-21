@@ -2210,18 +2210,18 @@ function renderOvmPreview() {
     var diffClr  = diff === 0 ? '' : (diff > 0 ? 'color:var(--green)' : 'color:var(--red)');
     var rowBg    = !r.in_tracking ? 'background:var(--red-light)' : r.will_skip ? 'opacity:0.5' : '';
     var refCell  = r.new_status === 'Sent for Approval'
-      ? `<td style="font-family:monospace;font-size:10px;color:var(--blue);text-align:left">${r.ref_no||'—'}</td>`
+      ? `<td style="font-family:monospace;font-size:10px;color:var(--blue)">${r.ref_no||'—'}</td>`
       : `<td style="color:var(--gray);font-size:10px">—</td>`;
     return `<tr style="${rowBg}">
       <td>${i+1}</td>
-      <td style="font-family:monospace;text-align:left">${r.cont_no}</td>
+      <td style="font-family:monospace">${r.cont_no}</td>
       ${refCell}
       <td style="text-align:right">${r.est_total ? num(r.est_total) : '—'}</td>
       <td style="text-align:right">${r.ovm_total ? num(r.ovm_total) : '—'}</td>
       <td style="text-align:right;${diffClr}">${diffStr}</td>
       <td>${r.in_tracking ? badge(r.new_status) : '—'}</td>
       <td style="font-size:11px">${r.app_date||'—'}</td>
-      <td style="font-size:10px;color:var(--gray);text-align:left">${r.note}</td>
+      <td style="font-size:10px;color:var(--gray)">${r.note}</td>
     </tr>`;
   }).join('');
 
@@ -2360,17 +2360,17 @@ function renderTrackingTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:left">${r.container_no||''}</td>
+      <td style="text-align:center">${r.container_no||''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
-      <td style="color:var(--blue);text-align:left">${r.ref_number||'—'}</td>
+      <td style="color:var(--blue)">${r.ref_number||'—'}</td>
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
       <td>${badge(r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
-      <td style="text-align:left">${r.po_number||'—'}</td>
+      <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
@@ -2438,14 +2438,14 @@ function renderSummaryTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:left">${r.container_no||''}</td>
+      <td style="text-align:center">${r.container_no||''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
-      <td style="color:var(--blue);text-align:left">${r.ref_number||'—'}</td>
+      <td style="color:var(--blue)">${r.ref_number||'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
-      <td style="text-align:left">${r.po_number||'—'}</td>
+      <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="text-align:right">${num(r.labour_hours)}</td>
       <td style="text-align:right">${num(r.labour_cost)}</td>
@@ -2453,7 +2453,7 @@ function renderSummaryTable(data) {
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
-      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;text-align:left">${r.remarks2||r.remarks||'—'}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis">${r.remarks2||r.remarks||'—'}</td>
     </tr>
   `).join('');
 
@@ -2544,19 +2544,19 @@ function renderStockTable(data) {
     <tr>
       <td>${r.seq||i+1}</td>
       <td>${r.carrier||''}</td>
-      <td style="text-align:left">${r.equipment_no||''}</td>
+      <td style="text-align:center">${r.equipment_no||''}</td>
       <td>${r.size_type||''}</td>
       <td>${r.size_type_iso||''}</td>
       <td>${r.manufactured_date||''}</td>
       <td>${r.grade||''}</td>
       <td>${r.trang_thai_container||'—'}</td>
       <td>${r.fe||''}</td>
-      <td style="text-align:left">${r.yard_location||''}</td>
+      <td style="text-align:center">${r.yard_location||''}</td>
       <td style="text-align:right">${r.so_ngay_luu_bai||''}</td>
       <td>${r.date_in_yard||''}</td>
       <td>${r.loai_hang||''}</td>
       <td>${r.container_status ? `<span class="badge b-gr">${r.container_status}</span>` : '—'}</td>
-      <td style="text-align:left">${r.remarks||''}</td>
+      <td style="text-align:center">${r.remarks||''}</td>
     </tr>
   `).join('');
   if (data.length > 200) {
@@ -2670,11 +2670,11 @@ async function loadBulk() {
       tbody.innerHTML = data.map(function(r, i) { return `
         <tr>
           <td>${i+1}</td>
-          <td style='text-align:left'>${r.equipment_number||''}</td>
+          <td style='text-align:center'>${r.equipment_number||''}</td>
           <td>${r.estimate_datetime ? r.estimate_datetime.split(' ')[0] : '—'}</td>
           <td>${r.carrier||''}</td>
-          <td style="text-align:left">${r.app_damage_location||'—'}</td>
-          <td style="text-align:left">${r.app_component||'—'}</td>
+          <td style="text-align:center">${r.app_damage_location||'—'}</td>
+          <td style="text-align:center">${r.app_component||'—'}</td>
           <td>${r.app_damage_type||'—'}</td>
           <td>${r.app_repair_type||'—'}</td>
           <td>${r.app_length||'—'}</td>
@@ -2718,11 +2718,11 @@ async function loadBulk() {
     tbody.innerHTML = data.map(function(r, i) { return `
       <tr>
         <td>${i+1}</td>
-        <td style='text-align:left'>${r.equipment_number||''}</td>
+        <td style='text-align:center'>${r.equipment_number||''}</td>
         <td>${r.estimate_datetime ? r.estimate_datetime.toString().split(' ')[0] : '—'}</td>
         <td>${r.carrier||''}</td>
-        <td style='text-align:left'>${r.damage_location||'—'}</td>
-        <td style='text-align:left'>${r.component||'—'}</td>
+        <td style='text-align:center'>${r.damage_location||'—'}</td>
+        <td style='text-align:center'>${r.component||'—'}</td>
         <td>${r.damage_type||'—'}</td>
         <td>${r.repair_type||'—'}</td>
         <td>${r.length||'—'}</td>
@@ -3106,10 +3106,10 @@ function genDetailedReport() {
             <td>${r.container_no||''}</td>
             <td>${r.size||''}</td>
             <td>${formatDate(r.est_date)}</td>
-            <td style="color:var(--blue);text-align:left">${r.ref_number||'—'}</td>
+            <td style="color:var(--blue)">${r.ref_number||'—'}</td>
             <td>${formatDate(r.approved_date)||'—'}</td>
             <td>${formatDate(r.repair_date)||'—'}</td>
-            <td style="text-align:left">${r.po_number||'—'}</td>
+            <td style="text-align:center">${r.po_number||'—'}</td>
             <td>${formatDate(r.po_date)||'—'}</td>
             <td style="text-align:right;color:var(--green);font-weight:500">${num(r.total_approved)}</td>
           </tr>
@@ -3177,9 +3177,9 @@ function previewRefNos() {
     var refClr  = ref === '—' ? 'color:var(--amber)' : 'color:var(--green)';
     return `<tr>
       <td>${i+1}</td>
-      <td style="font-family:monospace;text-align:left">${contNo}</td>
-      <td style="font-family:monospace;text-align:left;${refClr}">${ref}</td>
-      <td style="font-family:monospace;font-size:10px;color:var(--gray);text-align:left">${sample}</td>
+      <td style="font-family:monospace">${contNo}</td>
+      <td style="font-family:monospace;${refClr}">${ref}</td>
+      <td style="font-family:monospace;font-size:10px;color:var(--gray)">${sample}</td>
     </tr>`;
   }).join('');
   preview.style.display = 'block';
@@ -3605,8 +3605,8 @@ function renderTariffTable(data) {
       <td>${i+1}</td>
       <td>${r.carrier||''}</td>
       <td style="font-size:10px">${r.size_type||''}</td>
-      <td style="text-align:left">${r.damage_location||''}</td>
-      <td style="text-align:left">${r.component||''}</td>
+      <td style="text-align:center">${r.damage_location||''}</td>
+      <td style="text-align:center">${r.component||''}</td>
       <td>${r.damage_type||''}</td>
       <td>${r.repair_type||''}</td>
       <td style="text-align:right">${r.length||''}</td>
