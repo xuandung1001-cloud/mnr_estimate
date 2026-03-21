@@ -1341,13 +1341,13 @@ function addEstRow() {
     <td><input style="text-align:center" placeholder="WP" onblur="lookupTariff(this.closest('tr'))"></td>
     <td><input style="text-align:center" placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
     <td><input style="text-align:center" placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input style="text-align:center" placeholder="QTY" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input list="dl-unit" style="text-align:center" placeholder="QTY" onblur="validateField(this,['QTY','CMT']);lookupTariff(this.closest('tr'))"></td>
     <td><input style="text-align:center" placeholder="1" type="number" min="0" step="0.01" value="1" onblur="lookupTariff(this.closest('tr'))"></td>
     <td class="td-auto"><span class="h-val">—</span></td>
     <td class="td-auto"><span class="m-val">—</span></td>
     <td class="td-auto"><span class="l-val">—</span></td>
     <td class="td-auto"><span class="t-val">—</span></td>
-    <td><input style="text-align:center" placeholder="MSC"></td>
+    <td><input list="dl-resp" style="text-align:center" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','S','SU','T','U','V','W'])"></td>
     <td style="text-align:center"><button onclick="this.closest('tr').remove();updateEstNumbers();calcEstTotal()" style="border:none;background:none;color:#fc8181;cursor:pointer;font-size:14px">×</button></td>
   `;
   tbody.appendChild(tr);
@@ -1355,6 +1355,20 @@ function addEstRow() {
 }
 
 // Helper: kiểm tra giá trị có trong chuỗi phân cách / không
+
+function validateField(input, allowed) {
+  var val = input.value.trim().toUpperCase();
+  if (!val) return;
+  if (!allowed.includes(val)) {
+    input.style.background = '#fff1f2';
+    input.style.color = '#be123c';
+    toast('Giá trị "' + val + '" không hợp lệ! Cho phép: ' + allowed.join(', '), 3000);
+  } else {
+    input.style.background = '';
+    input.style.color = '';
+  }
+}
+
 function inList(tariffVal, input) {
   const tv = (tariffVal || '').toString().toUpperCase().trim();
   const iv = input.trim();
@@ -1634,14 +1648,14 @@ function makeReviseRow(i, r) {
     <td><input value="${rt}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))"></td>
     <td><input value="${len}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
     <td><input value="${wid}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
-    <td style="text-align:center"><input value="${uni}" placeholder="QTY" onblur="lookupRevise(this.closest('tr'))" style="text-align:center"></td>
+    <td style="text-align:center"><input list="dl-unit" value="${uni}" placeholder="QTY" onblur="validateField(this,['QTY','CMT']);lookupRevise(this.closest('tr'))" style="text-align:center"></td>
     <td style="text-align:center"><input value="${qty}" type="number" min="0" step="0.01" onblur="lookupRevise(this.closest('tr'))" style="text-align:center"></td>
     <td class="td-auto"><span class="rv-h">${h}</span></td>
     <td class="td-auto"><span class="rv-m">${m}</span></td>
     <td class="td-auto"><span class="rv-l">${l}</span></td>
     <td style="text-align:right;color:var(--gray);font-size:11px"><span class="rv-e">${est}</span></td>
     <td class="td-total"><span class="rv-t">${tot}</span></td>
-    <td style="text-align:center"><input value="${rsp}" placeholder="MSC" style="text-align:center"></td>
+    <td style="text-align:center"><input list="dl-resp" value="${rsp}" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','S','SU','T','U','V','W'])" style="text-align:center"></td>
     <td><select style="font-size:11px;border:none;background:transparent;width:100%;color:#1a202c" onchange="onReviseStatusChange(this)">
       <option ${sta==='Partially Approved'?'selected':''}>Partially Approved</option>
       <option ${sta==='Approved'?'selected':''}>Approved</option>
@@ -3372,8 +3386,8 @@ async function editEstimate(containerNo, estDate) {
       if (inp[3]) inp[3].value = line.repair_type       || '';
       if (inp[4]) inp[4].value = line.length            || '';
       if (inp[5]) inp[5].value = line.width             || '';
-      if (inp[6]) inp[6].value = line.unit              || '';
       if (inp[7]) inp[7].value = line.quantity          || 1;
+      if (inp[6]) inp[6].value = line.unit              || '';
       if (inp[8]) inp[8].value = line.responsible_party || '';
       var hv = tr.querySelector('.h-val'); if (hv) hv.textContent = parseFloat(line.labour_hours  || 0).toFixed(2);
       var mv = tr.querySelector('.m-val'); if (mv) mv.textContent = parseFloat(line.material_cost || 0).toFixed(2);
@@ -3787,5 +3801,8 @@ async function handleStockUpload(input) {
   reader.readAsArrayBuffer(file);
 }
 </script>
+
+<datalist id="dl-unit"><option value="QTY"><option value="CMT"></datalist>
+<datalist id="dl-resp"><option value="C"><option value="D"><option value="H"><option value="I"><option value="O"><option value="OT"><option value="S"><option value="SU"><option value="T"><option value="U"><option value="V"><option value="W"></datalist>
 </body>
 </html>
