@@ -218,7 +218,7 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="nav-label">Hệ thống</div>
       <div class="nav-item" onclick="nav('tariff',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-        Quản lý Tariff
+        Quản lý Bảng Giá
       </div>
     </div>
     <div class="nav-section">
@@ -685,24 +685,24 @@ td input:focus,td select:focus{background:#fffbeb}
           </div>
           <div id="stk-info" style="font-size:11px;color:var(--gray);margin-bottom:8px"></div>
           <div class="tbl-wrap">
-            <table>
+            <table style="table-layout:fixed;min-width:1200px">
               <thead>
                 <tr>
-                  <th style="width:32px">STT</th>
-                  <th style="width:55px">Carrier</th>
-                  <th style="width:105px">Equipment No</th>
-                  <th style="width:48px">Size</th>
-                  <th style="width:48px">ISO</th>
+                  <th style="width:34px">STT</th>
+                  <th style="width:52px">Carrier</th>
+                  <th style="width:100px">Equipment No</th>
+                  <th style="width:46px">Size</th>
+                  <th style="width:46px">ISO</th>
                   <th style="width:72px">Mfg Date</th>
-                  <th style="width:42px">Grade</th>
-                  <th style="width:110px">Trạng thái</th>
-                  <th style="width:48px">F/E</th>
+                  <th style="width:44px">Grade</th>
+                  <th style="width:90px">Trạng thái</th>
+                  <th style="width:40px">F/E</th>
                   <th style="width:90px">Yard Location</th>
-                  <th style="width:50px">Ngày lưu</th>
-                  <th style="width:80px">Date In Yard</th>
-                  <th style="width:42px">Loại HH</th>
-                  <th style="width:50px">Container Status</th>
-                  <th>Remarks</th>
+                  <th style="width:52px">Ngày lưu</th>
+                  <th style="width:82px">Date In Yard</th>
+                  <th style="width:50px">Loại HH</th>
+                  <th style="width:60px">Cont Status</th>
+                  <th style="min-width:160px">Remarks</th>
                 </tr>
               </thead>
               <tbody id="stk-rows">
@@ -1116,7 +1116,7 @@ function nav(screen, el) {
       { label: 'Lưu Revise', cls: 'btn-blue', fn: 'saveRevise()' }
     ]},
     ovm:      { title: 'Cập nhật OVM', actions: [] },
-    tariff:   { title: 'Quản lý Tariff', actions: [] },
+    tariff:   { title: 'Quản lý Bảng Giá', actions: [] },
     tracking: { title: 'Danh sách Báo Giá', actions: [] },
     summary:  { title: 'Tổng hợp', actions: [] },
     bulk:     { title: 'Xuất Bulk & Export', actions: [] },
