@@ -3553,7 +3553,7 @@ function renderTariffScreen() {
   filterTariff();
 }
 
-async async function runSetupHeaders() {
+async function runSetupHeaders() {
   toast('Đang setup cột sheet...');
   try {
     var res = await apiPost({ action: 'setupHeaders' });
@@ -3567,7 +3567,7 @@ async async function runSetupHeaders() {
   }
 }
 
-function refreshCache() {
+async function refreshCache() {
   localStorage.removeItem('mnr_tariff');
   localStorage.removeItem('mnr_stock');
   toast('Đang tải lại Tariff + Stock...');
