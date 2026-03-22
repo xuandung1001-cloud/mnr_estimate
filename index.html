@@ -2367,7 +2367,7 @@ function renderTrackingStats(s) {
 
 
 function makeStatusSelect(contNo, estDate, current) {
-  var statuses = ['Pending','Sent for Approval','Approved','Partially Approved','Repair Pending','Repaired','Rejected'];
+  var statuses = ['Pending','Sent for Approval','Approved','Partially Approved','Partially Approved - Revised','Repair Pending','Repaired','Rejected'];
   var colors = {
     'Pending':             'background:#f1f5f9;color:#64748b',
     'Sent for Approval':   'background:#dbeafe;color:#1e40af',
@@ -2472,7 +2472,7 @@ function renderTrackingTable(data) {
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Revise</button>` : ''}</td>
     </tr>
   `).join('');
 }
