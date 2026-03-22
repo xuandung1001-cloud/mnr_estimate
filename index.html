@@ -1163,9 +1163,8 @@ async function loadInitialData() {
     if (sumRes && sumRes.success)    state.summary   = sumRes.data;
     if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
     // Auto show dashboard after data loaded
-    var el = document.querySelector('.nav-item[onclick*="report"]');
-    if (el) nav('report', el);
-    genDashboard();
+    var reportEl = document.querySelector('.nav-item[onclick*="report"]');
+    if (reportEl) { nav('report', reportEl); genDashboard(); }
   } catch(e) { console.error('Data load error:', e); }
 
   if (!hasCachedTariff || !hasCachedStock) {
