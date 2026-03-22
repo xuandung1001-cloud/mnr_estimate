@@ -582,6 +582,9 @@ td input:focus,td select:focus{background:#fffbeb}
             <label style="font-size:11px;color:#be123c;display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
               <input type="checkbox" id="trk-infestation" onchange="filterTracking()"> 🪲 Termite Attack
             </label>
+            <label style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="trk-show-closed" onchange="filterTracking()"> Hiện Rejected/Repaired
+            </label>
             <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
           <div class="tbl-wrap">
@@ -2639,9 +2642,12 @@ function filterTracking() {
   const st = document.getElementById('trk-status').value;
   const ca = document.getElementById('trk-carrier').value;
   const showInfestation = document.getElementById('trk-infestation') && document.getElementById('trk-infestation').checked;
+  const showClosed = document.getElementById('trk-show-closed') && document.getElementById('trk-show-closed').checked;
   const showPO = false;
+  const CLOSED = ['Rejected', 'Repaired'];
   const filtered = state.tracking.filter(r => {
     if (!showPO && r.po_number) return false;
+    if (!showClosed && CLOSED.includes(r.approval_status)) return false;
     if (showInfestation && r.special_flag !== 'Termite Attack') return false;
     const matchQ  = !q  || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
     const matchSt = !st || r.approval_status === st;
