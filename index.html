@@ -126,8 +126,8 @@ td input:focus,td select:focus{background:#fffbeb}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* SCREENS */
-.screen{display:none}
-.screen.active{display:block}
+.screen{display:none;height:0;overflow:hidden}
+.screen.active{display:block;height:auto;overflow:visible}
 
 /* SECTION DIVIDER */
 .sec-div{font-size:11px;font-weight:600;color:var(--gray);padding:5px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
