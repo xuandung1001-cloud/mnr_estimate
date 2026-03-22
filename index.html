@@ -3341,9 +3341,9 @@ function genDashboard() {
   document.getElementById('rpt-dashboard').style.display = 'block';
   document.getElementById('rpt-summary-card').style.display = 'none';
 
-  // --- Filter tracking by PO date tháng/năm ---
+  // --- Filter tracking by approved_date tháng/năm ---
   const filtered = state.tracking.filter(r => {
-    const d = parseReportDate(r.po_date);
+    const d = parseReportDate(r.approved_date);
     if (!d) return false;
     const matchMonth = d.getMonth() === monthIdx && d.getFullYear() === year;
     const matchCarrier = !carrier || r.carrier === carrier;
@@ -3379,37 +3379,35 @@ function genDashboard() {
     </div>
   `;
 
-  // --- Chart 1: Stock emty theo trang_thai_container + grade ---
+  // --- Chart 1: Stock emty donut theo container_status + grade combo ---
   const stockData = state.stock || [];
-  const stockGroups = {};
+  const stockCombos = {};
   stockData.forEach(r => {
-    const status = r.trang_thai_container || r.container_status || 'Unknown';
-    const grade  = r.grade || '—';
-    const key = status;
-    if (!stockGroups[key]) stockGroups[key] = {};
-    stockGroups[key][grade] = (stockGroups[key][grade] || 0) + 1;
+    const cs = r.container_status || r.trang_thai_container || '?';
+    const gr = r.grade || '?';
+    const key = cs + '-' + gr;
+    stockCombos[key] = (stockCombos[key] || 0) + 1;
   });
-  const stockStatuses = Object.keys(stockGroups);
-  const allGrades = [...new Set(stockData.map(r => r.grade || '—'))].sort();
-  const gradeColors = ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#06b6d4','#f43f5e','#94a3b8'];
-  const stockDatasets = allGrades.map((g, gi) => ({
-    label: g,
-    data: stockStatuses.map(s => stockGroups[s][g] || 0),
-    backgroundColor: gradeColors[gi % gradeColors.length],
-    borderRadius: 3,
-  }));
+  // Sort by count desc
+  const comboEntries = Object.entries(stockCombos).sort((a,b) => b[1]-a[1]);
+  const comboLabels = comboEntries.map(e => e[0] + ' (' + e[1] + ')');
+  const comboCounts = comboEntries.map(e => e[1]);
+  const donutColors = ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#06b6d4','#f43f5e','#94a3b8','#10b981','#f97316','#ec4899','#6366f1','#84cc16'];
 
   if (_rptCharts.stock) _rptCharts.stock.destroy();
   _rptCharts.stock = new Chart(document.getElementById('chartStock'), {
-    type: 'bar',
-    data: { labels: stockStatuses, datasets: stockDatasets },
+    type: 'doughnut',
+    data: {
+      labels: comboLabels,
+      datasets: [{ data: comboCounts, backgroundColor: donutColors, borderWidth: 2, borderColor: '#fff' }]
+    },
     options: {
       responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { position: 'bottom', labels: { font: {size:9}, padding:6 } } },
-      scales: {
-        x: { stacked: true, ticks: {font:{size:9}}, grid:{display:false} },
-        y: { stacked: true, ticks: {font:{size:9}}, grid:{color:'#f1f5f9'}, beginAtZero:true }
-      }
+      plugins: {
+        legend: { position: 'right', labels: { font: {size:10}, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label } }
+      },
+      cutout: '58%'
     }
   });
 
@@ -3445,7 +3443,7 @@ function genDashboard() {
     trendLabels.push(label);
     const val = state.tracking
       .filter(r => {
-        const d = parseReportDate(r.po_date);
+        const d = parseReportDate(r.approved_date);
         return d && d.getMonth() === m && d.getFullYear() === y && (!carrier || r.carrier === carrier);
       })
       .reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0);
