@@ -2611,18 +2611,17 @@ async function toggleEstDetail(tr, contNo, estDate) {
           :e.approval_status==='Rejected'?'#fee2e2;color:#991b1b'
           :'#f1f5f9;color:#64748b')
         + ';font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500">' + e.approval_status + '</span>' : '—';
-      var lenDisp = (e.app_length !== undefined && e.app_length !== '' && e.app_length !== null) ? e.app_length : (e.length||'—');
-      var widDisp = (e.app_width  !== undefined && e.app_width  !== '' && e.app_width  !== null) ? e.app_width  : (e.width||'—');
+      var _app = function(v){ return (v !== undefined && v !== null && v !== '') ? v : '—'; };
       return '<tr style="background:' + (i%2===0?'#fff':'#f8fafc') + '">'
         + '<td style="padding:3px 8px;text-align:center;color:#888">' + (i+1) + '</td>'
-        + '<td style="padding:3px 8px">' + (e.damage_location||e.app_damage_location||'—') + '</td>'
-        + '<td style="padding:3px 8px">' + (e.component||e.app_component||'—') + '</td>'
-        + '<td style="padding:3px 8px">' + (e.damage_type||e.app_damage_type||'—') + '</td>'
-        + '<td style="padding:3px 8px">' + (e.repair_type||e.app_repair_type||'—') + '</td>'
-        + '<td style="padding:3px 8px;text-align:center">' + lenDisp + '</td>'
-        + '<td style="padding:3px 8px;text-align:center">' + widDisp + '</td>'
-        + '<td style="padding:3px 8px;text-align:center">' + (e.unit||e.app_unit||'—') + '</td>'
-        + '<td style="padding:3px 8px;text-align:center">' + (e.quantity||e.app_quantity||'—') + '</td>'
+        + '<td style="padding:3px 8px">' + _app(e.app_damage_location) + '</td>'
+        + '<td style="padding:3px 8px">' + _app(e.app_component) + '</td>'
+        + '<td style="padding:3px 8px">' + _app(e.app_damage_type) + '</td>'
+        + '<td style="padding:3px 8px">' + _app(e.app_repair_type) + '</td>'
+        + '<td style="padding:3px 8px;text-align:center">' + _app(e.app_length) + '</td>'
+        + '<td style="padding:3px 8px;text-align:center">' + _app(e.app_width) + '</td>'
+        + '<td style="padding:3px 8px;text-align:center">' + _app(e.app_unit) + '</td>'
+        + '<td style="padding:3px 8px;text-align:center">' + _app(e.app_quantity) + '</td>'
         + '<td style="padding:3px 8px;text-align:right;color:#64748b">' + (parseFloat(e.total_cost||0)>0 ? estV : '—') + '</td>'
         + '<td style="padding:3px 8px;text-align:right;color:#15803d;font-weight:500">' + appV + '</td>'
         + '<td style="padding:3px 8px;text-align:right;color:' + diffColor + '">' + diffStr + '</td>'
