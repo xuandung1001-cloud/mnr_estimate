@@ -1184,6 +1184,7 @@ async function loadInitialData() {
 
 // ===================== NAVIGATE =====================
 function nav(screen, el) {
+  document.getElementById('content').scrollTop = 0;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   el.classList.add('active');
