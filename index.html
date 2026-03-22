@@ -1125,7 +1125,6 @@ async function loadInitialData() {
   const hasCachedStock  = !!localStorage.getItem('mnr_stock');
   if (!hasCachedTariff || !hasCachedStock) toast('Đang tải dữ liệu...');
   // Auto navigate to report dashboard
-  setTimeout(function(){ var el = document.querySelector('.nav-item[onclick*="report"]'); if(el) nav('report', el); }, 100);
 
   // Tariff & Stock: cache sessionStorage — chỉ fetch lần đầu mỗi session
   try {
@@ -1168,6 +1167,10 @@ async function loadInitialData() {
     if (trkRes && trkRes.success)    state.tracking  = trkRes.data;
     if (sumRes && sumRes.success)    state.summary   = sumRes.data;
     if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
+    // Auto show dashboard after data loaded
+    var el = document.querySelector('.nav-item[onclick*="report"]');
+    if (el) nav('report', el);
+    genDashboard();
   } catch(e) { console.error('Data load error:', e); }
 
   if (!hasCachedTariff || !hasCachedStock) {
