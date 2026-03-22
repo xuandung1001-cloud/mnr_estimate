@@ -1099,10 +1099,10 @@ function showLoginError(msg) {
 
 // ===================== INIT =====================
 async function loadInitialData() {
-  setTopbar('Nhập Báo Giá mới', [
-    { label: 'Xoá form', fn: 'resetEstimate()' },
-    { label: 'Lưu Estimate', cls: 'btn-blue', fn: 'saveEstimate()' }
-  ]);
+  // Show report screen immediately
+  var reportEl = document.querySelector('.nav-item[onclick*="report"]');
+  if (reportEl) nav('report', reportEl);
+
 
   // Set today date
   document.getElementById('est-date').value = todayStr();
@@ -1162,9 +1162,8 @@ async function loadInitialData() {
     if (trkRes && trkRes.success)    state.tracking  = trkRes.data;
     if (sumRes && sumRes.success)    state.summary   = sumRes.data;
     if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
-    // Auto show dashboard after data loaded
-    var reportEl = document.querySelector('.nav-item[onclick*="report"]');
-    if (reportEl) { nav('report', reportEl); genDashboard(); }
+    // Render dashboard với data mới
+    genDashboard();
   } catch(e) { console.error('Data load error:', e); }
 
   if (!hasCachedTariff || !hasCachedStock) {
