@@ -600,6 +600,7 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:62px;text-align:right">Total Est.</th>
                   <th style="width:62px;text-align:right">Total App.</th>
                   <th style="width:72px">App. Date</th>
+                  <th style="width:68px;text-align:right">Total Revise</th>
                   <th style="width:115px">Status</th>
                   <th style="width:72px">Repair Date</th>
                   <th style="width:95px">PO Number</th>
@@ -609,7 +610,7 @@ td input:focus,td select:focus{background:#fffbeb}
                 </tr>
               </thead>
               <tbody id="trk-rows">
-                <tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -859,7 +860,7 @@ td input:focus,td select:focus{background:#fffbeb}
                 <th style="width:62px;text-align:right">Total</th>
               </tr></thead>
               <tbody id="trf-rows">
-                <tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -2699,7 +2700,7 @@ function filterTracking() {
 function renderTrackingTable(data) {
   const tbody = document.getElementById('trk-rows');
   if (!data || !data.length) {
-    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
   tbody.innerHTML = data.map((r, i) => `
@@ -2713,6 +2714,7 @@ function renderTrackingTable(data) {
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
+      <td style="text-align:right;${r.revise_total?'color:#b45309;font-weight:500':'color:var(--gray)'}">${r.revise_total?num(r.revise_total):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td style="text-align:center">${r.po_number||'—'}</td>
@@ -2831,7 +2833,7 @@ function exportSummary() {
 
 // ===================== STOCK =====================
 async function renderStock() {
-  document.getElementById('stk-rows').innerHTML = '<tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('stk-rows').innerHTML = '<tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   document.getElementById('stk-info').textContent = 'Đang tải...';
 
   // Dùng cache nếu đã có, không fetch lại
@@ -3953,7 +3955,7 @@ function filterTariff() {
 function renderTariffTable(data) {
   const tbody = document.getElementById('trf-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu — import file tariff để bắt đầu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu — import file tariff để bắt đầu</td></tr>';
     document.getElementById('trf-footer').textContent = '';
     return;
   }
