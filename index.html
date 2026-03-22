@@ -144,6 +144,7 @@ td input:focus,td select:focus{background:#fffbeb}
 .mode-tab:hover{background:var(--gray-light)}
 .mode-tab.active{background:var(--blue);color:#fff}
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -761,7 +762,7 @@ td input:focus,td select:focus{background:#fffbeb}
       <!-- REPORT -->
       <div class="screen" id="screen-report">
         <div class="card">
-          <div class="filter-bar">
+          <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
             <select class="fi" id="rpt-month" style="width:120px">
               <option>JANUARY</option><option>FEBRUARY</option><option>MARCH</option>
               <option>APRIL</option><option>MAY</option><option>JUNE</option>
@@ -770,13 +771,43 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <select class="fi" id="rpt-year" style="width:90px"></select>
             <select class="fi" id="rpt-carrier" style="width:120px"><option value="">Tất cả Carrier</option></select>
+            <button class="btn btn-sm" onclick="genDashboard()">📊 Dashboard</button>
             <button class="btn btn-sm" id="btn-summary-report" onclick="genSummaryReport()">Summary Report</button>
             <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Detailed Statement</button>
             <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
           </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="rpt-dashboard" style="display:none">
+          <!-- KPI Cards -->
+          <div class="stats-row" id="rpt-kpi" style="margin-bottom:16px"></div>
+
+          <!-- Charts row 1 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div class="card" style="padding:14px">
+              <div style="font-size:12px;font-weight:600;color:#1e40af;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">📦 Stock emty — theo Trang thái & Grade</div>
+              <canvas id="chartStock" style="max-height:220px"></canvas>
+            </div>
+            <div class="card" style="padding:14px">
+              <div style="font-size:12px;font-weight:600;color:#1e40af;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">📋 Số cont MNR theo Status tháng này</div>
+              <canvas id="chartStatus" style="max-height:220px"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart row 2: trend -->
+          <div class="card" style="padding:14px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:600;color:#1e40af;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">📈 Xu hướng Total Approved (No VAT) — 12 tháng gần nhất</div>
+            <canvas id="chartTrend" style="height:200px;max-height:200px"></canvas>
+          </div>
+        </div>
+
+        <!-- Summary / Detailed result -->
+        <div class="card" id="rpt-summary-card" style="display:none">
           <div class="stats-row" id="rpt-stats" style="margin-bottom:12px"></div>
           <div id="rpt-result"></div>
         </div>
+      </div>
       </div>
 
       <!-- QUẢN LÝ TARIFF -->
@@ -3295,7 +3326,163 @@ async function exportApproveTemplate() {
 }
 
 // ===================== REPORT =====================
+
+// ===================== DASHBOARD =====================
+var _rptCharts = {};
+
+function genDashboard() {
+  const month = document.getElementById('rpt-month').value;
+  const year  = parseInt(document.getElementById('rpt-year').value);
+  const carrier = document.getElementById('rpt-carrier').value;
+  const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const monthIdx = MONTHS.indexOf(month);
+
+  // Show dashboard, hide summary
+  document.getElementById('rpt-dashboard').style.display = 'block';
+  document.getElementById('rpt-summary-card').style.display = 'none';
+
+  // --- Filter tracking by PO date tháng/năm ---
+  const filtered = state.tracking.filter(r => {
+    const d = parseReportDate(r.po_date);
+    if (!d) return false;
+    const matchMonth = d.getMonth() === monthIdx && d.getFullYear() === year;
+    const matchCarrier = !carrier || r.carrier === carrier;
+    return matchMonth && matchCarrier;
+  });
+
+  const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
+  const noVat    = round2(totalApp / 1.1);
+  const unitCost = filtered.length ? round2(noVat / filtered.length) : 0;
+  const pending  = filtered.filter(r => ['Partially Approved','Partially Approved - Revised','Sent for Approval'].includes(r.approval_status)).length;
+
+  // KPI Cards
+  document.getElementById('rpt-kpi').innerHTML = `
+    <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #22c55e">
+      <div class="stat-label" style="color:#15803d">Tổng containers</div>
+      <div class="stat-value" style="color:#15803d">${filtered.length}</div>
+      <div class="stat-sub">${month} ${year}</div>
+    </div>
+    <div class="stat-card" style="background:#eff6ff;border-left:4px solid #3b82f6">
+      <div class="stat-label" style="color:#1d4ed8">Total No VAT</div>
+      <div class="stat-value" style="color:#1d4ed8;font-size:16px">${num(noVat)}</div>
+      <div class="stat-sub">USD</div>
+    </div>
+    <div class="stat-card" style="background:#fffbeb;border-left:4px solid #f59e0b">
+      <div class="stat-label" style="color:#b45309">Unit Cost TB</div>
+      <div class="stat-value" style="color:#b45309;font-size:16px">${num(unitCost)}</div>
+      <div class="stat-sub">USD / cont</div>
+    </div>
+    <div class="stat-card" style="background:#eef2ff;border-left:4px solid #6366f1">
+      <div class="stat-label" style="color:#4338ca">Đang chờ xử lý</div>
+      <div class="stat-value" style="color:#4338ca">${pending}</div>
+      <div class="stat-sub">Partially / Revised / Sent</div>
+    </div>
+  `;
+
+  // --- Chart 1: Stock emty theo trang_thai_container + grade ---
+  const stockData = state.stock || [];
+  const stockGroups = {};
+  stockData.forEach(r => {
+    const status = r.trang_thai_container || r.container_status || 'Unknown';
+    const grade  = r.grade || '—';
+    const key = status;
+    if (!stockGroups[key]) stockGroups[key] = {};
+    stockGroups[key][grade] = (stockGroups[key][grade] || 0) + 1;
+  });
+  const stockStatuses = Object.keys(stockGroups);
+  const allGrades = [...new Set(stockData.map(r => r.grade || '—'))].sort();
+  const gradeColors = ['#3b82f6','#22c55e','#f59e0b','#8b5cf6','#06b6d4','#f43f5e','#94a3b8'];
+  const stockDatasets = allGrades.map((g, gi) => ({
+    label: g,
+    data: stockStatuses.map(s => stockGroups[s][g] || 0),
+    backgroundColor: gradeColors[gi % gradeColors.length],
+    borderRadius: 3,
+  }));
+
+  if (_rptCharts.stock) _rptCharts.stock.destroy();
+  _rptCharts.stock = new Chart(document.getElementById('chartStock'), {
+    type: 'bar',
+    data: { labels: stockStatuses, datasets: stockDatasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'bottom', labels: { font: {size:9}, padding:6 } } },
+      scales: {
+        x: { stacked: true, ticks: {font:{size:9}}, grid:{display:false} },
+        y: { stacked: true, ticks: {font:{size:9}}, grid:{color:'#f1f5f9'}, beginAtZero:true }
+      }
+    }
+  });
+
+  // --- Chart 2: Số cont MNR theo Status tháng này ---
+  const statusOrder = ['Approved','Partially Approved','Partially Approved - Revised','Sent for Approval','Repair Pending','Repaired'];
+  const statusColors = ['#22c55e','#f59e0b','#6366f1','#3b82f6','#06b6d4','#10b981'];
+  const statusCounts = statusOrder.map(s => filtered.filter(r => r.approval_status === s).length);
+
+  if (_rptCharts.status) _rptCharts.status.destroy();
+  _rptCharts.status = new Chart(document.getElementById('chartStatus'), {
+    type: 'bar',
+    data: {
+      labels: ['Approved','Partially','Revised','Sent','Repair Pend.','Repaired'],
+      datasets: [{ data: statusCounts, backgroundColor: statusColors, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: {display:false} },
+      scales: {
+        x: { ticks:{font:{size:9}}, grid:{display:false} },
+        y: { beginAtZero:true, ticks:{font:{size:9},stepSize:1}, grid:{color:'#f1f5f9'} }
+      }
+    }
+  });
+
+  // --- Chart 3: Trend 12 tháng ---
+  const trendLabels = [];
+  const trendVals   = [];
+  for (let i = 11; i >= 0; i--) {
+    let m = monthIdx - i; let y = year;
+    while (m < 0) { m += 12; y--; }
+    const label = MONTHS[m].slice(0,3) + ' ' + String(y).slice(2);
+    trendLabels.push(label);
+    const val = state.tracking
+      .filter(r => {
+        const d = parseReportDate(r.po_date);
+        return d && d.getMonth() === m && d.getFullYear() === y && (!carrier || r.carrier === carrier);
+      })
+      .reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0);
+    trendVals.push(round2(val));
+  }
+
+  if (_rptCharts.trend) _rptCharts.trend.destroy();
+  _rptCharts.trend = new Chart(document.getElementById('chartTrend'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: 'Total No VAT (USD)',
+        data: trendVals,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 4,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        y: { ticks:{font:{size:10}, callback: v => '$'+v.toLocaleString()}, grid:{color:'#f1f5f9'} },
+        x: { ticks:{font:{size:10}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
 function genSummaryReport() {
+  document.getElementById('rpt-dashboard').style.display = 'none';
+  document.getElementById('rpt-summary-card').style.display = 'block';
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
   const carrier = document.getElementById('rpt-carrier').value;
@@ -3390,6 +3577,8 @@ function genSummaryReport() {
 }
 
 function genDetailedReport() {
+  document.getElementById('rpt-dashboard').style.display = 'none';
+  document.getElementById('rpt-summary-card').style.display = 'block';
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
