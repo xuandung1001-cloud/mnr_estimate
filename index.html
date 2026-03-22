@@ -1669,7 +1669,8 @@ function makeReviseRow(i, r) {
   const h   = r ? parseFloat(r.app_labour_hours  || r.labour_hours  || 0).toFixed(2) : '0.00';
   const m   = r ? parseFloat(r.app_material_cost || r.material_cost || 0).toFixed(2) : '0.00';
   const l   = r ? parseFloat(r.app_labour_cost   || r.labour_cost   || 0).toFixed(2) : '0.00';
-  const est = r ? parseFloat(r.total_cost || 0).toFixed(2) : '0.00';
+  // Dòng mới thêm (không có est gốc) → hiện '—' thay vì '0.00'
+  const est = (r && parseFloat(r.total_cost||0) > 0) ? parseFloat(r.total_cost).toFixed(2) : '—';
   const tot = r ? parseFloat(r.app_total_approved || r.total_cost || 0).toFixed(2) : '0.00';
   const rsp = r ? (r.app_responsible_party || r.responsible_party || carrier || '') : carrier;
   const sta = r ? (r.approval_status || 'Partially Approved') : 'Partially Approved';
@@ -1979,7 +1980,8 @@ function calcReviseTotal() {
     totH += parseFloat(row.querySelector('.rv-h')?.textContent || 0);
     totM += parseFloat(row.querySelector('.rv-m')?.textContent || 0);
     totL += parseFloat(row.querySelector('.rv-l')?.textContent || 0);
-    totE += parseFloat(row.querySelector('.rv-e')?.textContent || 0);
+    var eVal = row.querySelector('.rv-e')?.textContent || '0';
+    totE += eVal === '—' ? 0 : (parseFloat(eVal) || 0);
     totT += parseFloat(row.querySelector('.rv-t')?.textContent || 0);
   });
   document.getElementById('rev-tot-hours').textContent = round2(totH).toFixed(2);
