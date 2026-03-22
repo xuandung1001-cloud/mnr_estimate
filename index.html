@@ -588,7 +588,7 @@ td input:focus,td select:focus{background:#fffbeb}
             </label>
             <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
-          <div class="tbl-wrap">
+          <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table>
               <thead>
                 <tr>
@@ -629,7 +629,7 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
           </div>
-          <div class="tbl-wrap">
+          <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table>
               <thead>
                 <tr>
@@ -675,7 +675,7 @@ td input:focus,td select:focus{background:#fffbeb}
             <button class="btn btn-sm" onclick="exportEstList()">Export Est. List</button>
             <button class="btn btn-sm" onclick="exportAppList()">Export Approved List</button>
           </div>
-          <div class="tbl-wrap">
+          <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table>
               <thead id="bulk-thead">
                 <tr>
@@ -723,7 +723,7 @@ td input:focus,td select:focus{background:#fffbeb}
             <button class="btn btn-sm btn-red" onclick="confirmResetStock()">Reset Stock</button>
           </div>
           <div id="stk-info" style="font-size:11px;color:var(--gray);margin-bottom:8px"></div>
-          <div class="tbl-wrap">
+          <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table style="table-layout:fixed;width:100%;min-width:1400px">
               <colgroup>
                 <col style="width:36px"><col style="width:56px"><col style="width:110px">
@@ -900,7 +900,6 @@ td input:focus,td select:focus{background:#fffbeb}
 
       <!-- PICTURES -->
       <div class="screen" id="screen-pictures">
-
         <div class="card">
           <div class="card-title">Xuất hình ảnh → Google Drive</div>
 
@@ -950,7 +949,6 @@ td input:focus,td select:focus{background:#fffbeb}
 
           <div style="display:flex;gap:8px;align-items:center">
             <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">📂 Export lên Drive</button>
-            
           </div>
         </div>
 
@@ -968,9 +966,7 @@ td input:focus,td select:focus{background:#fffbeb}
           <div class="card-title">Kết quả Export</div>
           <div id="pic-result-body"></div>
         </div>
-
       </div>
-
     </div>
   </div>
 </div>
