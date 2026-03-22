@@ -2580,20 +2580,10 @@ async function toggleEstDetail(tr, contNo, estDate) {
   _estDetailOpen = contNo;
 
   try {
-    // Dùng cache state.estimates trước, fallback API nếu chưa có
-    var estData = state.estimates && state.estimates.length
-      ? state.estimates.filter(function(e) {
-          var matchCont = (e.equipment_number||'').toUpperCase() === contNo.toUpperCase();
-          var matchDate = !estDate || !e.estimate_datetime || e.estimate_datetime.split(' ')[0] === estDate || !e.estimate_datetime.trim();
-          return matchCont && matchDate;
-        })
-      : null;
+    // Luôn gọi API để lấy data mới nhất (không dùng cache)
+    var res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
+    var estData = (res && res.success) ? res.data : [];
 
-    var res;
-    if (!estData || !estData.length) {
-      res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
-      estData = (res && res.success) ? res.data : [];
-    }
 
     if (!estData || !estData.length) {
       detailTr.querySelector('td').innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--gray);font-style:italic">Không có chi tiết.</div>';
