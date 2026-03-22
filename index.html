@@ -3008,7 +3008,7 @@ async function loadBulk() {
     var tbody = document.getElementById('bulk-rows');
     tbody.innerHTML = '<tr><td colspan="13" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
     try {
-      var contNosB = searchList.length > 0 ? searchList.join(',') : state.tracking.map(function(t){return t.container_no;}).join(',');
+    var contNosB = searchList.length > 0 ? searchList.join(',') : '__ALL__';
       var res = await apiGet({ action: 'getAllEstimates', container_nos: contNosB });
       if (!res.success || !res.data || !res.data.length) {
         tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu estimates</td></tr>';
@@ -3060,7 +3060,7 @@ async function loadBulk() {
   var tbody = document.getElementById('bulk-rows');
   tbody.innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
-    var contNosA = searchList.length > 0 ? searchList.join(',') : state.tracking.map(function(t){return t.container_no;}).join(',');
+    var contNosA = searchList.length > 0 ? searchList.join(',') : '__ALL__';
     var res = await apiGet({ action: 'getAllEstimates', container_nos: contNosA });
     if (!res.success || !res.data || !res.data.length) {
       tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
