@@ -771,7 +771,6 @@ td input:focus,td select:focus{background:#fffbeb}
             </select>
             <select class="fi" id="rpt-year" style="width:90px"></select>
             <select class="fi" id="rpt-carrier" style="width:120px"><option value="">Tất cả Carrier</option></select>
-            <button class="btn btn-sm" onclick="genDashboard()">📊 Dashboard</button>
             <button class="btn btn-sm" id="btn-summary-report" onclick="genSummaryReport()">Summary Report</button>
             <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Detailed Statement</button>
             <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
@@ -779,7 +778,7 @@ td input:focus,td select:focus{background:#fffbeb}
         </div>
 
         <!-- DASHBOARD -->
-        <div id="rpt-dashboard" style="display:none">
+        <div id="rpt-dashboard" style="display:block">
           <!-- KPI Cards -->
           <div class="stats-row" id="rpt-kpi" style="margin-bottom:16px"></div>
 
@@ -1207,6 +1206,7 @@ function nav(screen, el) {
   const cfg = configs[screen] || { title: screen, actions: [] };
   setTopbar(cfg.title, cfg.actions);
 
+  if (screen === 'report') genDashboard();
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') renderSummary();
   if (screen === 'stock') renderStock();
