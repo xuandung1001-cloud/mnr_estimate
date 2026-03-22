@@ -2390,7 +2390,7 @@ function renderTracking() {
 
 function calcTrackingStats(data) {
   return {
-    total:    data.length,
+    total:    data.filter(r => r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected').length,
     approved: data.filter(r => r.approval_status === 'Approved').length,
     partial:  data.filter(r => r.approval_status === 'Partially Approved').length,
     revised:  data.filter(r => r.approval_status === 'Partially Approved - Revised').length,
@@ -2409,11 +2409,6 @@ function renderTrackingStats(s) {
       <div class="stat-label" style="color:#64748b">Tổng containers</div>
       <div class="stat-value" style="color:#1e293b">${s.total}</div>
     </div>
-    ${s.repaired ? `<div class="stat-card" style="background:#f0fdf4;border-left:3px solid #22c55e">
-      <div class="stat-label" style="color:#15803d">Repaired</div>
-      <div class="stat-value" style="color:#15803d">${s.repaired}</div>
-      <div class="stat-sub" style="color:#4ade80">${pct(s.repaired)}%</div>
-    </div>` : ''}
     ${s.repair ? `<div class="stat-card" style="background:#ecfeff;border-left:3px solid #06b6d4">
       <div class="stat-label" style="color:#0e7490">Repair Pending</div>
       <div class="stat-value" style="color:#0e7490">${s.repair}</div>
@@ -2442,11 +2437,6 @@ function renderTrackingStats(s) {
     ${s.pending ? `<div class="stat-card" style="background:#f8fafc;border-left:3px solid #94a3b8">
       <div class="stat-label" style="color:#64748b">Pending</div>
       <div class="stat-value" style="color:#94a3b8">${s.pending}</div>
-    </div>` : ''}
-    ${s.rejected ? `<div class="stat-card" style="background:#fff1f2;border-left:3px solid #f43f5e">
-      <div class="stat-label" style="color:#be123c">Rejected</div>
-      <div class="stat-value" style="color:#be123c">${s.rejected}</div>
-      <div class="stat-sub" style="color:#fda4af">${pct(s.rejected)}%</div>
     </div>` : ''}
   `;
 }
