@@ -1369,10 +1369,10 @@ function addEstRow() {
   const trigger = "onblur='lookupTariff(this.closest(\"tr\"))'";
   tr.innerHTML = `
     <td>${rowNum}</td>
-    <td><input style="text-align:center" placeholder="IXXX" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input style="text-align:center" placeholder="MCO" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input style="text-align:center" placeholder="DY" onblur="lookupTariff(this.closest('tr'))"></td>
-    <td><input style="text-align:center" placeholder="WP" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center;text-transform:uppercase" placeholder="IXXX" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center;text-transform:uppercase" placeholder="MCO" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center;text-transform:uppercase" placeholder="DY" onblur="lookupTariff(this.closest('tr'))"></td>
+    <td><input style="text-align:center;text-transform:uppercase" placeholder="WP" onblur="lookupTariff(this.closest('tr'))"></td>
     <td><input style="text-align:center" placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
     <td><input style="text-align:center" placeholder="" type="number" min="0" onblur="lookupTariff(this.closest('tr'))"></td>
     <td><input list="dl-unit" style="text-align:center" placeholder="QTY" onblur="validateField(this,['QTY','CMT']);lookupTariff(this.closest('tr'))"></td>
@@ -1677,9 +1677,9 @@ function makeReviseRow(i, r) {
   tr.innerHTML = `
     <td>${i+1}</td>
     <td><input value="${dl}" placeholder="IXXX" onblur="lookupRevise(this.closest('tr'))"></td>
-    <td><input value="${co}" placeholder="MCO"  onblur="lookupRevise(this.closest('tr'))"></td>
-    <td><input value="${dt}" placeholder="DY"   onblur="lookupRevise(this.closest('tr'))"></td>
-    <td><input value="${rt}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${co}" placeholder="MCO"  onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
+    <td><input value="${dt}" placeholder="DY"   onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
+    <td><input value="${rt}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
     <td><input value="${len}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
     <td><input value="${wid}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
     <td style="text-align:center"><input list="dl-unit" value="${uni}" placeholder="QTY" onblur="validateField(this,['QTY','CMT']);lookupRevise(this.closest('tr'))" style="text-align:center"></td>
@@ -1689,7 +1689,7 @@ function makeReviseRow(i, r) {
     <td class="td-auto"><span class="rv-l">${l}</span></td>
     <td style="text-align:right;color:var(--gray);font-size:11px"><span class="rv-e">${est}</span></td>
     <td class="td-total"><span class="rv-t">${tot}</span></td>
-    <td style="text-align:center"><input list="dl-resp" value="${rsp}" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','S','SU','T','U','V','W'])" style="text-align:center"></td>
+    <td style="text-align:center"><input list="dl-resp" value="${rsp}" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','S','SU','T','U','V','W'])" style="text-align:center;text-transform:uppercase"></td>
     <td><select style="font-size:11px;border:none;background:transparent;width:100%;color:#1a202c" onchange="onReviseStatusChange(this)">
       <option ${sta==='Partially Approved'?'selected':''}>Partially Approved</option>
       <option ${sta==='Approved'?'selected':''}>Approved</option>
