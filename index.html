@@ -1786,7 +1786,9 @@ function toggleCompare() {
 
 function renderCompare() {
   var tbody = document.getElementById('rev-compare-rows');
-  if (!_revRawData || !_revRawData.length) {
+  // Không return sớm — vẫn cần render dòng mới thêm dù _revRawData trống
+  var hasNewRows = document.querySelectorAll('#rev-rows tr[data-seq^="new_"]').length > 0;
+  if ((!_revRawData || !_revRawData.length) && !hasNewRows) {
     tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:16px">Không có dữ liệu để so sánh</td></tr>';
     return;
   }
