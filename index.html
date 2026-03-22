@@ -74,7 +74,7 @@ body{font-family:Tahoma,'Segoe UI',sans-serif;background:#f0f4f8;color:#1a202c;f
 /* TABLE */
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
-th{background:var(--gray-light);padding:6px 7px;text-align:center;font-weight:700;color:#1e40af;border:1px solid var(--border);font-size:10px;white-space:nowrap;overflow:hidden;text-transform:uppercase;letter-spacing:.03em}
+th{background:var(--gray-light);padding:6px 7px;text-align:center;font-weight:700;color:#1e40af;border:1px solid var(--border);font-size:10px;white-space:nowrap;overflow:hidden;text-transform:none;letter-spacing:0}
 td{padding:5px 7px;border:1px solid var(--border);color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 tr:hover td{background:#f7fafc}
 td input,td select{border:none;background:transparent;font-size:11px;width:100%;color:#1a202c;outline:none;font-family:inherit;text-align:center}
@@ -591,16 +591,16 @@ td input:focus,td select:focus{background:#fffbeb}
             <table>
               <thead>
                 <tr>
-                  <th style="width:32px">STT</th>
+                  <th style="width:32px">Stt</th>
                   <th style="width:110px">Equipment No</th>
                   <th style="width:46px">Carrier</th>
                   <th style="width:40px">Size</th>
-                  <th style="width:72px">Est Date</th>
-                  <th style="width:120px">Ref No</th>
+                  <th style="width:72px">Est. Date</th>
                   <th style="width:62px;text-align:right">Total Est.</th>
-                  <th style="width:62px;text-align:right">Total App.</th>
+                  <th style="width:120px">Ref No</th>
                   <th style="width:72px">App. Date</th>
-                  <th style="width:62px;text-align:right">Total Revise</th>
+                  <th style="width:62px;text-align:right">Total App.</th>
+                  <th style="width:62px;text-align:right">Total Rev.</th>
                   <th style="width:130px">Status</th>
                   <th style="width:72px">Repair Date</th>
                   <th style="width:120px">PO Number</th>
@@ -2700,10 +2700,10 @@ function renderTrackingTable(data) {
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
-      <td style="color:var(--blue);text-align:center">${r.ref_number||'—'}</td>
       <td style="text-align:right">${num(r.total_cost)}</td>
-      <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
+      <td style="color:var(--blue);text-align:center">${r.ref_number||'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
+      <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
       <td style="text-align:right;${r.revise_total?'color:#b45309;font-weight:500':'color:var(--gray)'}">${r.revise_total?num(r.revise_total):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
