@@ -3341,19 +3341,20 @@ function genDashboard() {
   document.getElementById('rpt-dashboard').style.display = 'block';
   document.getElementById('rpt-summary-card').style.display = 'none';
 
-  // --- Filter tracking by approved_date tháng/năm ---
+  // --- Filter tracking: po_date tháng/năm + Repaired ---
   const filtered = state.tracking.filter(r => {
-    const d = parseReportDate(r.approved_date);
+    const d = parseReportDate(r.po_date);
     if (!d) return false;
     const matchMonth = d.getMonth() === monthIdx && d.getFullYear() === year;
     const matchCarrier = !carrier || r.carrier === carrier;
-    return matchMonth && matchCarrier;
+    return matchMonth && matchCarrier && r.approval_status === 'Repaired';
   });
 
   const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
   const noVat    = round2(totalApp / 1.1);
   const unitCost = filtered.length ? round2(noVat / filtered.length) : 0;
-  const pending  = filtered.filter(r => ['Partially Approved','Partially Approved - Revised','Sent for Approval'].includes(r.approval_status)).length;
+  // Pending: tất cả cont chưa Repaired/Rejected (không filter theo tháng)
+  const pending  = state.tracking.filter(r => ['Partially Approved','Partially Approved - Revised','Sent for Approval'].includes(r.approval_status) && (!carrier || r.carrier === carrier)).length;
 
   // KPI Cards
   document.getElementById('rpt-kpi').innerHTML = `
@@ -3443,8 +3444,8 @@ function genDashboard() {
     trendLabels.push(label);
     const val = state.tracking
       .filter(r => {
-        const d = parseReportDate(r.approved_date);
-        return d && d.getMonth() === m && d.getFullYear() === y && (!carrier || r.carrier === carrier);
+        const d = parseReportDate(r.po_date);
+        return d && d.getMonth() === m && d.getFullYear() === y && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
       })
       .reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0);
     trendVals.push(round2(val));
@@ -3999,16 +4000,21 @@ function formatDate(d) {
 function parseReportDate(val) {
   if (!val) return null;
   var s = String(val).trim();
-  if (!s) return null;
-  // dd/MM/yyyy
+  if (!s || s === 'null' || s === 'undefined') return null;
+  // ISO format: 2026-03-01T17:00:00.000Z
+  var mISO = s.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  if (mISO) return new Date(parseInt(mISO[1]), parseInt(mISO[2])-1, parseInt(mISO[3]));
+  // dd/MM/yyyy or d/M/yyyy (VN format)
   var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  if (m) {
+    var d = parseInt(m[1]), mo = parseInt(m[2]), y = parseInt(m[3]);
+    if (mo > 12) return new Date(y, d-1, mo); // M/D/YYYY US → swap
+    return new Date(y, mo-1, d);
+  }
   // yyyy-MM-dd
   var m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (m2) return new Date(parseInt(m2[1]), parseInt(m2[2])-1, parseInt(m2[3]));
-  // fallback
-  var d = new Date(s);
-  return isNaN(d) ? null : d;
+  return null;
 }
 
 function todayStr() {
