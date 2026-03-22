@@ -568,7 +568,7 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:78px">Repair Date</th>
                   <th style="width:105px">PO Number</th>
                   <th style="width:78px">PO Date</th>
-                  <th style="width:90px"></th>
+                  <th style="width:110px;text-align:left">Thao tác</th>
                 </tr>
               </thead>
               <tbody id="trk-rows">
@@ -2365,6 +2365,75 @@ function renderTrackingStats(s) {
   `;
 }
 
+
+function makeStatusSelect(contNo, estDate, current) {
+  var statuses = ['Pending','Sent for Approval','Approved','Partially Approved','Repair Pending','Repaired','Rejected'];
+  var colors = {
+    'Pending':             'background:#f1f5f9;color:#64748b',
+    'Sent for Approval':   'background:#dbeafe;color:#1e40af',
+    'Approved':            'background:#dcfce7;color:#15803d',
+    'Partially Approved':  'background:#fef9c3;color:#854d0e',
+    'Partially Approved - Revised': 'background:#e0e7ff;color:#3730a3',
+    'Repair Pending':      'background:#cffafe;color:#0e7490',
+    'Repaired':            'background:#d1fae5;color:#065f46',
+    'Rejected':            'background:#fee2e2;color:#991b1b'
+  };
+  var style = colors[current] || 'background:#f1f5f9;color:#64748b';
+  var opts = statuses.map(function(s) {
+    return '<option value="' + s + '"' + (s === current ? ' selected' : '') + '>' + s + '</option>';
+  }).join('');
+  var c2 = contNo.replace(/\\/g,'').replace(/'/g,'');
+  var d2 = (estDate||'').replace(/\\/g,'').replace(/'/g,'');
+  var onch = "updateStatusInline(this,'" + c2 + "','" + d2 + "')";
+  return '<select data-prev="' + (current||'') + '" onchange="' + onch + '" style="border:none;border-radius:4px;font-size:10px;font-weight:500;padding:2px 5px;cursor:pointer;width:100%;' + style + '">' + opts + '</select>';
+}
+
+async function updateStatusInline(sel, containerNo, estDate) {
+  var newStatus = sel.value;
+  var oldStatus = sel.dataset.prev || '';
+  if (newStatus === oldStatus) return;
+
+  // Cập nhật màu ngay
+  var colors = {
+    'Pending':             'background:#f1f5f9;color:#64748b',
+    'Sent for Approval':   'background:#dbeafe;color:#1e40af',
+    'Approved':            'background:#dcfce7;color:#15803d',
+    'Partially Approved':  'background:#fef9c3;color:#854d0e',
+    'Partially Approved - Revised': 'background:#e0e7ff;color:#3730a3',
+    'Repair Pending':      'background:#cffafe;color:#0e7490',
+    'Repaired':            'background:#d1fae5;color:#065f46',
+    'Rejected':            'background:#fee2e2;color:#991b1b'
+  };
+  var c = colors[newStatus] || 'background:#f1f5f9;color:#64748b';
+  sel.style.cssText = 'border:none;border-radius:4px;font-size:10px;font-weight:500;padding:2px 5px;cursor:pointer;width:100%;' + c;
+  sel.dataset.prev = newStatus;
+
+  toast('Đang lưu...');
+  try {
+    var res = await apiPost({
+      action: 'updateTrackingStatus',
+      container_no: containerNo,
+      est_date: estDate || '',
+      approval_status: newStatus
+    });
+    if (res && res.success) {
+      var trk = state.tracking.find(function(t) {
+        return (t.container_no||'').toUpperCase() === containerNo.toUpperCase() &&
+               (!estDate || t.est_date === estDate);
+      });
+      if (trk) trk.approval_status = newStatus;
+      toast('Đã đổi: ' + newStatus, 2000);
+    } else {
+      toast('Lỗi: ' + (res ? res.error : 'unknown'), 4000);
+      sel.value = oldStatus;
+      sel.dataset.prev = oldStatus;
+    }
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 4000);
+    sel.value = oldStatus;
+  }
+}
+
 function filterTracking() {
   const q = document.getElementById('trk-search').value.toLowerCase();
   const st = document.getElementById('trk-status').value;
@@ -2399,11 +2468,11 @@ function renderTrackingTable(data) {
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
-      <td>${badge(r.approval_status)}</td>
+      <td style="padding:2px 4px">${makeStatusSelect(r.container_no, r.est_date, r.approval_status)}</td>
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
+      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Revise</button>` : ''}<button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Xoá</button></td>
     </tr>
   `).join('');
 }
