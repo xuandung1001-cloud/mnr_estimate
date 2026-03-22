@@ -1238,59 +1238,79 @@ function clearEstPhotos() {
 }
 
 var _estPhotosTimer = null;
+// Cache ảnh theo key "contNo|carrier"
+var _photoCache = {};
+
 function loadEstPhotos(contNo, carrier) {
   clearEstPhotos();
   if (!contNo || !carrier) return;
-  // Debounce 600ms để không gọi API liên tục khi đang gõ
   clearTimeout(_estPhotosTimer);
   _estPhotosTimer = setTimeout(async function() {
-    var grid = document.getElementById('est-photos-grid');
+    var grid    = document.getElementById('est-photos-grid');
     var section = document.getElementById('est-photos');
-    var label = document.getElementById('est-photos-label');
+    var label   = document.getElementById('est-photos-label');
+    var cacheKey = contNo + '|' + carrier;
 
     grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:8px 0">Đang tải ảnh...</div>';
     section.style.display = 'block';
 
     try {
-      var res = await apiGet({
-        action:       'getPhotosByFolder',
-        container_no: contNo,
-        carrier:      carrier,
-        loai_anh:     'Trước sửa chữa'
-      });
-
-      if (!res.success || !res.photos || !res.photos.length) {
-        grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:8px 0;font-style:italic">Chưa có ảnh Trước Sửa Chữa cho container này</div>';
-        label.textContent = contNo + ' / ' + carrier;
-        return;
+      var photos;
+      if (_photoCache[cacheKey]) {
+        photos = _photoCache[cacheKey];
+      } else {
+        var res = await apiGet({
+          action:       'getPhotosByFolder',
+          container_no: contNo,
+          carrier:      carrier,
+          loai_anh:     'Trước sửa chữa'
+        });
+        if (!res.success || !res.photos || !res.photos.length) {
+          grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:8px 0;font-style:italic">Chưa có ảnh Trước Sửa Chữa cho container này</div>';
+          label.textContent = contNo + ' / ' + carrier;
+          return;
+        }
+        photos = res.photos;
+        _photoCache[cacheKey] = photos;
       }
 
-      label.textContent = contNo + ' / ' + carrier + ' — ' + res.photos.length + ' ảnh';
-      grid.innerHTML = res.photos.map(function(p, idx) {
-        var fallback1 = 'https://drive.google.com/thumbnail?id=' + p.id + '&sz=w400';
-        var fallback2 = 'https://drive.google.com/uc?export=view&id=' + p.id;
+      label.textContent = contNo + ' / ' + carrier + ' — ' + photos.length + ' ảnh';
+
+      // Render grid với placeholder, load ảnh song song
+      grid.innerHTML = photos.map(function(p, idx) {
+        var fb1 = 'https://drive.google.com/thumbnail?id=' + p.id + '&sz=w300';
+        var fb2 = 'https://drive.google.com/uc?export=view&id=' + p.id;
         return '<div class="est-photo-item" data-idx="' + idx + '" style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:#1a1a1a;cursor:zoom-in">'
-          + '<img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:contain" loading="lazy"'
-          + ' onerror="if(this.dataset.retry===\'1\'){this.dataset.retry=\'2\';this.src=\'' + fallback2 + '\';}else if(!this.dataset.retry){this.dataset.retry=\'1\';this.src=\'' + fallback1 + '\';}">'
+          + '<img data-src="' + p.thumb + '" data-fb1="' + fb1 + '" data-fb2="' + fb2 + '"'
+          + ' style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s">'
           + '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>'
           + '</div>';
       }).join('');
 
-      // Lưu photos để lightbox dùng
-      window._estPhotosData = res.photos;
+      window._estPhotosData = photos;
 
-      // Gán click events sau khi render xong
+      // Load tất cả ảnh song song
+      grid.querySelectorAll('img[data-src]').forEach(function(img) {
+        var src = img.dataset.src, fb1 = img.dataset.fb1, fb2 = img.dataset.fb2;
+        img.onload  = function() { this.style.opacity = '1'; };
+        img.onerror = function() {
+          if (!this.dataset.retry)          { this.dataset.retry='1'; this.src=fb1; }
+          else if (this.dataset.retry==='1') { this.dataset.retry='2'; this.src=fb2; }
+          else                               { this.style.opacity='0.3'; }
+        };
+        img.src = src;
+      });
+
       grid.querySelectorAll('.est-photo-item').forEach(function(el) {
-        el.addEventListener('click', function() {
-          openLightboxIdx(parseInt(this.dataset.idx));
-        });
+        el.addEventListener('click', function() { openLightboxIdx(parseInt(this.dataset.idx)); });
       });
 
     } catch(e) {
       grid.innerHTML = '<div style="color:var(--red);font-size:11px;padding:8px 0">Lỗi tải ảnh: ' + e.message + '</div>';
     }
-  }, 600);
+  }, 400);
 }
+
 
 var _lightboxIdx = 0;
 
