@@ -2431,52 +2431,6 @@ async function updateStatusInline(sel, seq) {
   }
 }
 
-function filterTracking() {
-  const q  = document.getElementById('trk-search').value.toLowerCase();
-  const st = document.getElementById('trk-status').value;
-  const ca = document.getElementById('trk-carrier').value;
-  const showInfestation = document.getElementById('trk-infestation') && document.getElementById('trk-infestation').checked;
-  const filtered = state.tracking.filter(r => {
-    if (r.po_number) return false; // ẩn cont đã có PO mặc định
-    if (showInfestation && r.special_flag !== 'Termite Attack') return false;
-    const matchQ  = !q  || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
-    const matchSt = !st || r.approval_status === st;
-    const matchCa = !ca || r.carrier === ca;
-    return matchQ && matchSt && matchCa;
-  });
-  renderTrackingTable(filtered);
-}
-
-function renderTrackingTable(data) {
-  const tbody = document.getElementById('trk-rows');
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
-    return;
-  }
-  tbody.innerHTML = data.map((r, i) => `
-    <tr>
-      <td>${i+1}</td>
-      <td style="text-align:center">${r.container_no||''}${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
-      <td>${r.carrier||''}</td>
-      <td>${r.size||''}</td>
-      <td>${formatDate(r.est_date)}</td>
-      <td style="color:var(--blue);text-align:left">${r.ref_number||'—'}</td>
-      <td style="text-align:right">${num(r.total_cost)}</td>
-      <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">
-        ${r.total_approved?num(r.total_approved):'—'}</td>
-      <td>${formatDate(r.approved_date)||'—'}</td>
-      <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
-      <td>${formatDate(r.repair_date)||'—'}</td>
-      <td style="text-align:center">${r.po_number||'—'}</td>
-      <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="white-space:nowrap;padding:2px 4px;text-align:left">
-        <button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button>
-        <button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Xoá</button>
-        ${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Revise</button>` : ''}
-      </td>
-    </tr>
-  `).join('');
-}
 
 function exportTracking() {
   exportTableToCSV('trk-rows', 'est_tracking_' + todayStr().replace(/\//g,'-') + '.csv');
