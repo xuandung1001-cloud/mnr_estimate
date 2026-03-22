@@ -1870,20 +1870,26 @@ function renderCompare() {
     var seq = tr.dataset.seq || '';
     if (seq.startsWith('new_')) {
       var inputs = tr.querySelectorAll('input');
-      var sel = tr.querySelector('select');
+      var rvH = tr.querySelector('.rv-h'); var rvM = tr.querySelector('.rv-m');
+      var rvL = tr.querySelector('.rv-l'); var rvT = tr.querySelector('.rv-t');
+      var g = function(i){ return inputs[i] ? inputs[i].value : ''; };
       rows.push('<tr style="background:#f0fdf4">'
-        + '<td>+</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[0]?inputs[0].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[1]?inputs[1].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[2]?inputs[2].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[3]?inputs[3].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[4]?inputs[4].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[5]?inputs[5].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[6]?inputs[6].value:'') + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + (inputs[7]?inputs[7].value:'') + '</td>'
-        + '<td colspan="4" style="color:#64748b;font-size:10px;text-align:center">— tính sau khi lưu —</td>'
-        + '<td style="color:#15803d">' + (inputs[8]?inputs[8].value:'') + '</td>'
-        + '<td style="color:#64748b;font-style:italic">' + (inputs[9]?inputs[9].value:'') + '</td>'
+        + '<td style="color:#15803d;font-weight:600">+</td>'
+        + '<td style="color:#15803d;font-weight:500">' + g(0) + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + g(1) + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + g(2) + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + g(3) + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + g(4) + '</td>'
+        + '<td style="color:#15803d;font-weight:500">' + g(5) + '</td>'
+        + '<td style="color:#15803d;text-align:center">' + g(6) + '</td>'
+        + '<td style="color:#15803d;text-align:center">' + g(7) + '</td>'
+        + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvH?rvH.textContent:'—') + '</td>'
+        + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvM?rvM.textContent:'—') + '</td>'
+        + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvL?rvL.textContent:'—') + '</td>'
+        + '<td style="text-align:right;color:var(--gray);font-size:11px">—</td>'
+        + '<td style="background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right">' + (rvT?rvT.textContent:'—') + '</td>'
+        + '<td style="color:#15803d;text-align:center">' + g(8) + '</td>'
+        + '<td style="color:#64748b;font-style:italic"></td>'
         + '<td></td>'
         + '</tr>');
     }
@@ -1897,6 +1903,9 @@ function addReviseRow() {
   const tbody = document.getElementById('rev-rows');
   tbody.appendChild(makeReviseRow(tbody.querySelectorAll('tr').length, null));
   calcReviseTotal();
+  // Hiện nút So sánh khi có dữ liệu
+  var btnCmp = document.getElementById('btn-compare');
+  if (btnCmp) btnCmp.style.display = 'inline-block';
 }
 
 function updateReviseNumbers() {
