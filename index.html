@@ -763,14 +763,14 @@ td input:focus,td select:focus{background:#fffbeb}
       <div class="screen active" id="screen-report">
         <div class="card">
           <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
-            <select class="fi" id="rpt-month" style="width:120px">
+            <select class="fi" id="rpt-month" onchange="genDashboard()" style="width:120px">
               <option>JANUARY</option><option>FEBRUARY</option><option>MARCH</option>
               <option>APRIL</option><option>MAY</option><option>JUNE</option>
               <option>JULY</option><option>AUGUST</option><option>SEPTEMBER</option>
               <option>OCTOBER</option><option>NOVEMBER</option><option>DECEMBER</option>
             </select>
-            <select class="fi" id="rpt-year" style="width:90px"></select>
-            <select class="fi" id="rpt-carrier" style="width:120px"><option value="">Tất cả Carrier</option></select>
+            <select class="fi" id="rpt-year" onchange="genDashboard()" style="width:90px"></select>
+            <select class="fi" id="rpt-carrier" onchange="genDashboard()" style="width:120px"><option value="">Tất cả Carrier</option></select>
             <button class="btn btn-sm" id="btn-summary-report" onclick="genSummaryReport()">Summary Report</button>
             <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Detailed Statement</button>
             <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
