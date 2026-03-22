@@ -1121,14 +1121,17 @@ async function loadInitialData() {
     }
   } catch(e) { console.error('Stock load error:', e); }
 
-  // Tracking & Tổng hợp: luôn fetch mới vì thay đổi thường xuyên
-  try { var trkRes = await apiGet({ action: 'getTracking' });
-    if (trkRes && trkRes.success) { state.tracking = trkRes.data; }
-  } catch(e) { console.error('Tracking load error:', e); }
-
-  try { var sumRes = await apiGet({ action: 'getSummary' });
-    if (sumRes && sumRes.success) { state.summary = sumRes.data; }
-  } catch(e) { console.error('Tổng hợp load error:', e); }
+  // Tracking, Summary, Estimates: fetch song song
+  try {
+    var [trkRes, sumRes, estAllRes] = await Promise.all([
+      apiGet({ action: 'getTracking' }),
+      apiGet({ action: 'getSummary' }),
+      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' })
+    ]);
+    if (trkRes && trkRes.success)    state.tracking  = trkRes.data;
+    if (sumRes && sumRes.success)    state.summary   = sumRes.data;
+    if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
+  } catch(e) { console.error('Data load error:', e); }
 
   if (!hasCachedTariff || !hasCachedStock) {
     toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
@@ -2540,13 +2543,27 @@ async function toggleEstDetail(tr, contNo, estDate) {
   _estDetailOpen = contNo;
 
   try {
-    var res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
-    if (!res.success || !res.data || !res.data.length) {
+    // Dùng cache state.estimates trước, fallback API nếu chưa có
+    var estData = state.estimates && state.estimates.length
+      ? state.estimates.filter(function(e) {
+          var matchCont = (e.equipment_number||'').toUpperCase() === contNo.toUpperCase();
+          var matchDate = !estDate || !e.estimate_datetime || e.estimate_datetime.split(' ')[0] === estDate || !e.estimate_datetime.trim();
+          return matchCont && matchDate;
+        })
+      : null;
+
+    var res;
+    if (!estData || !estData.length) {
+      res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
+      estData = (res && res.success) ? res.data : [];
+    }
+
+    if (!estData || !estData.length) {
       detailTr.querySelector('td').innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--gray);font-style:italic">Không có chi tiết.</div>';
       return;
     }
 
-    var rows = res.data.map(function(e, i) {
+    var rows = estData.map(function(e, i) {
       var hasApp = e.app_total_approved && parseFloat(e.app_total_approved) > 0;
       var estV = parseFloat(e.total_cost||0).toFixed(2);
       var appV = hasApp ? parseFloat(e.app_total_approved).toFixed(2) : '—';
@@ -2575,8 +2592,8 @@ async function toggleEstDetail(tr, contNo, estDate) {
         + '</tr>';
     }).join('');
 
-    var totEst = res.data.reduce(function(s,e){ return s+(parseFloat(e.total_cost)||0); }, 0);
-    var totApp = res.data.reduce(function(s,e){ return s+(parseFloat(e.app_total_approved)||0); }, 0);
+    var totEst = estData.reduce(function(s,e){ return s+(parseFloat(e.total_cost)||0); }, 0);
+    var totApp = estData.reduce(function(s,e){ return s+(parseFloat(e.app_total_approved)||0); }, 0);
     var totDiff = totApp - totEst;
 
     detailTr.querySelector('td').innerHTML =
@@ -2643,7 +2660,7 @@ function renderTrackingTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${r.container_no||''}', '${r.est_date||''}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline dotted">${r.container_no||''}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
+      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${r.container_no||''}', '${r.est_date||''}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline">${r.container_no||''}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
@@ -2717,7 +2734,7 @@ function renderSummaryTable(data) {
   tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${r.container_no||''}', '${r.est_date||''}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline dotted">${r.container_no||''}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
+      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${r.container_no||''}', '${r.est_date||''}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline">${r.container_no||''}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
       <td>${r.carrier||''}</td>
       <td>${r.size||''}</td>
       <td>${formatDate(r.est_date)}</td>
