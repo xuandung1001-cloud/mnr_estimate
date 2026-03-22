@@ -592,7 +592,7 @@ td input:focus,td select:focus{background:#fffbeb}
               <thead>
                 <tr>
                   <th style="width:32px">STT</th>
-                  <th style="width:105px">Equipment No</th>
+                  <th style="width:90px">Equipment No</th>
                   <th style="width:46px">Carrier</th>
                   <th style="width:40px">Size</th>
                   <th style="width:72px">Est Date</th>
@@ -604,7 +604,7 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:72px">Repair Date</th>
                   <th style="width:95px">PO Number</th>
                   <th style="width:72px">PO Date</th>
-                  <th style="width:130px">Remarks</th>
+                  <th style="width:200px">Remarks</th>
                   <th style="width:110px;text-align:left">Thao tác</th>
                 </tr>
               </thead>
@@ -2513,6 +2513,34 @@ async function updateStatusInline(sel, seq) {
 }
 
 
+
+async function saveTrackingRemark(input, containerNo, estDate) {
+  var val = input.value.trim();
+  // Tìm dòng tracking tương ứng để lấy seq
+  var trk = state.tracking.find(function(t) {
+    return (t.container_no||'').toUpperCase() === containerNo.toUpperCase()
+      && (!estDate || t.est_date === estDate);
+  });
+  if (!trk) return;
+  // Không save nếu không thay đổi
+  if (val === (trk.remarks1||trk.remarks2||'')) return;
+  try {
+    var res = await apiPost({
+      action: 'updateTrackingRemark',
+      seq: trk.seq,
+      remarks1: val
+    });
+    if (res && res.success) {
+      trk.remarks1 = val;
+      toast('Đã lưu remark!', 1500);
+    } else {
+      toast('Lỗi: ' + (res ? res.error : 'unknown'), 3000);
+    }
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 3000);
+  }
+}
+
 function exportTracking() {
   exportTableToCSV('trk-rows', 'est_tracking_' + todayStr().replace(/\//g,'-') + '.csv');
   toast('Đã export CSV!', 2000);
@@ -2679,7 +2707,7 @@ function renderTrackingTable(data) {
       <td>${formatDate(r.repair_date)||'—'}</td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray);font-size:11px" title="${r.remarks1||r.remarks2||''}">${r.remarks1||r.remarks2||'—'}</td>
+      <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
       <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Revise</button>` : ''}</td>
     </tr>
   `).join('');
