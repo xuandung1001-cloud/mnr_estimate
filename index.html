@@ -1702,10 +1702,11 @@ function makeReviseRow(i, r) {
   const co  = r ? (r.app_component       || r.component       || '') : '';
   const dt  = r ? (r.app_damage_type     || r.damage_type     || '') : '';
   const rt  = r ? (r.app_repair_type     || r.repair_type     || '') : '';
-  const len = r ? (r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length || '')) : '';
-  const wid = r ? (r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width  || '')) : '';
-  const uni = r ? (r.app_unit   || r.unit   || '') : '';
-  const qty = r ? (r.app_quantity || r.quantity || 1) : 1;
+  const _val = (a, b) => (a !== undefined && a !== null && a !== '') ? a : (b || '');
+  const len = r ? _val(r.app_length, r.length) : '';
+  const wid = r ? _val(r.app_width,  r.width)  : '';
+  const uni = r ? _val(r.app_unit,     r.unit)             : '';
+  const qty = r ? (_val(r.app_quantity, r.quantity) || 1)  : 1;
   const sta = r ? (r.approval_status || 'Partially Approved') : 'Partially Approved';
   const isRej = sta === 'Rejected';
   const _num = v => { var n = parseFloat(v); return isNaN(n) ? 0 : n; };
@@ -1715,7 +1716,7 @@ function makeReviseRow(i, r) {
   // Dòng mới thêm (không có est gốc) → hiện '—' thay vì '0.00'
   const est = (r && !isRej && parseFloat(r.total_cost||0) > 0) ? parseFloat(r.total_cost).toFixed(2) : '—';
   const tot = isRej ? '0.00' : (r ? parseFloat(r.app_total_approved || r.total_cost || 0).toFixed(2) : '0.00');
-  const rsp = r ? (r.app_responsible_party || r.responsible_party || carrier || '') : carrier;
+  const rsp = r ? _val(r.app_responsible_party, r.responsible_party || carrier) : carrier;
   const rem = r ? (r.app_remark_details || '') : '';
   tr.innerHTML = `
     <td>${i+1}</td>
