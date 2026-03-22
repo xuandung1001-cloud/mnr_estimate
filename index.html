@@ -1709,8 +1709,11 @@ function onReviseStatusChange(sel) {
     row.querySelector('.rv-m').textContent = '0.00';
     row.querySelector('.rv-l').textContent = '0.00';
     row.querySelector('.rv-t').textContent = '0.00';
+    calcReviseTotal();
+  } else {
+    // Đổi từ Rejected sang status khác → lookup lại tariff để restore giá trị
+    lookupRevise(row);
   }
-  calcReviseTotal();
 }
 
 async function onReviseInput(val, estDate) {
