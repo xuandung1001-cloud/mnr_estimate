@@ -3387,7 +3387,7 @@ function genDetailedReport() {
         <col style="width:36px"><col style="width:110px"><col style="width:48px">
         <col style="width:82px"><col style="width:145px"><col style="width:82px">
         <col style="width:82px"><col style="width:145px"><col style="width:82px">
-        <col style="width:110px">
+        <col style="width:110px"><col style="width:160px">
       </colgroup>
       <thead><tr>
         <th style="width:36px">STT</th>
@@ -3400,6 +3400,7 @@ function genDetailedReport() {
         <th style="width:145px">PO Number</th>
         <th style="width:82px">PO Date</th>
         <th style="width:110px;text-align:right">Total App.</th>
+        <th style="width:160px">Remark</th>
       </tr></thead>
       <tbody>
         ${filtered.map((r,i) => `
@@ -3414,10 +3415,11 @@ function genDetailedReport() {
             <td style="text-align:center">${r.po_number||'—'}</td>
             <td>${formatDate(r.po_date)||'—'}</td>
             <td style="text-align:right;color:var(--green);font-weight:500">${num(r.total_approved)}</td>
+            <td style="color:var(--gray);font-size:11px">${r.remarks1||r.remarks2||'—'}</td>
           </tr>
         `).join('')}
         <tr style="background:var(--blue-light);font-weight:600">
-          <td colspan="9" style="text-align:right;color:var(--blue)">Total:</td>
+          <td colspan="10" style="text-align:right;color:var(--blue)">Total:</td>
           <td style="text-align:right;color:var(--green)">${num(filtered.reduce((s,r)=>s+(parseFloat(r.total_approved)||0),0))}</td>
         </tr>
       </tbody>
