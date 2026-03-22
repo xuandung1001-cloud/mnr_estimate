@@ -3412,16 +3412,29 @@ function genDashboard() {
     }
   });
 
+  // Chart status: lấy tất cả cont có approved_date trong tháng (kể cả chưa Repaired)
+  const allFiltered = state.tracking.filter(r => {
+    const d = parseReportDate(r.approved_date);
+    const matchCarrier2 = !carrier || r.carrier === carrier;
+    // Nếu có approved_date trong tháng → lấy
+    if (d && d.getMonth() === monthIdx && d.getFullYear() === year && matchCarrier2) return true;
+    // Nếu không có approved_date nhưng có po_date trong tháng → lấy
+    const dp = parseReportDate(r.po_date);
+    if (dp && dp.getMonth() === monthIdx && dp.getFullYear() === year && matchCarrier2) return true;
+    return false;
+  });
+
+
   // --- Chart 2: Số cont MNR theo Status tháng này ---
-  const statusOrder = ['Approved','Partially Approved','Partially Approved - Revised','Sent for Approval','Repair Pending','Repaired'];
-  const statusColors = ['#22c55e','#f59e0b','#6366f1','#3b82f6','#06b6d4','#10b981'];
-  const statusCounts = statusOrder.map(s => filtered.filter(r => r.approval_status === s).length);
+  const statusOrder = ['Pending','Sent for Approval','Approved','Partially Approved','Partially Approved - Revised','Repair Pending','Repaired'];
+  const statusColors = ['#94a3b8','#3b82f6','#22c55e','#f59e0b','#6366f1','#06b6d4','#10b981'];
+  const statusCounts = statusOrder.map(s => allFiltered.filter(r => r.approval_status === s).length);
 
   if (_rptCharts.status) _rptCharts.status.destroy();
   _rptCharts.status = new Chart(document.getElementById('chartStatus'), {
     type: 'bar',
     data: {
-      labels: ['Approved','Partially','Revised','Sent','Repair Pend.','Repaired'],
+      labels: ['Pending','Sent','Approved','Partially','Revised','Repair Pend.','Repaired'],
       datasets: [{ data: statusCounts, backgroundColor: statusColors, borderRadius: 4 }]
     },
     options: {
