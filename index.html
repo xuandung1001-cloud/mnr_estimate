@@ -1871,20 +1871,21 @@ function renderCompare() {
     var seq = String(r.repair_seq);
     var isDeleted = !appSeqs.has(seq);
 
-    var dl  = [r.damage_location,  r.app_damage_location  || r.damage_location];
-    var co  = [r.component,        r.app_component        || r.component];
-    var dt  = [r.damage_type,      r.app_damage_type      || r.damage_type];
-    var rt  = [r.repair_type,      r.app_repair_type      || r.repair_type];
-    var len = [String(r.length||''), String(r.app_length !== undefined && r.app_length !== '' ? r.app_length : (r.length||''))];
-    var wid = [String(r.width||''),  String(r.app_width  !== undefined && r.app_width  !== '' ? r.app_width  : (r.width ||''))];
-    var uni = [r.unit,             r.app_unit  || r.unit];
-    var qty = [String(r.quantity||''), String(r.app_quantity || r.quantity || '')];
-    var h   = [parseFloat(r.labour_hours ||0).toFixed(2), parseFloat(r.app_labour_hours  ||r.labour_hours  ||0).toFixed(2)];
-    var m   = [parseFloat(r.material_cost||0).toFixed(2), parseFloat(r.app_material_cost ||r.material_cost ||0).toFixed(2)];
-    var l   = [parseFloat(r.labour_cost  ||0).toFixed(2), parseFloat(r.app_labour_cost   ||r.labour_cost   ||0).toFixed(2)];
-    var est = [parseFloat(r.total_cost||0).toFixed(2), parseFloat(r.total_cost||0).toFixed(2)];
-    var tot = [parseFloat(r.app_total_approved||r.total_cost||0).toFixed(2), parseFloat(r.app_total_approved||r.total_cost||0).toFixed(2)];
-    var rsp = [r.responsible_party, r.app_responsible_party || r.responsible_party];
+    var dl  = [r.damage_location||'',  r.app_damage_location||''];
+    var co  = [r.component||'',        r.app_component||''];
+    var dt  = [r.damage_type||'',      r.app_damage_type||''];
+    var rt  = [r.repair_type||'',      r.app_repair_type||''];
+    var len = [String(r.length||''), String(r.app_length !== undefined && r.app_length !== null && r.app_length !== '' ? r.app_length : '')];
+    var wid = [String(r.width||''),  String(r.app_width  !== undefined && r.app_width  !== null && r.app_width  !== '' ? r.app_width  : '')];
+    var uni = [r.unit||'', r.app_unit||''];
+    var qty = [String(r.quantity||''), String(r.app_quantity !== undefined && r.app_quantity !== null && r.app_quantity !== '' ? r.app_quantity : '')];
+    var _n = function(v){ var x=parseFloat(v); return isNaN(x)?0:x; };
+    var h   = [_n(r.labour_hours ).toFixed(2), _n(r.app_labour_hours ).toFixed(2)];
+    var m   = [_n(r.material_cost).toFixed(2), _n(r.app_material_cost).toFixed(2)];
+    var l   = [_n(r.labour_cost  ).toFixed(2), _n(r.app_labour_cost  ).toFixed(2)];
+    var est = [_n(r.total_cost).toFixed(2), _n(r.total_cost).toFixed(2)];
+    var tot = [_n(r.app_total_approved).toFixed(2), _n(r.app_total_approved).toFixed(2)];
+    var rsp = [r.responsible_party||'', r.app_responsible_party||''];
 
     var allPairs = [dl,co,dt,rt,len,wid,uni,qty,h,m,l,rsp];
     var hasChange = !isDeleted && allPairs.some(function(p){ return String(p[0]||'').trim() !== String(p[1]||'').trim(); });
