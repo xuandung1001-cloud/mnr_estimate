@@ -3281,18 +3281,21 @@ function exportContList(type) {
   function fmtD(v) {
     if (!v) return '';
     var s = String(v).trim();
-    // Already DD/MM/YYYY or D/M/YYYY
+    var day, mon, yr;
+    // DD/MM/YYYY or D/M/YYYY
     if (s.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
       var p = s.split('/');
-      return p[0].padStart(2,'0') + '/' + p[1].padStart(2,'0') + '/' + p[2];
+      day = p[0].padStart(2,'0'); mon = p[1].padStart(2,'0'); yr = p[2];
     }
-    // ISO: 2026-03-02T17:00:00.000Z
-    // GAS stores date as midnight Vietnam time → UTC = 17:00 previous day
-    // Extract date part directly from ISO string to avoid timezone issues
-    if (s.indexOf('T') > 0) {
-      var iso = s.split('T')[0]; // "2026-03-02"
-      var p = iso.split('-');    // ["2026","03","02"]
-      if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0]; // "02/03/2026"
+    // ISO: 2026-03-10T...
+    else if (s.indexOf('T') > 0) {
+      var iso = s.split('T')[0].split('-');
+      if (iso.length === 3) { yr=iso[0]; mon=iso[1]; day=iso[2]; }
+    }
+    if (day && mon && yr) {
+      // Use month name abbreviation to prevent Excel locale misinterpretation
+      var MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return day + '-' + MONTHS[parseInt(mon,10)] + '-' + yr;
     }
     return s;
   }
