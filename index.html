@@ -3342,15 +3342,23 @@ function exportContList(type) {
         lh=parseFloat(r.labour_hours)||0; lab=parseFloat(r.labour_cost)||0;
         mat=parseFloat(r.material_cost)||0; tot=parseFloat(r.total_cost)||0;
         resp=r.responsible_party; mtype=r.material_type||'SK';
-        date=r.estimate_datetime?(r.estimate_datetime+'').split(' ')[0]:'';
-        repSeq=r.repair_seq||'';
+        var ed = r.estimate_datetime ? (r.estimate_datetime+'').split(' ')[0] : '';
+        // Parse to DD/MM/YYYY
+        if (ed && ed.includes('T')) { var dd=new Date(ed); ed=('0'+dd.getDate()).slice(-2)+'/'+ ('0'+(dd.getMonth()+1)).slice(-2)+'/'+dd.getFullYear(); }
+        date=ed; repSeq=r.repair_seq||'';
       } else {
         dl=r.app_damage_location; co=r.app_component; dt=r.app_damage_type; rt=r.app_repair_type;
         ln=r.app_length; wd=r.app_width; un=r.app_unit; qty=r.app_quantity||1;
         lh=parseFloat(r.app_labour_hours)||0; lab=parseFloat(r.app_labour_cost)||0;
         mat=parseFloat(r.app_material_cost)||0; tot=parseFloat(r.app_total_approved)||0;
         resp=r.app_responsible_party; mtype=r.app_material_type||'SK';
-        date=r.approval_date||''; repSeq=r.repair_seq||'';
+        var ad = r.approval_date||'';
+        // Parse ISO or M/D/YYYY to DD/MM/YYYY
+        if (ad && ad.includes('T')) { var dd2=new Date(ad); ad=('0'+dd2.getDate()).slice(-2)+'/'+ ('0'+(dd2.getMonth()+1)).slice(-2)+'/'+dd2.getFullYear(); }
+        else if (ad && ad.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+          var pts=ad.split('/'); ad=pts[0].padStart(2,'0')+'/'+pts[1].padStart(2,'0')+'/'+pts[2];
+        }
+        date=ad; repSeq=r.repair_seq||'';
       }
       totQty+=parseInt(qty)||1; totLH+=lh; totLab+=lab; totMat+=mat; totTot+=tot;
 
