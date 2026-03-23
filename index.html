@@ -3351,6 +3351,12 @@ function exportContList(type) {
     +'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>'
     +'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>'
     +'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n'
+    +'<Style ss:ID="dt"><Font ss:Size="9"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/>'
+    +'<NumberFormat ss:Format="@"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>'
+    +'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>'
+    +'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>'
+    +'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n'
     +'</Styles>\n'
     +'<Worksheet ss:Name="Sheet1"><Table>\n';
 
@@ -3410,12 +3416,12 @@ function exportContList(type) {
           xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="Number">'+esc(seq)+'</Data></Cell>';
           xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(contNo)+'</Data></Cell>';
           xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(size)+'</Data></Cell>';
-          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(date)+'</Data></Cell>';
+          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="dt"><Data ss:Type="String">'+esc(date)+'</Data></Cell>';
         } else {
           xml += C(seq,   'd','Number');
           xml += C(contNo,'d');
           xml += C(size,  'd');
-          xml += C(date,  'd');
+          xml += '<Cell ss:StyleID="dt"><Data ss:Type="String">'+esc(date)+'</Data></Cell>';
         }
         xml += C(repSeq,'d','Number');
       } else {
