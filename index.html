@@ -593,19 +593,19 @@ td input:focus,td select:focus{background:#fffbeb}
               <thead>
                 <tr>
                   <th style="width:32px">Stt</th>
-                  <th style="width:110px;cursor:pointer" onclick="sortTracking('container_no',this)">Equipment No ⇅</th>
-                  <th style="width:46px;cursor:pointer" onclick="sortTracking('carrier',this)">Carrier ⇅</th>
-                  <th style="width:40px">Size</th>
-                  <th style="width:72px;cursor:pointer" onclick="sortTracking('est_date',this)">Est. Date ⇅</th>
-                  <th style="width:62px;text-align:right;cursor:pointer" onclick="sortTracking('total_cost',this)">Total Est. ⇅</th>
+                  <th style="width:110px;cursor:pointer;user-select:none" onclick="showColFilter('container_no',this)">Equipment No ▾</th>
+                  <th style="width:46px;cursor:pointer;user-select:none" onclick="showColFilter('carrier',this)">Carrier ▾</th>
+                  <th style="width:40px;cursor:pointer;user-select:none" onclick="showColFilter('size',this)">Size ▾</th>
+                  <th style="width:72px;cursor:pointer;user-select:none" onclick="showColFilter('est_date',this)">Est. Date ▾</th>
+                  <th style="width:62px;text-align:right;cursor:pointer;user-select:none" onclick="sortTracking('total_cost',this)">Total Est. ⇅</th>
                   <th style="width:120px">Ref No</th>
-                  <th style="width:72px;cursor:pointer" onclick="sortTracking('approved_date',this)">App. Date ⇅</th>
-                  <th style="width:62px;text-align:right;cursor:pointer" onclick="sortTracking('total_approved',this)">Total App. ⇅</th>
+                  <th style="width:72px;cursor:pointer;user-select:none" onclick="showColFilter('approved_date',this)">App. Date ▾</th>
+                  <th style="width:62px;text-align:right;cursor:pointer;user-select:none" onclick="sortTracking('total_approved',this)">Total App. ⇅</th>
                   <th style="width:62px;text-align:right">Total Rev.</th>
-                  <th style="width:130px">Status</th>
-                  <th style="width:72px;cursor:pointer" onclick="sortTracking('repair_date',this)">Repair Date ⇅</th>
+                  <th style="width:130px;cursor:pointer;user-select:none" onclick="showColFilter('approval_status',this)">Status ▾</th>
+                  <th style="width:72px;cursor:pointer;user-select:none" onclick="showColFilter('repair_date',this)">Repair Date ▾</th>
                   <th style="width:120px">PO Number</th>
-                  <th style="width:72px;cursor:pointer" onclick="sortTracking('po_date',this)">PO Date ⇅</th>
+                  <th style="width:72px;cursor:pointer;user-select:none" onclick="showColFilter('po_date',this)">PO Date ▾</th>
                   <th style="width:160px">Remarks</th>
                   <th style="width:130px;text-align:left">Thao tác</th>
                 </tr>
@@ -2413,6 +2413,7 @@ function cancelOvm() {
 
 // ===================== TRACKING =====================
 var _trkSortCol = null, _trkSortAsc = true;
+var _trkColFilters = {}; // {col: Set of selected values}
 
 function sortTracking(col, th) {
   if (_trkSortCol === col) {
@@ -2421,14 +2422,97 @@ function sortTracking(col, th) {
     _trkSortCol = col;
     _trkSortAsc = true;
   }
-  // Update header indicators
-  document.querySelectorAll('#screen-tracking th').forEach(function(t) {
-    t.style.color = '';
-    t.style.background = '';
-  });
-  th.style.color = 'var(--blue)';
-  th.style.background = '#e8f0fe';
+  renderTracking();
+}
 
+function showColFilter(col, th, labelFn) {
+  // Remove existing dropdown
+  var existing = document.getElementById('col-filter-dropdown');
+  if (existing) {
+    existing.remove();
+    if (existing.dataset.col === col) return; // toggle off
+  }
+
+  // Get all unique values for this col from full tracking data
+  var allVals = [];
+  var seen = new Set();
+  state.tracking.forEach(function(r) {
+    var v = labelFn ? labelFn(r) : (r[col]||'');
+    var key = String(v);
+    if (!seen.has(key)) { seen.add(key); allVals.push({v: v, key: key}); }
+  });
+  allVals.sort(function(a,b){ return String(a.key).localeCompare(String(b.key)); });
+
+  var selected = _trkColFilters[col] || null; // null = all selected
+
+  var rect = th.getBoundingClientRect();
+  var dd = document.createElement('div');
+  dd.id = 'col-filter-dropdown';
+  dd.dataset.col = col;
+  dd.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:180px;max-height:320px;overflow-y:auto;padding:6px 0;font-size:12px;';
+  dd.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+  dd.style.top  = (rect.bottom + 2) + 'px';
+
+  // Header row
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'padding:6px 12px 4px;font-weight:600;color:#1e40af;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center';
+  hdr.innerHTML = '<span>Filter</span><span style="cursor:pointer;color:#64748b;font-size:10px" onclick="clearColFilter(''+col+'')">Xóa filter</span>';
+  dd.appendChild(hdr);
+
+  // "Tất cả" option
+  var allOpt = document.createElement('div');
+  allOpt.style.cssText = 'padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:8px';
+  allOpt.onmouseover = function(){this.style.background='#f8fafc'};
+  allOpt.onmouseout  = function(){this.style.background=''};
+  var allChk = document.createElement('input');
+  allChk.type = 'checkbox';
+  allChk.checked = !selected;
+  allChk.onchange = function() { clearColFilter(col); };
+  allOpt.appendChild(allChk);
+  allOpt.appendChild(Object.assign(document.createElement('span'), {textContent: '(Tất cả)'}));
+  dd.appendChild(allOpt);
+
+  // Individual values
+  allVals.forEach(function(item) {
+    var row = document.createElement('div');
+    row.style.cssText = 'padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:8px';
+    row.onmouseover = function(){this.style.background='#f8fafc'};
+    row.onmouseout  = function(){this.style.background=''};
+    var chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.checked = !selected || selected.has(item.key);
+    chk.onchange = function() {
+      if (!_trkColFilters[col]) _trkColFilters[col] = new Set(allVals.map(function(x){return x.key;}));
+      if (chk.checked) _trkColFilters[col].add(item.key);
+      else _trkColFilters[col].delete(item.key);
+      if (_trkColFilters[col].size === allVals.length) delete _trkColFilters[col];
+      allChk.checked = !_trkColFilters[col];
+      renderTracking();
+    };
+    row.appendChild(chk);
+    var lbl = document.createElement('span');
+    lbl.textContent = item.key || '(trống)';
+    row.appendChild(lbl);
+    dd.appendChild(row);
+  });
+
+  document.body.appendChild(dd);
+
+  // Close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', function handler(e) {
+      if (!dd.contains(e.target) && e.target !== th) {
+        dd.remove();
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 50);
+}
+
+function clearColFilter(col) {
+  delete _trkColFilters[col];
+  var dd = document.getElementById('col-filter-dropdown');
+  if (dd) dd.remove();
   renderTracking();
 }
 
@@ -2750,7 +2834,14 @@ function filterTracking() {
     const matchQ  = !q  || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q);
     const matchSt = !st || r.approval_status === st;
     const matchCa = !ca || r.carrier === ca;
-    return matchQ && matchSt && matchCa;
+    if (!matchQ || !matchSt || !matchCa) return false;
+    // Apply column filters
+    for (var col in _trkColFilters) {
+      var fset = _trkColFilters[col];
+      var val = String(r[col]||'');
+      if (fset && !fset.has(val)) return false;
+    }
+    return true;
   });
   // Apply sort if set
   var sorted = filtered.slice();
