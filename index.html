@@ -2754,7 +2754,7 @@ function renderTrackingTable(data) {
       <td style="color:var(--blue);text-align:center">${r.ref_number||'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
-      <td style="text-align:right;${r.revise_total&&r.revise_total!='0'?'color:#b45309;font-weight:500':'color:var(--gray)'}">${r.revise_total&&r.revise_total!='0'?num(r.revise_total):'—'}</td>
+      <td style="text-align:right;${parseFloat(r.revise_total)>0?'color:#b45309;font-weight:500':'color:var(--gray)'}">${parseFloat(r.revise_total)>0?num(r.revise_total):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
       <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
       <td style="text-align:center">${r.po_number||'—'}</td>
