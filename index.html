@@ -3713,48 +3713,6 @@ function genDashboard() {
       }
     }
   });
-  monday.setDate(today2.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-  monday.setHours(0,0,0,0);
-
-  for (var w = 7; w >= 0; w--) {
-    var wMon = new Date(monday);
-    wMon.setDate(monday.getDate() - w * 7);
-    var wSun = new Date(wMon);
-    wSun.setDate(wMon.getDate() + 6);
-    wSun.setHours(23,59,59,999);
-    var label = wMon.getDate().toString().padStart(2,'0') + '/' + (wMon.getMonth()+1).toString().padStart(2,'0');
-    weekLabels.push(label);
-    var val = state.tracking
-      .filter(function(r) {
-        var d = parseReportDate(r.po_date);
-        if (!d) return false;
-        return d >= wMon && d <= wSun && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
-      })
-      .reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0);
-    weekVals.push(round2(val));
-  }
-
-  if (_rptCharts.weekly) _rptCharts.weekly.destroy();
-  _rptCharts.weekly = new Chart(document.getElementById('chartWeekly'), {
-    type: 'bar',
-    data: {
-      labels: weekLabels,
-      datasets: [{
-        label: 'Total No VAT (USD)',
-        data: weekVals,
-        backgroundColor: weekVals.map(function(v,i){ return i === weekVals.length-1 ? '#3b82f6' : 'rgba(59,130,246,0.45)'; }),
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false} },
-      scales: {
-        y: { beginAtZero:true, ticks:{font:{size:10}, callback: function(v){ return '$'+v.toLocaleString(); }}, grid:{color:'#f1f5f9'} },
-        x: { ticks:{font:{size:10}}, grid:{display:false} }
-      }
-    }
-  });
 }
 
 function genSummaryReport() {
