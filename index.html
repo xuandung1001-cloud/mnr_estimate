@@ -672,8 +672,13 @@ td input:focus,td select:focus{background:#fffbeb}
             <input class="fi" id="bulk-search" placeholder="Tìm Equipment No..." style="flex:1">
             <button class="btn btn-blue btn-sm" onclick="loadBulk()">Tải danh sách</button>
             <button class="btn btn-sm" id="btn-export-bulk" onclick="exportBulkTemplate()">Export Bulk Template</button>
-            <button class="btn btn-sm" onclick="exportEstList()">Export Est. List</button>
-            <button class="btn btn-sm" onclick="exportAppList()">Export Approved List</button>
+            <div style="position:relative;display:inline-block">
+              <button class="btn btn-sm" onclick="toggleExportMenu(this)">📥 Export Excel ▾</button>
+              <div id="export-menu" style="display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:100;min-width:160px">
+                <div onclick="exportContList('est')" style="padding:8px 14px;cursor:pointer;font-size:12px;color:#1e293b;white-space:nowrap" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">📋 Estimated List</div>
+                <div onclick="exportContList('app')" style="padding:8px 14px;cursor:pointer;font-size:12px;color:#1e293b;white-space:nowrap" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">✅ Approved List</div>
+              </div>
+            </div>
           </div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table>
@@ -3228,6 +3233,7 @@ async function exportBulkTemplate() {
       {wch:12},{wch:10},{wch:12},{wch:10},{wch:14},{wch:14},{wch:10},{wch:10}
     ];
 
+
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
     // Download
@@ -3245,8 +3251,108 @@ async function exportBulkTemplate() {
     console.error(err);
   }
 }
-function exportEstList() { exportTableToCSV('bulk-rows','estimated_list.csv'); toast('Đã export!', 2000); }
-function exportAppList() { exportTableToCSV('bulk-rows','approved_list.csv'); toast('Đã export!', 2000); }
+function toggleExportMenu(btn) {
+  var menu = document.getElementById('export-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  // Close when click outside
+  setTimeout(function(){
+    document.addEventListener('click', function handler(e) {
+      if (!e.target.closest || !e.target.closest('#export-menu') && e.target !== btn) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 10);
+}
+
+function exportContList(type) {
+  document.getElementById('export-menu').style.display = 'none';
+  // Get data from state.estimates filtered by current bulk cont list
+  var conts = bulkFilteredConts && bulkFilteredConts.length ? bulkFilteredConts : [];
+  if (!conts.length) { toast('Tải danh sách trước!', 3000); return; }
+
+  var data = (state.estimates || []).filter(function(r) {
+    return conts.includes((r.equipment_number||'').toUpperCase().trim());
+  });
+  if (!data.length) { toast('Không có dữ liệu!', 3000); return; }
+
+  // Group by container
+  var groups = {};
+  var order = [];
+  data.forEach(function(r) {
+    var k = r.equipment_number;
+    if (!groups[k]) { groups[k] = []; order.push(k); }
+    groups[k].push(r);
+  });
+
+  // Build xlsx using SheetJS
+  var XLSX = window.XLSX;
+  if (!XLSX) { toast('SheetJS chưa load!', 3000); return; }
+
+  var wb = XLSX.utils.book_new();
+  var wsData = [];
+  var title = type === 'est' ? 'ESTIMATED CONTAINER LIST' : 'APPROVED CONTAINER LIST';
+  wsData.push([title]);
+  wsData.push([]);
+  wsData.push([]);
+
+  var headers = ['Seq','Equipment Number','Size Type','Date','Repair Seq',
+    'Damage Location','Component','Damage Type','Repair Type',
+    'Length','Width','Unit','Quantity','Currency',
+    'Labour Hours','Labour Cost','Material Cost','Total Cost','Responsible Party','Material Type'];
+
+  var seqNo = 1;
+  order.forEach(function(contNo) {
+    var rows = groups[contNo];
+    wsData.push(headers);
+    var totQty=0, totLH=0, totMat=0, totLab=0, totTotal=0;
+    rows.forEach(function(r) {
+      var dl, co, dt, rt, len, wid, uni, qty, lh, lab, mat, tot, resp, mtype, date;
+      if (type === 'est') {
+        dl=r.damage_location; co=r.component; dt=r.damage_type; rt=r.repair_type;
+        len=r.length; wid=r.width; uni=r.unit; qty=r.quantity||1;
+        lh=parseFloat(r.labour_hours)||0; lab=parseFloat(r.labour_cost)||0;
+        mat=parseFloat(r.material_cost)||0; tot=parseFloat(r.total_cost)||0;
+        resp=r.responsible_party; mtype=r.material_type||'SK';
+        date=r.estimate_datetime?r.estimate_datetime.split(' ')[0]:'';
+      } else {
+        dl=r.app_damage_location; co=r.app_component; dt=r.app_damage_type; rt=r.app_repair_type;
+        len=r.app_length; wid=r.app_width; uni=r.app_unit; qty=r.app_quantity||1;
+        lh=parseFloat(r.app_labour_hours)||0; lab=parseFloat(r.app_labour_cost)||0;
+        mat=parseFloat(r.app_material_cost)||0; tot=parseFloat(r.app_total_approved)||0;
+        resp=r.app_responsible_party; mtype=r.app_material_type||'SK';
+        date=r.approval_date||'';
+      }
+      if (!dl && !co) return; // skip empty rows
+      wsData.push([seqNo, contNo, r.size_type||'', date, r.repair_seq||'',
+        dl||'', co||'', dt||'', rt||'',
+        len||'', wid||'', uni||'', qty, 'USD',
+        lh, lab, mat, tot, resp||'', mtype]);
+      totQty+=Number(qty)||0; totLH+=lh; totMat+=mat; totLab+=lab; totTotal+=tot;
+    });
+    wsData.push(['Total', totQty, '', '', '', '', '', '', '', '', '', '', '', '',
+      round2(totLH), round2(totLab), round2(totMat), round2(totTotal), '', '']);
+    wsData.push([]);
+    wsData.push([]);
+    seqNo++;
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Set column widths
+  ws['!cols'] = [
+    {wch:6},{wch:14},{wch:8},{wch:14},{wch:10},
+    {wch:10},{wch:10},{wch:10},{wch:10},
+    {wch:8},{wch:8},{wch:6},{wch:6},{wch:8},
+    {wch:10},{wch:10},{wch:12},{wch:10},{wch:8},{wch:10}
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  var fname = type === 'est' ? 'Estimated_Container_List.xlsx' : 'Approved_Container_List.xlsx';
+  XLSX.writeFile(wb, fname);
+  toast('Đã xuất ' + fname, 2500);
+}
+
 
 // ===================== APPROVE TEMPLATE EXPORT =====================
 async function exportApproveTemplate() {
