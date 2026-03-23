@@ -3270,87 +3270,123 @@ function exportSumList() {
   exportContList(type);
 }
 
-async function exportContList(type) {
+function exportContList(type) {
   if (!bulkFilteredConts || !bulkFilteredConts.length) { toast('Tải danh sách trước!', 3000); return; }
-
-  // Lấy data từ state.estimates filter theo bulkFilteredConts
-  var allEst = state.estimates || [];
-  var contSet = new Set(bulkFilteredConts.map(function(c){ return c.toUpperCase().trim(); }));
-  var data = allEst.filter(function(r) {
+  var contSet = new Set(bulkFilteredConts.map(function(c){ return (c||'').toUpperCase().trim(); }));
+  var data = (state.estimates||[]).filter(function(r){
     return contSet.has((r.equipment_number||'').toUpperCase().trim());
   });
+  console.log('exportContList type='+type+' matched='+data.length);
+  if (!data.length) { toast('Không có dữ liệu! Bấm Tải danh sách lại.', 4000); return; }
 
-  console.log('exportContList type='+type+' bulkConts='+bulkFilteredConts.length+' matched='+data.length);
-
-  if (!data.length) {
-    toast('Không có dữ liệu! Thử bấm "Tải danh sách" lại.', 4000);
-    return;
+  function fmtD(v) {
+    if (!v) return '';
+    var s = String(v);
+    if (s.indexOf('T') > 0) { var d=new Date(s); return ('0'+d.getDate()).slice(-2)+'/'+ ('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear(); }
+    if (s.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) { var p=s.split('/'); return p[0].padStart(2,'0')+'/'+p[1].padStart(2,'0')+'/'+p[2]; }
+    return s;
+  }
+  function esc(v) { return String(v===null||v===undefined?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function C(val,style,typ) {
+    var t=typ||'String', v=(val===null||val===undefined||val==='')?'':val;
+    if(t==='Number'&&(v===''||isNaN(Number(v)))){t='String';v='';}
+    return '<Cell ss:StyleID="'+style+'"><Data ss:Type="'+t+'">'+esc(v)+'</Data></Cell>';
   }
 
-  // Slim down data - chỉ gửi fields cần thiết
-  var slim = data.map(function(r) {
-    return {
-      equipment_number: r.equipment_number,
-      size_type: r.size_type,
-      repair_seq: r.repair_seq,
-      estimate_datetime: r.estimate_datetime,
-      approval_date: r.approval_date,
-      // est fields
-      damage_location: r.damage_location,
-      component: r.component,
-      damage_type: r.damage_type,
-      repair_type: r.repair_type,
-      length: r.length,
-      width: r.width,
-      unit: r.unit,
-      quantity: r.quantity,
-      labour_hours: r.labour_hours,
-      labour_cost: r.labour_cost,
-      material_cost: r.material_cost,
-      total_cost: r.total_cost,
-      responsible_party: r.responsible_party,
-      material_type: r.material_type,
-      // app fields
-      app_damage_location: r.app_damage_location,
-      app_component: r.app_component,
-      app_damage_type: r.app_damage_type,
-      app_repair_type: r.app_repair_type,
-      app_length: r.app_length,
-      app_width: r.app_width,
-      app_unit: r.app_unit,
-      app_quantity: r.app_quantity,
-      app_labour_hours: r.app_labour_hours,
-      app_labour_cost: r.app_labour_cost,
-      app_material_cost: r.app_material_cost,
-      app_total_approved: r.app_total_approved,
-      app_responsible_party: r.app_responsible_party,
-      app_material_type: r.app_material_type
-    };
+  var title = type==='est'?'ESTIMATED CONTAINER LIST':'APPROVED CONTAINER LIST';
+  var dateHdr = type==='est'?'Estimate Date &amp; Time (DD/MM/YYYY HH:MM:SS)':'Approval Date (DD/MM/YYYY)';
+  var HDR = ['Seq','Equipment Number','Size Type',dateHdr,'Repair Sequence',
+    'Damage Location','Component','Damage Type','Repair Type','Length','Width','Unit','Quantity','Currency',
+    'Labour Hours','Labour Cost','Material Cost','Total Cost','Responsible Party','Material Type'];
+
+  var groups={}, order=[];
+  data.forEach(function(r){ var k=r.equipment_number||''; if(!groups[k]){groups[k]=[];order.push(k);} groups[k].push(r); });
+
+  var xml='<?xml version="1.0"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n<Styles>\n';
+  xml+='<Style ss:ID="t"><Font ss:Bold="1" ss:Color="#FF0000" ss:Size="16"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>\n';
+  xml+='<Style ss:ID="h"><Font ss:Bold="1" ss:Size="9"/><Interior ss:Color="#DCDCDC" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n';
+  xml+='<Style ss:ID="d"><Font ss:Size="9"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n';
+  xml+='<Style ss:ID="n"><Font ss:Size="9"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n';
+  xml+='<Style ss:ID="T"><Font ss:Bold="1" ss:Color="#FF0000" ss:Size="9"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n';
+  xml+='<Style ss:ID="N"><Font ss:Bold="1" ss:Color="#FF0000" ss:Size="9"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>\n';
+  xml+='</Styles>\n<Worksheet ss:Name="Sheet1"><Table>\n';
+
+  var W=[40,130,65,250,95,100,90,90,90,55,55,50,55,65,90,90,100,85,120,100];
+  W.forEach(function(w){xml+='<Column ss:Width="'+w+'"/>\n';});
+
+  xml+='<Row ss:Height="40"><Cell ss:MergeAcross="19" ss:StyleID="t"><Data ss:Type="String">'+title+'</Data></Cell></Row>\n';
+  xml+='<Row ss:Height="8"/>\n<Row ss:Height="8"/>\n';
+
+  var seq=1;
+  order.forEach(function(contNo){
+    var contRows=groups[contNo];
+    var valid=contRows.filter(function(r){ return type==='est'?(r.damage_location||r.component):(r.app_damage_location||r.app_component); });
+    if(!valid.length) return;
+
+    xml+='<Row ss:Height="28">';
+    HDR.forEach(function(h){xml+=C(h,'h');});
+    xml+='</Row>\n';
+
+    var tQ=0,tLH=0,tLab=0,tMat=0,tTot=0, n=valid.length;
+    valid.forEach(function(r,ri){
+      var dl,co,dt,rt,ln,wd,un,qty,lh,lab,mat,tot,resp,mtype,date,repSeq;
+      if(type==='est'){
+        dl=r.damage_location||'';co=r.component||'';dt=r.damage_type||'';rt=r.repair_type||'';
+        ln=r.length;wd=r.width;un=r.unit||'';qty=parseFloat(r.quantity)||1;
+        lh=parseFloat(r.labour_hours)||0;lab=parseFloat(r.labour_cost)||0;
+        mat=parseFloat(r.material_cost)||0;tot=parseFloat(r.total_cost)||0;
+        resp=r.responsible_party||'';mtype=r.material_type||'SK';
+        date=fmtD((r.estimate_datetime||'').toString().split(' ')[0]);repSeq=r.repair_seq||'';
+      } else {
+        dl=r.app_damage_location||'';co=r.app_component||'';dt=r.app_damage_type||'';rt=r.app_repair_type||'';
+        ln=r.app_length;wd=r.app_width;un=r.app_unit||'';qty=parseFloat(r.app_quantity)||1;
+        lh=parseFloat(r.app_labour_hours)||0;lab=parseFloat(r.app_labour_cost)||0;
+        mat=parseFloat(r.app_material_cost)||0;tot=parseFloat(r.app_total_approved)||0;
+        resp=r.app_responsible_party||'';mtype=r.app_material_type||'SK';
+        date=fmtD(r.approval_date||'');repSeq=r.repair_seq||'';
+      }
+      tQ+=qty;tLH+=lh;tLab+=lab;tMat+=mat;tTot+=tot;
+      var lv=(ln!==null&&ln!==''&&ln!==undefined&&Number(ln)!==0)?ln:'';
+      var wv=(wd!==null&&wd!==''&&wd!==undefined&&Number(wd)!==0)?wd:'';
+      xml+='<Row ss:Height="15">';
+      xml+=C(ri===0?seq:'','d',ri===0?'Number':'String');
+      xml+=C(ri===0?contNo:'','d');
+      xml+=C(ri===0?(r.size_type||''):'','d');
+      xml+=C(ri===0?date:'','d');
+      xml+=C(repSeq,'d','Number');
+      xml+=C(dl,'d');xml+=C(co,'d');xml+=C(dt,'d');xml+=C(rt,'d');
+      xml+=C(lv,'n',lv!==''?'Number':'String');
+      xml+=C(wv,'n',wv!==''?'Number':'String');
+      xml+=C(un,'d');xml+=C(qty,'n','Number');xml+=C('USD','d');
+      xml+=C(Math.round(lh*100)/100,'n','Number');
+      xml+=C(Math.round(lab*100)/100,'n','Number');
+      xml+=C(Math.round(mat*100)/100,'n','Number');
+      xml+=C(Math.round(tot*100)/100,'n','Number');
+      xml+=C(resp,'d');xml+=C(mtype,'d');
+      xml+='</Row>\n';
+    });
+
+    xml+='<Row ss:Height="15"><Cell ss:MergeAcross="3" ss:StyleID="T"><Data ss:Type="String">Total</Data></Cell>';
+    for(var c=0;c<10;c++) xml+=C('','T');
+    xml+=C(Math.round(tLH*100)/100,'N','Number');
+    xml+=C(Math.round(tLab*100)/100,'N','Number');
+    xml+=C(Math.round(tMat*100)/100,'N','Number');
+    xml+=C(Math.round(tTot*100)/100,'N','Number');
+    xml+=C('','T');xml+=C('','T');
+    xml+='</Row>\n<Row/><Row/><Row/>\n';
+    seq++;
   });
 
-  toast('Đang tạo file Excel (' + slim.length + ' dòng)...', 15000);
-  try {
-    var res = await apiPost({ action: 'genExcelList', type: type, rows: slim });
-    if (!res || !res.success) {
-      toast('Lỗi GAS: ' + ((res && res.error) || 'Unknown'), 5000);
-      console.error('genExcelList error:', res);
-      return;
-    }
-    // Download from base64
-    var binary = atob(res.b64);
-    var bytes = new Uint8Array(binary.length);
-    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    var blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = res.filename || 'export.xlsx';
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-    toast('Đã xuất ' + res.filename, 3000);
-  } catch(e) {
-    toast('Lỗi: ' + e.message, 5000);
-    console.error('exportContList error:', e);
-  }
+  xml+='</Table></Worksheet></Workbook>';
+
+  var fname=(type==='est'?'Estimated_Container_List':'Approved_Container_List')+'.xls';
+  var blob=new Blob(['\ufeff'+xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=fname;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Đã xuất '+fname,2500);
 }
 
 
@@ -3677,7 +3713,7 @@ function genDashboard() {
       }
     }
   });
-  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  monday.setDate(today2.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
   monday.setHours(0,0,0,0);
 
   for (var w = 7; w >= 0; w--) {
