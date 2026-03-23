@@ -3286,12 +3286,13 @@ function exportContList(type) {
       var p = s.split('/');
       return p[0].padStart(2,'0') + '/' + p[1].padStart(2,'0') + '/' + p[2];
     }
-    // ISO: 2026-03-02T17:00:00.000Z → use local time +7
+    // ISO: 2026-03-02T17:00:00.000Z
+    // GAS stores date as midnight Vietnam time → UTC = 17:00 previous day
+    // Extract date part directly from ISO string to avoid timezone issues
     if (s.indexOf('T') > 0) {
-      var d = new Date(s);
-      // Add 7 hours to convert UTC to Vietnam time
-      var local = new Date(d.getTime() + 7*60*60*1000);
-      return ('0'+local.getUTCDate()).slice(-2) + '/' + ('0'+(local.getUTCMonth()+1)).slice(-2) + '/' + local.getUTCFullYear();
+      var iso = s.split('T')[0]; // "2026-03-02"
+      var p = iso.split('-');    // ["2026","03","02"]
+      if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0]; // "02/03/2026"
     }
     return s;
   }
@@ -3403,16 +3404,23 @@ function exportContList(type) {
 
       xml += '<Row ss:Height="15">';
       if (ri === 0) {
-        // First row: show Seq, Equipment, Size, Date
-        xml += C(seq,   'd', 'Number');
-        xml += C(contNo,'d');
-        xml += C(size,  'd');
-        xml += C(date,  'd');
+        // First row: MergeDown cols A-D if multi-row
+        if (n > 1) {
+          var md = n - 1;
+          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="Number">'+esc(seq)+'</Data></Cell>';
+          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(contNo)+'</Data></Cell>';
+          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(size)+'</Data></Cell>';
+          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(date)+'</Data></Cell>';
+        } else {
+          xml += C(seq,   'd','Number');
+          xml += C(contNo,'d');
+          xml += C(size,  'd');
+          xml += C(date,  'd');
+        }
         xml += C(repSeq,'d','Number');
       } else {
-        // Subsequent rows: 4 blank cells then repSeq
-        xml += C('','d'); xml += C('','d'); xml += C('','d'); xml += C('','d');
-        xml += C(repSeq,'d','Number');
+        // Subsequent rows: skip A-D (merged), jump to col E
+        xml += '<Cell ss:Index="5" ss:StyleID="d"><Data ss:Type="Number">'+esc(repSeq)+'</Data></Cell>';
       }
       xml += C(dl,'d'); xml += C(co,'d'); xml += C(dt,'d'); xml += C(rt,'d');
       xml += C(lv,'n', lv!==''?'Number':'String');
