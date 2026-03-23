@@ -799,6 +799,12 @@ td input:focus,td select:focus{background:#fffbeb}
             <div style="font-size:12px;font-weight:600;color:#1e40af;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">📈 Xu hướng Total Approved (No VAT) — 12 tháng gần nhất</div>
             <canvas id="chartTrend" style="height:200px;max-height:200px"></canvas>
           </div>
+
+          <!-- Chart row 3: weekly trend -->
+          <div class="card" style="padding:14px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:600;color:#1e40af;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">📊 Xu hướng theo tuần — 8 tuần gần nhất (T2–CN)</div>
+            <canvas id="chartWeekly" style="height:200px;max-height:200px"></canvas>
+          </div>
         </div>
 
         <!-- Summary / Detailed result -->
@@ -3355,6 +3361,7 @@ function genDashboard() {
   const unitCost = filtered.length ? round2(noVat / filtered.length) : 0;
   // Pending: tất cả cont chưa Repaired/Rejected (không filter theo tháng)
   const pending  = state.tracking.filter(r => r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected' && (!carrier || r.carrier === carrier)).length;
+  const termite = state.tracking.filter(r => r.special_flag === 'Termite Attack' && (!carrier || r.carrier === carrier)).length;
 
   // KPI Cards
   document.getElementById('rpt-kpi').innerHTML = `
@@ -3377,6 +3384,12 @@ function genDashboard() {
       <div class="stat-label" style="color:#4338ca">Đang chờ xử lý</div>
       <div class="stat-value" style="color:#4338ca">${pending}</div>
       <div class="stat-sub">Partially / Revised / Sent</div>
+
+    <div class="stat-card" style="background:#fff1f2;border-left:4px solid #be123c">
+      <div class="stat-label" style="color:#be123c">🪲 Termite Attack</div>
+      <div class="stat-value" style="color:#be123c">${termite}</div>
+      <div class="stat-sub">cont đang xử lý mối mọt</div>
+    </div>
     </div>
   `;
 
@@ -3490,6 +3503,56 @@ function genDashboard() {
       plugins: { legend:{display:false} },
       scales: {
         y: { ticks:{font:{size:10}, callback: v => '$'+v.toLocaleString()}, grid:{color:'#f1f5f9'} },
+        x: { ticks:{font:{size:10}}, grid:{display:false} }
+      }
+    }
+  });
+
+  // --- Chart 3: Weekly trend (last 8 weeks, Mon-Sun) ---
+  const weekLabels = [];
+  const weekVals = [];
+  // Get Monday of current week
+  var today = new Date();
+  var dayOfWeek = today.getDay(); // 0=Sun, 1=Mon...
+  var monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  monday.setHours(0,0,0,0);
+
+  for (var w = 7; w >= 0; w--) {
+    var wMon = new Date(monday);
+    wMon.setDate(monday.getDate() - w * 7);
+    var wSun = new Date(wMon);
+    wSun.setDate(wMon.getDate() + 6);
+    wSun.setHours(23,59,59,999);
+    var label = wMon.getDate().toString().padStart(2,'0') + '/' + (wMon.getMonth()+1).toString().padStart(2,'0');
+    weekLabels.push(label);
+    var val = state.tracking
+      .filter(function(r) {
+        var d = parseReportDate(r.po_date);
+        if (!d) return false;
+        return d >= wMon && d <= wSun && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
+      })
+      .reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0);
+    weekVals.push(round2(val));
+  }
+
+  if (_rptCharts.weekly) _rptCharts.weekly.destroy();
+  _rptCharts.weekly = new Chart(document.getElementById('chartWeekly'), {
+    type: 'bar',
+    data: {
+      labels: weekLabels,
+      datasets: [{
+        label: 'Total No VAT (USD)',
+        data: weekVals,
+        backgroundColor: weekVals.map(function(v,i){ return i === weekVals.length-1 ? '#3b82f6' : 'rgba(59,130,246,0.45)'; }),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        y: { beginAtZero:true, ticks:{font:{size:10}, callback: function(v){ return '$'+v.toLocaleString(); }}, grid:{color:'#f1f5f9'} },
         x: { ticks:{font:{size:10}}, grid:{display:false} }
       }
     }
