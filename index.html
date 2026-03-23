@@ -3270,152 +3270,30 @@ function exportSumList() {
   exportContList(type);
 }
 
-function exportContList(type) {
+async function exportContList(type) {
   if (!bulkFilteredConts || !bulkFilteredConts.length) { toast('Tải danh sách trước!', 3000); return; }
-
   var data = (state.estimates || []).filter(function(r) {
     return bulkFilteredConts.includes((r.equipment_number||'').toUpperCase().trim());
   });
   if (!data.length) { toast('Không có dữ liệu!', 3000); return; }
 
-  // Load SheetJS if needed
-  if (typeof XLSX === 'undefined') {
-    toast('Đang tải thư viện...', 1500);
-    var s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-    s.onload = function(){ exportContList(type); };
-    document.head.appendChild(s);
-    return;
-  }
+  toast('Đang tạo file Excel...', 10000);
+  try {
+    var res = await apiPost({ action: 'genExcelList', type: type, rows: data });
+    if (!res.success) { toast('Lỗi: ' + (res.error||'Unknown'), 4000); return; }
 
-  // Group by container preserving order
-  var groups = {}, order = [];
-  data.forEach(function(r) {
-    var k = r.equipment_number;
-    if (!groups[k]) { groups[k] = []; order.push(k); }
-    groups[k].push(r);
-  });
-
-  var title = type === 'est' ? 'ESTIMATED CONTAINER LIST' : 'APPROVED CONTAINER LIST';
-  var dateHdr = type === 'est' ? 'Estimate Date & Time (DD/MM/YYYY HH:MM:SS)' : 'Approval Date (DD/MM/YYYY)';
-
-  var HEADERS = ['Seq','Equipment Number','Size Type', dateHdr,
-    'Repair Sequence','Damage Location','Component','Damage Type','Repair Type',
-    'Length','Width','Unit','Quantity','Currency',
-    'Labour Hours','Labour Cost','Material Cost','Total Cost',
-    'Responsible Party','Material Type'];
-
-  var wb = XLSX.utils.book_new();
-  var wsData = [];
-  var merges = [];
-
-  // Row 0: Title (row index 0 = Excel row 1)
-  wsData.push([title]);
-  wsData.push([]); wsData.push([]); // rows 1,2 blank (Excel 2,3)
-  // So headers start at wsData index 3 = Excel row 4
-
-  var seqNo = 1;
-
-  order.forEach(function(contNo) {
-    var rows = groups[contNo];
-    var firstDataRow = wsData.length; // index of header row
-
-    // Header row
-    wsData.push(HEADERS.slice());
-
-    // Filter valid rows
-    var validRows = rows.filter(function(r) {
-      var dl = type === 'est' ? r.damage_location : r.app_damage_location;
-      var co = type === 'est' ? r.component : r.app_component;
-      return dl || co;
-    });
-    if (!validRows.length) return;
-
-    var dataStartIdx = wsData.length; // first data row index
-    var totQty=0, totLH=0, totLab=0, totMat=0, totTot=0;
-
-    validRows.forEach(function(r, ri) {
-      var dl,co,dt,rt,ln,wd,un,qty,lh,lab,mat,tot,resp,mtype,date,repSeq;
-      if (type === 'est') {
-        dl=r.damage_location; co=r.component; dt=r.damage_type; rt=r.repair_type;
-        ln=r.length; wd=r.width; un=r.unit; qty=r.quantity||1;
-        lh=parseFloat(r.labour_hours)||0; lab=parseFloat(r.labour_cost)||0;
-        mat=parseFloat(r.material_cost)||0; tot=parseFloat(r.total_cost)||0;
-        resp=r.responsible_party; mtype=r.material_type||'SK';
-        var ed = r.estimate_datetime ? (r.estimate_datetime+'').split(' ')[0] : '';
-        // Parse to DD/MM/YYYY
-        if (ed && ed.includes('T')) { var dd=new Date(ed); ed=('0'+dd.getDate()).slice(-2)+'/'+ ('0'+(dd.getMonth()+1)).slice(-2)+'/'+dd.getFullYear(); }
-        date=ed; repSeq=r.repair_seq||'';
-      } else {
-        dl=r.app_damage_location; co=r.app_component; dt=r.app_damage_type; rt=r.app_repair_type;
-        ln=r.app_length; wd=r.app_width; un=r.app_unit; qty=r.app_quantity||1;
-        lh=parseFloat(r.app_labour_hours)||0; lab=parseFloat(r.app_labour_cost)||0;
-        mat=parseFloat(r.app_material_cost)||0; tot=parseFloat(r.app_total_approved)||0;
-        resp=r.app_responsible_party; mtype=r.app_material_type||'SK';
-        var ad = r.approval_date||'';
-        // Parse ISO or M/D/YYYY to DD/MM/YYYY
-        if (ad && ad.includes('T')) { var dd2=new Date(ad); ad=('0'+dd2.getDate()).slice(-2)+'/'+ ('0'+(dd2.getMonth()+1)).slice(-2)+'/'+dd2.getFullYear(); }
-        else if (ad && ad.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
-          var pts=ad.split('/'); ad=pts[0].padStart(2,'0')+'/'+pts[1].padStart(2,'0')+'/'+pts[2];
-        }
-        date=ad; repSeq=r.repair_seq||'';
-      }
-      totQty+=parseInt(qty)||1; totLH+=lh; totLab+=lab; totMat+=mat; totTot+=tot;
-
-      // Cols A-D only on first row of cont, others blank
-      wsData.push([
-        ri===0?seqNo:'',
-        ri===0?contNo:'',
-        ri===0?(r.size_type||''):'',
-        ri===0?date:'',
-        repSeq,
-        dl||'', co||'', dt||'', rt||'',
-        (ln!==null&&ln!==''&&ln!=='0'&&ln!==0)?ln:'',
-        (wd!==null&&wd!==''&&wd!=='0'&&wd!==0)?wd:'',
-        un||'', qty, 'USD',
-        round2(lh), round2(lab), round2(mat), round2(tot),
-        resp||'', mtype||'SK'
-      ]);
-    });
-
-    var n = validRows.length;
-    // Merge A,B,C,D for multi-row conts
-    if (n > 1) {
-      [0,1,2,3].forEach(function(c) {
-        merges.push({s:{r:dataStartIdx,c:c}, e:{r:dataStartIdx+n-1,c:c}});
-      });
-    }
-
-    // Total row
-    var totRowIdx = wsData.length;
-    wsData.push(['Total',totQty,'','','','','','','','','','','','',
-      round2(totLH),round2(totLab),round2(totMat),round2(totTot),'','']);
-    // Merge A:D for Total label
-    merges.push({s:{r:totRowIdx,c:0}, e:{r:totRowIdx,c:3}});
-
-    // Title row merge A:T
-    merges.push({s:{r:firstDataRow-4>=0?0:0,c:0}, e:{r:0,c:19}});
-
-    wsData.push([]); wsData.push([]); wsData.push([]); // 3 blank rows
-    seqNo++;
-  });
-
-  // Title row merge (always row 0)
-  // Already added, deduplicate
-  var ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!merges'] = merges;
-
-  // Column widths
-  ws['!cols'] = [
-    {wch:5},{wch:16},{wch:8},{wch:30},{wch:12},
-    {wch:14},{wch:11},{wch:11},{wch:11},{wch:7},{wch:7},
-    {wch:6},{wch:7},{wch:8},{wch:11},{wch:11},{wch:12},{wch:10},{wch:14},{wch:12}
-  ];
-
-  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-  var fname = type === 'est' ? 'Estimated_Container_List.xlsx' : 'Approved_Container_List.xlsx';
-  XLSX.writeFile(wb, fname);
-  toast('Đã xuất ' + fname, 2500);
+    // Download from base64
+    var binary = atob(res.b64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    var blob = new Blob([bytes], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = res.filename || 'export.xlsx';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast('Đã xuất ' + res.filename, 3000);
+  } catch(e) { toast('Lỗi: ' + e.message, 4000); }
 }
 
 
