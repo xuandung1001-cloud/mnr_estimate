@@ -3313,7 +3313,8 @@ function exportContList(type) {
   var dateHdr = type==='est' ? 'Estimate Date &amp; Time (DD/MM/YYYY HH:MM:SS)' : 'Approval Date (DD/MM/YYYY)';
   var HDR = ['Seq','Equipment Number','Size Type',dateHdr,'Repair Sequence',
     'Damage Location','Component','Damage Type','Repair Type','Length','Width','Unit','Quantity','Currency',
-    'Labour Hours','Labour Cost','Material Cost','Total Cost','Responsible Party','Material Type'];
+    'Labour Hours','Labour Cost','Material Cost','Total Cost','Responsible Party',
+    type==='app' ? 'App Remark Details' : 'Material Type'];
 
   // Group by container
   var groups={}, order=[];
@@ -3439,7 +3440,7 @@ function exportContList(type) {
       xml += C(Math.round(lab*100)/100, 'n','Number');
       xml += C(Math.round(mat*100)/100, 'n','Number');
       xml += C(Math.round(tot*100)/100, 'n','Number');
-      xml += C(resp,'d'); xml += C(mtype,'d');
+      xml += C(resp,'d'); xml += C(type==='app' ? (r.app_remark_details||'') : mtype, 'd');
       xml += '</Row>\n';
     });
 
@@ -3450,7 +3451,7 @@ function exportContList(type) {
     xml += C(Math.round(tLab*100)/100, 'N','Number');
     xml += C(Math.round(tMat*100)/100, 'N','Number');
     xml += C(Math.round(tTot*100)/100, 'N','Number');
-    xml += C('','T'); xml += C('','T');
+    xml += C('','T'); xml += C('','T'); // resp, remark/mtype
     xml += '</Row>\n<Row/><Row/><Row/>\n';
     seq++;
   });
