@@ -593,19 +593,19 @@ td input:focus,td select:focus{background:#fffbeb}
               <thead>
                 <tr>
                   <th style="width:32px">Stt</th>
-                  <th style="width:110px">Equipment No</th>
-                  <th style="width:46px">Carrier</th>
+                  <th style="width:110px;cursor:pointer" onclick="sortTracking('container_no',this)">Equipment No ⇅</th>
+                  <th style="width:46px;cursor:pointer" onclick="sortTracking('carrier',this)">Carrier ⇅</th>
                   <th style="width:40px">Size</th>
-                  <th style="width:72px">Est. Date</th>
-                  <th style="width:62px;text-align:right">Total Est.</th>
+                  <th style="width:72px;cursor:pointer" onclick="sortTracking('est_date',this)">Est. Date ⇅</th>
+                  <th style="width:62px;text-align:right;cursor:pointer" onclick="sortTracking('total_cost',this)">Total Est. ⇅</th>
                   <th style="width:120px">Ref No</th>
-                  <th style="width:72px">App. Date</th>
-                  <th style="width:62px;text-align:right">Total App.</th>
+                  <th style="width:72px;cursor:pointer" onclick="sortTracking('approved_date',this)">App. Date ⇅</th>
+                  <th style="width:62px;text-align:right;cursor:pointer" onclick="sortTracking('total_approved',this)">Total App. ⇅</th>
                   <th style="width:62px;text-align:right">Total Rev.</th>
                   <th style="width:130px">Status</th>
-                  <th style="width:72px">Repair Date</th>
+                  <th style="width:72px;cursor:pointer" onclick="sortTracking('repair_date',this)">Repair Date ⇅</th>
                   <th style="width:120px">PO Number</th>
-                  <th style="width:72px">PO Date</th>
+                  <th style="width:72px;cursor:pointer" onclick="sortTracking('po_date',this)">PO Date ⇅</th>
                   <th style="width:160px">Remarks</th>
                   <th style="width:130px;text-align:left">Thao tác</th>
                 </tr>
@@ -2412,6 +2412,26 @@ function cancelOvm() {
 }
 
 // ===================== TRACKING =====================
+var _trkSortCol = null, _trkSortAsc = true;
+
+function sortTracking(col, th) {
+  if (_trkSortCol === col) {
+    _trkSortAsc = !_trkSortAsc;
+  } else {
+    _trkSortCol = col;
+    _trkSortAsc = true;
+  }
+  // Update header indicators
+  document.querySelectorAll('#screen-tracking th').forEach(function(t) {
+    t.style.color = '';
+    t.style.background = '';
+  });
+  th.style.color = 'var(--blue)';
+  th.style.background = '#e8f0fe';
+
+  renderTracking();
+}
+
 function renderTracking() {
   const data = state.tracking;
   const stats = calcTrackingStats(data);
@@ -2545,6 +2565,27 @@ async function updateStatusInline(sel, seq) {
 }
 
 
+
+async function saveTrackingRepairDate(input, seq) {
+  var val = input.value.trim();
+  // Find tracking row by seq
+  var trk = state.tracking.find(r => String(r.seq||'') === String(seq));
+  if (!trk) return;
+  if (val === (formatDate(trk.repair_date)||'')) return;
+  try {
+    var res = await apiPost({ action: 'updateTrackingRepairDate', seq: seq, repair_date: val });
+    if (res && res.success) {
+      trk.repair_date = val;
+      toast('Đã lưu Repair Date', 1500);
+    } else {
+      toast('Lỗi: ' + (res&&res.error||'Unknown'), 3000);
+      input.value = formatDate(trk.repair_date)||'';
+    }
+  } catch(e) {
+    toast('Lỗi kết nối', 3000);
+    input.value = formatDate(trk.repair_date)||'';
+  }
+}
 
 async function saveTrackingRemark(input, containerNo, estDate) {
   var val = input.value.trim();
@@ -2711,7 +2752,19 @@ function filterTracking() {
     const matchCa = !ca || r.carrier === ca;
     return matchQ && matchSt && matchCa;
   });
-  renderTrackingTable(filtered);
+  // Apply sort if set
+  var sorted = filtered.slice();
+  if (_trkSortCol) {
+    sorted.sort(function(a, b) {
+      var va = a[_trkSortCol] || '';
+      var vb = b[_trkSortCol] || '';
+      // Try numeric
+      var na = parseFloat(va), nb = parseFloat(vb);
+      var cmp = (!isNaN(na) && !isNaN(nb)) ? na - nb : String(va).localeCompare(String(vb));
+      return _trkSortAsc ? cmp : -cmp;
+    });
+  }
+  renderTrackingTable(sorted);
 }
 
 function renderTrackingTable(data) {
@@ -2733,7 +2786,7 @@ function renderTrackingTable(data) {
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
       <td style="text-align:right;${r.revise_total?'color:#b45309;font-weight:500':'color:var(--gray)'}">${r.revise_total?num(r.revise_total):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
-      <td>${formatDate(r.repair_date)||'—'}</td>
+      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="DD/MM/YYYY" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
@@ -2805,7 +2858,7 @@ function renderSummaryTable(data) {
       <td>${formatDate(r.est_date)}</td>
       <td style="color:var(--blue)">${r.ref_number||'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
-      <td>${formatDate(r.repair_date)||'—'}</td>
+      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="DD/MM/YYYY" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="text-align:right">${num(r.labour_hours)}</td>
