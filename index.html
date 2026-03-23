@@ -1715,10 +1715,11 @@ async function saveEstimate() {
     });
     if (res.success) {
       toast('Đã lưu thành công! ' + res.lines_saved + ' hạng mục', 3000);
-      // Reload tracking
-      const trkRes = await apiGet({ action: 'getTracking' });
-      if (trkRes.success) state.tracking = trkRes.data;
-      resetEstimate();
+      resetEstimate(); // Reset form ngay lập tức
+      // Reload tracking ngầm
+      apiGet({ action: 'getTracking' }).then(function(trkRes) {
+        if (trkRes && trkRes.success) state.tracking = trkRes.data;
+      });
     } else {
       toast('Lỗi: ' + res.error, 4000);
     }
