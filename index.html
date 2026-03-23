@@ -3272,28 +3272,85 @@ function exportSumList() {
 
 async function exportContList(type) {
   if (!bulkFilteredConts || !bulkFilteredConts.length) { toast('Tải danh sách trước!', 3000); return; }
-  var data = (state.estimates || []).filter(function(r) {
-    return bulkFilteredConts.includes((r.equipment_number||'').toUpperCase().trim());
+
+  // Lấy data từ state.estimates filter theo bulkFilteredConts
+  var allEst = state.estimates || [];
+  var contSet = new Set(bulkFilteredConts.map(function(c){ return c.toUpperCase().trim(); }));
+  var data = allEst.filter(function(r) {
+    return contSet.has((r.equipment_number||'').toUpperCase().trim());
   });
-  if (!data.length) { toast('Không có dữ liệu!', 3000); return; }
 
-  toast('Đang tạo file Excel...', 10000);
+  console.log('exportContList type='+type+' bulkConts='+bulkFilteredConts.length+' matched='+data.length);
+
+  if (!data.length) {
+    toast('Không có dữ liệu! Thử bấm "Tải danh sách" lại.', 4000);
+    return;
+  }
+
+  // Slim down data - chỉ gửi fields cần thiết
+  var slim = data.map(function(r) {
+    return {
+      equipment_number: r.equipment_number,
+      size_type: r.size_type,
+      repair_seq: r.repair_seq,
+      estimate_datetime: r.estimate_datetime,
+      approval_date: r.approval_date,
+      // est fields
+      damage_location: r.damage_location,
+      component: r.component,
+      damage_type: r.damage_type,
+      repair_type: r.repair_type,
+      length: r.length,
+      width: r.width,
+      unit: r.unit,
+      quantity: r.quantity,
+      labour_hours: r.labour_hours,
+      labour_cost: r.labour_cost,
+      material_cost: r.material_cost,
+      total_cost: r.total_cost,
+      responsible_party: r.responsible_party,
+      material_type: r.material_type,
+      // app fields
+      app_damage_location: r.app_damage_location,
+      app_component: r.app_component,
+      app_damage_type: r.app_damage_type,
+      app_repair_type: r.app_repair_type,
+      app_length: r.app_length,
+      app_width: r.app_width,
+      app_unit: r.app_unit,
+      app_quantity: r.app_quantity,
+      app_labour_hours: r.app_labour_hours,
+      app_labour_cost: r.app_labour_cost,
+      app_material_cost: r.app_material_cost,
+      app_total_approved: r.app_total_approved,
+      app_responsible_party: r.app_responsible_party,
+      app_material_type: r.app_material_type
+    };
+  });
+
+  toast('Đang tạo file Excel (' + slim.length + ' dòng)...', 15000);
   try {
-    var res = await apiPost({ action: 'genExcelList', type: type, rows: data });
-    if (!res.success) { toast('Lỗi: ' + (res.error||'Unknown'), 4000); return; }
-
+    var res = await apiPost({ action: 'genExcelList', type: type, rows: slim });
+    if (!res || !res.success) {
+      toast('Lỗi GAS: ' + ((res && res.error) || 'Unknown'), 5000);
+      console.error('genExcelList error:', res);
+      return;
+    }
     // Download from base64
     var binary = atob(res.b64);
     var bytes = new Uint8Array(binary.length);
-    for (var i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    var blob = new Blob([bytes], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    var blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url; a.download = res.filename || 'export.xlsx';
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
     toast('Đã xuất ' + res.filename, 3000);
-  } catch(e) { toast('Lỗi: ' + e.message, 4000); }
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 5000);
+    console.error('exportContList error:', e);
+  }
 }
 
 
