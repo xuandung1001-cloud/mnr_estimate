@@ -3583,7 +3583,7 @@ function genDashboard() {
   const unitCost = filtered.length ? round2(noVat / filtered.length) : 0;
   // Pending: tất cả cont chưa Repaired/Rejected (không filter theo tháng)
   const pending  = state.tracking.filter(r => r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected' && (!carrier || r.carrier === carrier)).length;
-  const termite = state.tracking.filter(r => r.special_flag === 'Termite Attack' && (!carrier || r.carrier === carrier)).length;
+  const termite = state.tracking.filter(r => r.special_flag === 'Termite Attack' && r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected' && (!carrier || r.carrier === carrier)).length;
 
   // KPI Cards
   document.getElementById('rpt-kpi').innerHTML = `
