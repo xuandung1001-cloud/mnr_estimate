@@ -2456,7 +2456,7 @@ function showColFilter(col, th, labelFn) {
   // Header row
   var hdr = document.createElement('div');
   hdr.style.cssText = 'padding:6px 12px 4px;font-weight:600;color:#1e40af;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center';
-  hdr.innerHTML = '<span>Filter</span><span style="cursor:pointer;color:#64748b;font-size:10px" onclick="clearColFilter(''+col+'')">Xóa filter</span>';
+  hdr.innerHTML = '<span>Filter</span><span style="cursor:pointer;color:#64748b;font-size:10px" onclick="clearColFilter(\''+col+'\')">Xóa filter</span>';
   dd.appendChild(hdr);
 
   // "Tất cả" option
