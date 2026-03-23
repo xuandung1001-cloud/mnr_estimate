@@ -3271,85 +3271,137 @@ function exportSumList() {
 }
 
 function exportContList(type) {
-  document.getElementById('export-menu').style.display = 'none';
-  // Get data from state.estimates filtered by current bulk cont list
-  var conts = bulkFilteredConts && bulkFilteredConts.length ? bulkFilteredConts : [];
-  if (!conts.length) { toast('Tải danh sách trước!', 3000); return; }
+  if (!bulkFilteredConts || !bulkFilteredConts.length) { toast('Tải danh sách trước!', 3000); return; }
 
   var data = (state.estimates || []).filter(function(r) {
-    return conts.includes((r.equipment_number||'').toUpperCase().trim());
+    return bulkFilteredConts.includes((r.equipment_number||'').toUpperCase().trim());
   });
   if (!data.length) { toast('Không có dữ liệu!', 3000); return; }
 
-  // Group by container
-  var groups = {};
-  var order = [];
+  // Load SheetJS if needed
+  if (typeof XLSX === 'undefined') {
+    toast('Đang tải thư viện...', 1500);
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = function(){ exportContList(type); };
+    document.head.appendChild(s);
+    return;
+  }
+
+  // Group by container preserving order
+  var groups = {}, order = [];
   data.forEach(function(r) {
     var k = r.equipment_number;
     if (!groups[k]) { groups[k] = []; order.push(k); }
     groups[k].push(r);
   });
 
-  // Build xlsx using SheetJS
-  var XLSX = window.XLSX;
-  if (!XLSX) { toast('SheetJS chưa load!', 3000); return; }
+  var title = type === 'est' ? 'ESTIMATED CONTAINER LIST' : 'APPROVED CONTAINER LIST';
+  var dateHdr = type === 'est' ? 'Estimate Date & Time (DD/MM/YYYY HH:MM:SS)' : 'Approval Date (DD/MM/YYYY)';
+
+  var HEADERS = ['Seq','Equipment Number','Size Type', dateHdr,
+    'Repair Sequence','Damage Location','Component','Damage Type','Repair Type',
+    'Length','Width','Unit','Quantity','Currency',
+    'Labour Hours','Labour Cost','Material Cost','Total Cost',
+    'Responsible Party','Material Type'];
 
   var wb = XLSX.utils.book_new();
   var wsData = [];
-  var title = type === 'est' ? 'ESTIMATED CONTAINER LIST' : 'APPROVED CONTAINER LIST';
-  wsData.push([title]);
-  wsData.push([]);
-  wsData.push([]);
+  var merges = [];
 
-  var headers = ['Seq','Equipment Number','Size Type','Date','Repair Seq',
-    'Damage Location','Component','Damage Type','Repair Type',
-    'Length','Width','Unit','Quantity','Currency',
-    'Labour Hours','Labour Cost','Material Cost','Total Cost','Responsible Party','Material Type'];
+  // Row 0: Title (row index 0 = Excel row 1)
+  wsData.push([title]);
+  wsData.push([]); wsData.push([]); // rows 1,2 blank (Excel 2,3)
+  // So headers start at wsData index 3 = Excel row 4
 
   var seqNo = 1;
+
   order.forEach(function(contNo) {
     var rows = groups[contNo];
-    wsData.push(headers);
-    var totQty=0, totLH=0, totMat=0, totLab=0, totTotal=0;
-    rows.forEach(function(r) {
-      var dl, co, dt, rt, len, wid, uni, qty, lh, lab, mat, tot, resp, mtype, date;
+    var firstDataRow = wsData.length; // index of header row
+
+    // Header row
+    wsData.push(HEADERS.slice());
+
+    // Filter valid rows
+    var validRows = rows.filter(function(r) {
+      var dl = type === 'est' ? r.damage_location : r.app_damage_location;
+      var co = type === 'est' ? r.component : r.app_component;
+      return dl || co;
+    });
+    if (!validRows.length) return;
+
+    var dataStartIdx = wsData.length; // first data row index
+    var totQty=0, totLH=0, totLab=0, totMat=0, totTot=0;
+
+    validRows.forEach(function(r, ri) {
+      var dl,co,dt,rt,ln,wd,un,qty,lh,lab,mat,tot,resp,mtype,date,repSeq;
       if (type === 'est') {
         dl=r.damage_location; co=r.component; dt=r.damage_type; rt=r.repair_type;
-        len=r.length; wid=r.width; uni=r.unit; qty=r.quantity||1;
+        ln=r.length; wd=r.width; un=r.unit; qty=r.quantity||1;
         lh=parseFloat(r.labour_hours)||0; lab=parseFloat(r.labour_cost)||0;
         mat=parseFloat(r.material_cost)||0; tot=parseFloat(r.total_cost)||0;
         resp=r.responsible_party; mtype=r.material_type||'SK';
-        date=r.estimate_datetime?r.estimate_datetime.split(' ')[0]:'';
+        date=r.estimate_datetime?(r.estimate_datetime+'').split(' ')[0]:'';
+        repSeq=r.repair_seq||'';
       } else {
         dl=r.app_damage_location; co=r.app_component; dt=r.app_damage_type; rt=r.app_repair_type;
-        len=r.app_length; wid=r.app_width; uni=r.app_unit; qty=r.app_quantity||1;
+        ln=r.app_length; wd=r.app_width; un=r.app_unit; qty=r.app_quantity||1;
         lh=parseFloat(r.app_labour_hours)||0; lab=parseFloat(r.app_labour_cost)||0;
         mat=parseFloat(r.app_material_cost)||0; tot=parseFloat(r.app_total_approved)||0;
         resp=r.app_responsible_party; mtype=r.app_material_type||'SK';
-        date=r.approval_date||'';
+        date=r.approval_date||''; repSeq=r.repair_seq||'';
       }
-      if (!dl && !co) return; // skip empty rows
-      wsData.push([seqNo, contNo, r.size_type||'', date, r.repair_seq||'',
+      totQty+=parseInt(qty)||1; totLH+=lh; totLab+=lab; totMat+=mat; totTot+=tot;
+
+      // Cols A-D only on first row of cont, others blank
+      wsData.push([
+        ri===0?seqNo:'',
+        ri===0?contNo:'',
+        ri===0?(r.size_type||''):'',
+        ri===0?date:'',
+        repSeq,
         dl||'', co||'', dt||'', rt||'',
-        len||'', wid||'', uni||'', qty, 'USD',
-        lh, lab, mat, tot, resp||'', mtype]);
-      totQty+=Number(qty)||0; totLH+=lh; totMat+=mat; totLab+=lab; totTotal+=tot;
+        (ln!==null&&ln!==''&&ln!=='0'&&ln!==0)?ln:'',
+        (wd!==null&&wd!==''&&wd!=='0'&&wd!==0)?wd:'',
+        un||'', qty, 'USD',
+        round2(lh), round2(lab), round2(mat), round2(tot),
+        resp||'', mtype||'SK'
+      ]);
     });
-    wsData.push(['Total', totQty, '', '', '', '', '', '', '', '', '', '', '', '',
-      round2(totLH), round2(totLab), round2(totMat), round2(totTotal), '', '']);
-    wsData.push([]);
-    wsData.push([]);
+
+    var n = validRows.length;
+    // Merge A,B,C,D for multi-row conts
+    if (n > 1) {
+      [0,1,2,3].forEach(function(c) {
+        merges.push({s:{r:dataStartIdx,c:c}, e:{r:dataStartIdx+n-1,c:c}});
+      });
+    }
+
+    // Total row
+    var totRowIdx = wsData.length;
+    wsData.push(['Total',totQty,'','','','','','','','','','','','',
+      round2(totLH),round2(totLab),round2(totMat),round2(totTot),'','']);
+    // Merge A:D for Total label
+    merges.push({s:{r:totRowIdx,c:0}, e:{r:totRowIdx,c:3}});
+
+    // Title row merge A:T
+    merges.push({s:{r:firstDataRow-4>=0?0:0,c:0}, e:{r:0,c:19}});
+
+    wsData.push([]); wsData.push([]); wsData.push([]); // 3 blank rows
     seqNo++;
   });
 
+  // Title row merge (always row 0)
+  // Already added, deduplicate
   var ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!merges'] = merges;
 
-  // Set column widths
+  // Column widths
   ws['!cols'] = [
-    {wch:6},{wch:14},{wch:8},{wch:14},{wch:10},
-    {wch:10},{wch:10},{wch:10},{wch:10},
-    {wch:8},{wch:8},{wch:6},{wch:6},{wch:8},
-    {wch:10},{wch:10},{wch:12},{wch:10},{wch:8},{wch:10}
+    {wch:5},{wch:16},{wch:8},{wch:30},{wch:12},
+    {wch:14},{wch:11},{wch:11},{wch:11},{wch:7},{wch:7},
+    {wch:6},{wch:7},{wch:8},{wch:11},{wch:11},{wch:12},{wch:10},{wch:14},{wch:12}
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -3359,7 +3411,6 @@ function exportContList(type) {
 }
 
 
-// ===================== APPROVE TEMPLATE EXPORT =====================
 async function exportApproveTemplate() {
   toast('Đang tải dữ liệu approve...');
   try {
