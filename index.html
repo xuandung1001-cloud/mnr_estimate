@@ -1211,7 +1211,7 @@ function nav(screen, el) {
   const cfg = configs[screen] || { title: screen, actions: [] };
   setTopbar(cfg.title, cfg.actions);
 
-  if (screen === 'report') genDashboard();
+  if (screen === 'report' && state.tracking && state.tracking.length) genDashboard();
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') renderSummary();
   if (screen === 'stock') renderStock();
@@ -3337,8 +3337,11 @@ async function exportApproveTemplate() {
 var _rptCharts = {};
 
 function genDashboard() {
+  if (!state.tracking || !state.tracking.length) return; // data chưa load
+  var yearVal = parseInt(document.getElementById('rpt-year').value);
+  if (isNaN(yearVal)) return; // year chưa populate
   const month = document.getElementById('rpt-month').value;
-  const year  = parseInt(document.getElementById('rpt-year').value);
+  const year  = parseInt(document.getElementById('rpt-year').value) || new Date().getFullYear();
   const carrier = document.getElementById('rpt-carrier').value;
   const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
   const monthIdx = MONTHS.indexOf(month);
