@@ -163,7 +163,39 @@ td input:focus,td select:focus{background:#FEFAF0}
     </div>
     <div id="login-error" class="alert alert-err" style="display:none;margin-top:8px"></div>
     <button class="login-btn" onclick="doLogin()" id="login-btn">Đăng nhập</button>
-    <div class="login-hint">Liên hệ admin nếu quên key đăng nhập</div>
+    <div style="text-align:center;margin-top:10px">
+      <span onclick="showChangePwdModal()" style="font-size:11px;color:var(--amber);cursor:pointer;text-decoration:underline">Đổi mật khẩu</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div id="modal-changepwd" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
+    <div style="font-size:15px;font-weight:700;color:#1A1A1A;margin-bottom:4px">Đổi mật khẩu</div>
+    <div style="font-size:11px;color:#999;margin-bottom:18px">Nhập thông tin để đổi mật khẩu mới</div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" id="cpwd-user" placeholder="Nhập username" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Mật khẩu cũ</label>
+      <input class="login-input" id="cpwd-old" type="password" placeholder="Nhập mật khẩu hiện tại">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Mật khẩu mới</label>
+      <input class="login-input" id="cpwd-new" type="password" placeholder="Tối thiểu 4 ký tự">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Xác nhận mật khẩu mới</label>
+      <input class="login-input" id="cpwd-confirm" type="password" placeholder="Nhập lại mật khẩu mới" onkeydown="if(event.key==='Enter')doChangePwd()">
+    </div>
+    <div id="cpwd-error" class="alert alert-err" style="display:none;margin-top:8px"></div>
+    <div id="cpwd-ok" class="alert alert-ok" style="display:none;margin-top:8px">Đổi mật khẩu thành công!</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="hideChangePwdModal()" class="btn" style="flex:1">Huỷ</button>
+      <button onclick="doChangePwd()" class="btn btn-blue" style="flex:2" id="cpwd-btn">Xác nhận đổi</button>
+    </div>
   </div>
 </div>
 
@@ -220,6 +252,10 @@ td input:focus,td select:focus{background:#FEFAF0}
       <div class="nav-item" onclick="nav('tariff',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
         Quản lý Bảng Giá
+      </div>
+      <div class="nav-item" id="nav-users" style="display:none" onclick="nav('users',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Quản lý User
       </div>
     </div>
     <div class="nav-section">
@@ -978,6 +1014,33 @@ td input:focus,td select:focus{background:#FEFAF0}
         </div>
       </div>
 
+      <!-- QUẢN LÝ USER -->
+      <div class="screen" id="screen-users">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="card-title" style="margin:0">Quản lý User</div>
+            <button class="btn btn-blue btn-sm" onclick="showAddUserModal()">+ Thêm User</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px">STT</th>
+                  <th style="width:140px">Username</th>
+                  <th style="width:180px">Họ tên</th>
+                  <th style="width:100px">Hết hạn</th>
+                  <th style="width:80px">Role</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="users-rows">
+                <tr><td colspan="6" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- MSC INVENTORY REPORT -->
       <div class="screen" id="screen-inventory">
         <div class="card">
@@ -1039,6 +1102,9 @@ window.addEventListener('load', function() {
             document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + session.expiry;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
+            if ((session.role||'').toLowerCase() === 'admin') {
+              document.getElementById('nav-users').style.display = 'flex';
+            }
             loadInitialData();
             return;
           }
@@ -1105,14 +1171,20 @@ async function doLogin() {
     const res = await apiGet({ action: 'login', username, key });
     if (res.success) {
       state.user = res;
+      state.user.username = username;
+      state.user.key = key; // lưu tạm trong memory cho admin calls
       // Lưu session vào localStorage
       localStorage.setItem('mnr_session', JSON.stringify({
-        username, fullname: res.fullname, expiry: res.expiry
+        username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user'
       }));
       document.getElementById('sb-username').textContent = res.fullname || username;
       document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + formatDate(res.expiry);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
+      // Hiện nav Quản lý User nếu admin
+      if ((res.role||'').toLowerCase() === 'admin') {
+        document.getElementById('nav-users').style.display = 'flex';
+      }
       loadInitialData();
     } else {
       showLoginError(res.error || 'Đăng nhập thất bại');
@@ -1233,7 +1305,8 @@ function nav(screen, el) {
     stock:    { title: 'Tồn Rỗng', actions: [] },
     report:   { title: 'Báo cáo tháng', actions: [] },
     pictures: { title: 'Xuất hình ảnh', actions: [] },
-    inventory: { title: 'MSC Inventory', actions: [] }
+    inventory: { title: 'MSC Inventory', actions: [] },
+    users:     { title: 'Quản lý User', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
@@ -1243,6 +1316,7 @@ function nav(screen, el) {
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') renderSummary();
   if (screen === 'inventory') renderInventoryReport();
+  if (screen === 'users') renderUsers();
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
   if (screen === 'pictures') initPicturesScreen();
@@ -4766,7 +4840,160 @@ async function handleStockUpload(input) {
   reader.readAsArrayBuffer(file);
 }
 
-// ===================== MSC INVENTORY REPORT =====================
+// ===================== ĐỔI MẬT KHẨU =====================
+function showChangePwdModal() {
+  document.getElementById('cpwd-user').value = '';
+  document.getElementById('cpwd-old').value = '';
+  document.getElementById('cpwd-new').value = '';
+  document.getElementById('cpwd-confirm').value = '';
+  document.getElementById('cpwd-error').style.display = 'none';
+  document.getElementById('cpwd-ok').style.display = 'none';
+  const m = document.getElementById('modal-changepwd');
+  m.style.display = 'flex';
+}
+function hideChangePwdModal() {
+  document.getElementById('modal-changepwd').style.display = 'none';
+}
+async function doChangePwd() {
+  const username = document.getElementById('cpwd-user').value.trim();
+  const oldKey   = document.getElementById('cpwd-old').value.trim();
+  const newKey   = document.getElementById('cpwd-new').value.trim();
+  const confirm  = document.getElementById('cpwd-confirm').value.trim();
+  const errEl    = document.getElementById('cpwd-error');
+  const okEl     = document.getElementById('cpwd-ok');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  if (!username || !oldKey || !newKey) { errEl.textContent = 'Vui lòng nhập đầy đủ thông tin'; errEl.style.display='block'; return; }
+  if (newKey.length < 4) { errEl.textContent = 'Mật khẩu mới phải ít nhất 4 ký tự'; errEl.style.display='block'; return; }
+  if (newKey !== confirm) { errEl.textContent = 'Mật khẩu mới không khớp'; errEl.style.display='block'; return; }
+  const btn = document.getElementById('cpwd-btn');
+  btn.disabled = true; btn.textContent = 'Đang xử lý...';
+  try {
+    const res = await apiPost({ action: 'changePassword', username, old_key: oldKey, new_key: newKey });
+    if (res.success) {
+      okEl.style.display = 'block';
+      setTimeout(hideChangePwdModal, 1500);
+    } else {
+      errEl.textContent = res.error || 'Đổi mật khẩu thất bại';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Lỗi kết nối'; errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Xác nhận đổi';
+}
+
+// ===================== QUẢN LÝ USER =====================
+async function renderUsers() {
+  const tbody = document.getElementById('users-rows');
+  if (!state.user) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  try {
+    const res = await apiGet({ action: 'getUsers', username: state.user.username, key: state.user.key || localStorage.getItem('mnr_key') || '' });
+    if (!res.success) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
+    const data = res.data || [];
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px">Chưa có user nào</td></tr>'; return; }
+    tbody.innerHTML = data.map((u, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td style="font-weight:600;text-align:left">${u.username}</td>
+        <td style="text-align:left">${u.fullname||'—'}</td>
+        <td>${u.expiry||'—'}</td>
+        <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${u.role||'user'}</span></td>
+        <td style="text-align:left">
+          <button onclick="showEditUserModal('${u.username}','${u.fullname||''}','${u.expiry||''}','${u.role||'user'}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
+          <button onclick="doDeleteUser('${u.username}')" class="btn btn-sm btn-red">Xoá</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:20px">Lỗi: ${e.message}</td></tr>`;
+  }
+}
+
+function showAddUserModal() {
+  document.getElementById('modal-user-title').textContent = 'Thêm User mới';
+  document.getElementById('u-username').value = '';
+  document.getElementById('u-username').disabled = false;
+  document.getElementById('u-password').value = '';
+  document.getElementById('u-pwd-hint').textContent = '(bắt buộc)';
+  document.getElementById('u-fullname').value = '';
+  document.getElementById('u-expiry').value = '31/12/2026';
+  document.getElementById('u-role').value = 'user';
+  document.getElementById('modal-user-error').style.display = 'none';
+  document.getElementById('modal-user').style.display = 'flex';
+}
+
+function showEditUserModal(username, fullname, expiry, role) {
+  document.getElementById('modal-user-title').textContent = 'Chỉnh sửa User';
+  document.getElementById('u-username').value = username;
+  document.getElementById('u-username').disabled = true;
+  document.getElementById('u-password').value = '';
+  document.getElementById('u-pwd-hint').textContent = '(để trống = giữ nguyên)';
+  document.getElementById('u-fullname').value = fullname;
+  document.getElementById('u-expiry').value = expiry;
+  document.getElementById('u-role').value = role;
+  document.getElementById('modal-user-error').style.display = 'none';
+  document.getElementById('modal-user').style.display = 'flex';
+}
+
+function hideUserModal() {
+  document.getElementById('modal-user').style.display = 'none';
+}
+
+async function doSaveUser() {
+  const username = document.getElementById('u-username').value.trim();
+  const key      = document.getElementById('u-password').value.trim();
+  const fullname = document.getElementById('u-fullname').value.trim();
+  const expiry   = document.getElementById('u-expiry').value.trim();
+  const role     = document.getElementById('u-role').value;
+  const errEl    = document.getElementById('modal-user-error');
+  errEl.style.display = 'none';
+  if (!username) { errEl.textContent = 'Vui lòng nhập username'; errEl.style.display='block'; return; }
+
+  // Convert expiry DD/MM/YYYY → YYYY-MM-DD for backend
+  let expiryISO = expiry;
+  if (expiry && expiry.includes('/')) {
+    const p = expiry.split('/');
+    if (p.length === 3) expiryISO = p[2] + '-' + p[1] + '-' + p[0];
+  }
+
+  const btn = document.getElementById('u-save-btn');
+  btn.disabled = true; btn.textContent = 'Đang lưu...';
+  try {
+    const res = await apiPost({
+      action: 'saveUser',
+      admin_username: state.user.username,
+      admin_key: state.user.key || '',
+      username, key, fullname, expiry: expiryISO, role
+    });
+    if (res.success) {
+      hideUserModal();
+      toast(res.message || 'Đã lưu!');
+      renderUsers();
+    } else {
+      errEl.textContent = res.error || 'Lỗi lưu user'; errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Lỗi kết nối'; errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Lưu';
+}
+
+async function doDeleteUser(username) {
+  if (!confirm(`Xoá user "${username}"?`)) return;
+  try {
+    const res = await apiPost({
+      action: 'deleteUser',
+      admin_username: state.user.username,
+      admin_key: state.user.key || '',
+      username
+    });
+    if (res.success) { toast('Đã xoá user!'); renderUsers(); }
+    else toast('Lỗi: ' + (res.error||'Không xoá được'));
+  } catch(e) { toast('Lỗi kết nối'); }
+}
+</script>
 const INV_SIZES = ['20DV','20RE','20OT','20FL','20HF','40DV','40HC','40HP','40OT','40HO','40FL','40HF','40HR','45HC','45HP'];
 const INV_TEU   = s => s && s.startsWith('2') ? 1 : 2;
 
@@ -5103,5 +5330,42 @@ function exportInventoryExcel() {
 
 <datalist id="dl-unit"><option value="QTY"><option value="CMT"></datalist>
 <datalist id="dl-resp"><option value="C"><option value="D"><option value="H"><option value="I"><option value="O"><option value="OT"><option value="S"><option value="SU"><option value="T"><option value="U"><option value="V"><option value="W"><option value="PO"></datalist>
+<!-- MODAL THÊM/SỬA USER -->
+<div id="modal-user" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
+    <div style="font-size:15px;font-weight:700;color:#1A1A1A;margin-bottom:16px" id="modal-user-title">Thêm User mới</div>
+    <div class="form-grid grid-2" style="margin-bottom:0">
+      <div class="fg">
+        <div class="fl">Username *</div>
+        <input class="fi" id="u-username" placeholder="vd: nguyen.van.a">
+      </div>
+      <div class="fg">
+        <div class="fl">Mật khẩu <span id="u-pwd-hint" style="font-weight:400;text-transform:none">(bắt buộc)</span></div>
+        <input class="fi" id="u-password" type="password" placeholder="Nhập mật khẩu">
+      </div>
+      <div class="fg">
+        <div class="fl">Họ tên</div>
+        <input class="fi" id="u-fullname" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="fg">
+        <div class="fl">Hết hạn</div>
+        <input class="fi" id="u-expiry" placeholder="31/12/2026">
+      </div>
+      <div class="fg">
+        <div class="fl">Role</div>
+        <select class="fi" id="u-role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="hideUserModal()" class="btn" style="flex:1">Huỷ</button>
+      <button onclick="doSaveUser()" class="btn btn-blue" style="flex:2" id="u-save-btn">Lưu</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
