@@ -2963,7 +2963,18 @@ function filterStock() {
   const sz = document.getElementById('stk-size').value;
   const ca = document.getElementById('stk-carrier').value;
   const filtered = state.stock.filter(r => {
-    const matchQ = !q || (r.equipment_no||'').toLowerCase().includes(q) || (r.carrier||'').toLowerCase().includes(q);
+    const matchQ = !q ||
+      (r.equipment_no||'').toLowerCase().includes(q) ||
+      (r.carrier||'').toLowerCase().includes(q) ||
+      (r.size_type||'').toLowerCase().includes(q) ||
+      (r.size_type_iso||'').toLowerCase().includes(q) ||
+      (r.grade||'').toLowerCase().includes(q) ||
+      (r.trang_thai_container||'').toLowerCase().includes(q) ||
+      (r.container_status||'').toLowerCase().includes(q) ||
+      (r.yard_location||'').toLowerCase().includes(q) ||
+      (r.remarks||'').toLowerCase().includes(q) ||
+      (r.loai_hang||'').toLowerCase().includes(q) ||
+      (r.hang_hoa||'').toLowerCase().includes(q);
     const matchSz = !sz || r.size_type === sz;
     const matchCa = !ca || r.carrier === ca;
     return matchQ && matchSz && matchCa;
