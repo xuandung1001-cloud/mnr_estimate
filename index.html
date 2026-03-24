@@ -939,6 +939,7 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:32px">STT</th>
                   <th>Container</th>
                   <th>Ref Number</th>
+                  <th style="width:70px;text-align:right">Số ảnh</th>
                   <th>Tên file mẫu</th>
                 </tr></thead>
                 <tbody id="pic-ref-rows"></tbody>
@@ -4026,14 +4027,33 @@ function previewRefNos() {
     var refPart = (trk && trk.ref_number) ? trk.ref_number + '_' : '';
     var sample  = _picMode + '_' + contNo + '_' + refPart + '001.jpg';
     var refClr  = ref === '—' ? 'color:var(--amber)' : 'color:var(--green)';
-    return `<tr>
+    return `<tr id="pic-prev-row-${contNo}">
       <td>${i+1}</td>
       <td style="font-family:monospace">${contNo}</td>
       <td style="font-family:monospace;${refClr}">${ref}</td>
+      <td style="text-align:right;color:var(--gray)" id="pic-count-${contNo}">...</td>
       <td style="font-family:monospace;font-size:10px;color:var(--gray)">${sample}</td>
     </tr>`;
   }).join('');
   preview.style.display = 'block';
+
+  // Fetch photo counts from Drive
+  var carrier = document.getElementById('pic-carrier').value;
+  if (!carrier) return;
+  var loaiAnh = _picMode === 'B' ? 'Trước sửa chữa' : 'Sau sửa chữa';
+  apiGet({ action: 'countPhotos', cont_list: conts.join(','), carrier: carrier, loai_anh: loaiAnh })
+    .then(function(res) {
+      if (!res || !res.success) return;
+      (res.counts || []).forEach(function(item) {
+        var el = document.getElementById('pic-count-' + item.cont);
+        if (el) {
+          el.textContent = item.count + ' ảnh';
+          el.style.color = item.count > 0 ? 'var(--blue)' : 'var(--red)';
+          el.style.fontWeight = item.count > 0 ? '600' : 'normal';
+        }
+      });
+    })
+    .catch(function() {});
 }
 
 function fillContFromBulk() {
