@@ -232,6 +232,10 @@ td input:focus,td select:focus{background:#fffbeb}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         Xuất hình ảnh
       </div>
+      <div class="nav-item" onclick="nav('inventory',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        MSC Inventory
+      </div>
     </div>
     <div class="sb-footer">
       <div style="display:flex;align-items:center;gap:8px">
@@ -973,6 +977,28 @@ td input:focus,td select:focus{background:#fffbeb}
           <div id="pic-result-body"></div>
         </div>
       </div>
+
+      <!-- MSC INVENTORY REPORT -->
+      <div class="screen" id="screen-inventory">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div class="card-title" style="margin:0">MSC Inventory Report — Cảng Thạnh Phước</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="font-size:11px;color:var(--gray)" id="inv-info">—</div>
+              <button class="btn btn-sm" onclick="refreshInventory()" style="background:var(--blue)">&#8635; Refresh</button>
+              <button class="btn btn-sm" onclick="exportInventoryExcel()" style="background:#16a34a">&#8595; Export Excel</button>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px" id="inv-date"></div>
+          <div style="overflow-x:auto">
+            <table id="inv-table" style="width:auto;min-width:100%;font-size:10.5px;border-collapse:collapse;table-layout:auto">
+              <thead id="inv-thead"></thead>
+              <tbody id="inv-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1206,7 +1232,8 @@ function nav(screen, el) {
     bulk:     { title: 'Xuất Bulk & Export', actions: [] },
     stock:    { title: 'Tồn Rỗng', actions: [] },
     report:   { title: 'Báo cáo tháng', actions: [] },
-    pictures: { title: 'Xuất hình ảnh', actions: [] }
+    pictures: { title: 'Xuất hình ảnh', actions: [] },
+    inventory: { title: 'MSC Inventory', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
@@ -1215,6 +1242,7 @@ function nav(screen, el) {
   if (screen === 'report' && state.tracking && state.tracking.length) genDashboard();
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') renderSummary();
+  if (screen === 'inventory') renderInventoryReport();
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
   if (screen === 'pictures') initPicturesScreen();
@@ -4725,6 +4753,194 @@ async function handleStockUpload(input) {
     input.value = '';
   };
   reader.readAsArrayBuffer(file);
+}
+
+// ===================== MSC INVENTORY REPORT =====================
+const INV_SIZES = ['20DV','20RE','20OT','20FL','20HF','40DV','40HC','40HP','40OT','40HO','40FL','40HF','40HR','45HC','45HP'];
+const INV_TEU   = s => s && s.startsWith('2') ? 1 : 2;
+
+// Định nghĩa các dòng report
+// type: 'total'=bold+bg vàng, 'sub'=in thường+bg trắng, 'italic'=in nghiêng+bg trắng, 'separator'=dòng trống, 'plain'=in thường không bg
+const INV_ROWS = [
+  { label: 'TOTAL AV',                        type:'total',  filter: r => isAV(r) },
+  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isTraxens(r) },
+  { label: 'TOTAL DM ( PENDING FOR REPAIR)',  type:'total',  filter: r => isDM(r) },
+  { label: 'TOTAL DM (AWAITING APPROVAL)',    type:'total',  filter: r => isWA(r) },
+  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isTraxens(r) },
+  { label: 'UN SURVEYED',                     type:'sub',    filter: r => (isDM(r)||isWA(r)) && isGrade(r,'U') },
+  { label: '',                                type:'separator', filter: null },
+  { label: 'TOTAL GRADE A',                   type:'total',  filter: r => isGrade(r,'A') },
+  { label: 'AV GRADE A',                      type:'sub',    filter: r => isAV(r) && isGrade(r,'A') },
+  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isGrade(r,'A') && isTraxens(r) },
+  { label: 'DM ( PENDING FOR REPAIR) GRADE A',type:'sub',   filter: r => isDM(r) && isGrade(r,'A') },
+  { label: 'DM (AWAITING APPROVAL) GRADE A',  type:'sub',   filter: r => isWA(r) && isGrade(r,'A') },
+  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'A') && isTraxens(r) },
+  { label: '',                                type:'separator', filter: null },
+  { label: 'TOTAL GRADE B',                   type:'total',  filter: r => isGrade(r,'B') },
+  { label: 'AV GRADE B',                      type:'sub',    filter: r => isAV(r) && isGrade(r,'B') },
+  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isGrade(r,'B') && isTraxens(r) },
+  { label: 'DM ( PENDING FOR REPAIR) GRADE B',type:'sub',   filter: r => isDM(r) && isGrade(r,'B') },
+  { label: 'DM (AWAITING APPROVAL) GRADE B',  type:'sub',   filter: r => isWA(r) && isGrade(r,'B') },
+  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'B') && isTraxens(r) },
+  { label: '',                                type:'separator', filter: null },
+  { label: 'TOTAL GRADE C',                   type:'total',  filter: r => isGrade(r,'C') },
+  { label: 'AV GRADE C',                      type:'sub',    filter: r => isAV(r) && isGrade(r,'C') },
+  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isGrade(r,'C') && isTraxens(r) },
+  { label: 'DM ( PENDING FOR REPAIR) GRADE C',type:'sub',   filter: r => isDM(r) && isGrade(r,'C') },
+  { label: 'DM (AWAITING APPROVAL) GRADE C',  type:'sub',   filter: r => isWA(r) && isGrade(r,'C') },
+  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'C') && isTraxens(r) },
+  { label: '',                                type:'separator', filter: null },
+  { label: 'SELL',                            type:'plain',  filter: r => isSELL(r) },
+  { label: 'OFH',                             type:'plain',  filter: r => isOFH(r) },
+  { label: '',                                type:'separator', filter: null },
+  { label: 'REEFER ONLY : SELECTED FOR NOR (AV)', type:'plain', filter: r => isAV(r) && isReefer(r) },
+  { label: 'REEFER ONLY : SELECTED FOR NOR (DM)', type:'plain', filter: r => (isDM(r)||isWA(r)) && isReefer(r) },
+  { label: '',                                type:'separator', filter: null },
+  { label: 'TOTAL',                           type:'total',  filter: r => true },
+];
+
+// Helper filter functions — dễ chỉnh sau khi anh confirm giá trị thực
+function _tt(r)    { return String(r.trang_thai_container||r.container_status||'').toUpperCase().trim(); }
+function _gr(r)    { return String(r.grade||'').toUpperCase().trim(); }
+function isAV(r)   { return _tt(r) === 'AV'; }
+function isDM(r)   { return _tt(r) === 'DM'; }
+function isWA(r)   { return _tt(r) === 'WA'; }
+function isSELL(r) { return _tt(r) === 'SL' || _tt(r) === 'SELL'; }
+function isOFH(r)  { return _tt(r) === 'OF' || _tt(r) === 'OFH'; }
+function isReefer(r){ const s = String(r.size_type||'').toUpperCase(); return s.includes('RE') || s.includes('RF'); }
+function isGrade(r, g) { return _gr(r) === g.toUpperCase(); }
+function isTraxens(r){ return String(r.remarks||'').toLowerCase().includes('traxens'); }
+
+function calcInvRow(data, rowDef) {
+  const filtered = data.filter(rowDef.filter);
+  const counts = {};
+  let totalUnits = 0, totalTeus = 0, traxens = 0;
+  INV_SIZES.forEach(s => counts[s] = 0);
+  filtered.forEach(r => {
+    const s = String(r.size_type||'').toUpperCase().trim();
+    if (counts.hasOwnProperty(s)) {
+      counts[s]++;
+      totalUnits++;
+      totalTeus += INV_TEU(s);
+    } else {
+      // size không match vẫn tính total
+      totalUnits++;
+      totalTeus += INV_TEU(s);
+    }
+    if (isTraxens(r)) traxens++;
+  });
+  return { counts, totalUnits, totalTeus, traxens };
+}
+
+async function refreshInventory() {
+  // Force reload stock từ server
+  try {
+    const res = await apiGet({ action: 'getEmtyStock' });
+    if (res.success) {
+      state.stock = res.data;
+      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+      toast('Đã cập nhật dữ liệu stock!');
+      renderInventoryReport();
+    } else {
+      toast('Lỗi: ' + (res.error||'Không thể tải stock'));
+    }
+  } catch(e) {
+    toast('Lỗi kết nối!');
+  }
+}
+
+function renderInventoryReport() {
+  const data = state.stock || [];
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('inv-info').textContent = data.length + ' containers';
+  document.getElementById('inv-date').textContent = 'Cập nhật lúc: ' + dateStr;
+
+  // CSS styles cho các loại dòng
+  const styles = {
+    total:     'background:#fffde7;font-weight:700;color:#1a202c',
+    sub:       'background:#fff;font-weight:400;color:#2d3748',
+    italic:    'background:#fff;font-style:italic;color:#4a5568;font-weight:400',
+    separator: 'background:#f1f5f9;height:10px',
+    plain:     'background:#fff;font-weight:400;color:#2d3748',
+  };
+  const tdStyle = 'padding:4px 7px;border:1px solid #d1d5db;text-align:center;white-space:nowrap';
+  const tdLabel = 'padding:4px 8px;border:1px solid #d1d5db;text-align:left;white-space:nowrap';
+
+  // HEADER
+  const thead = document.getElementById('inv-thead');
+  thead.innerHTML = `<tr>
+    <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 8px;border:1px solid #d1d5db;text-align:left;min-width:240px">DEPOT NAME</th>
+    ${INV_SIZES.map(s=>`<th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:42px">${s}</th>`).join('')}
+    <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:60px">Total Units</th>
+    <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:60px">Total TEUs</th>
+    <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:70px">TRAXENS Devices</th>
+  </tr>`;
+
+  // BODY
+  const tbody = document.getElementById('inv-tbody');
+  tbody.innerHTML = INV_ROWS.map(rowDef => {
+    if (rowDef.type === 'separator') {
+      return `<tr><td colspan="${INV_SIZES.length + 4}" style="${styles.separator};border:1px solid #e2e8f0"></td></tr>`;
+    }
+    const st = styles[rowDef.type] || styles.sub;
+    const result = calcInvRow(data, rowDef);
+    const cells = INV_SIZES.map(s => {
+      const v = result.counts[s];
+      return `<td style="${tdStyle};${st}">${v > 0 ? v : '<span style=\'color:#9ca3af\'>-</span>'}</td>`;
+    }).join('');
+    const tu = result.totalUnits;
+    const tt = result.totalTeus;
+    const tx = result.traxens;
+    return `<tr>
+      <td style="${tdLabel};${st}">${rowDef.label}</td>
+      ${cells}
+      <td style="${tdStyle};${st}">${tu > 0 ? tu : '<span style=\'color:#9ca3af\'>-</span>'}</td>
+      <td style="${tdStyle};${st}">${tt > 0 ? tt : '<span style=\'color:#9ca3af\'>-</span>'}</td>
+      <td style="${tdStyle};${st}">${tx > 0 ? tx : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportInventoryExcel() {
+  const data = state.stock || [];
+  if (!data.length) { toast('Không có dữ liệu!'); return; }
+
+  // Build array of arrays for SheetJS
+  const header = ['DEPOT NAME', ...INV_SIZES, 'Total Units', 'Total TEUs', 'TRAXENS Devices'];
+  const rows = [header];
+
+  INV_ROWS.forEach(rowDef => {
+    if (rowDef.type === 'separator') {
+      rows.push(Array(header.length).fill(''));
+      return;
+    }
+    const result = calcInvRow(data, rowDef);
+    const row = [rowDef.label];
+    INV_SIZES.forEach(s => row.push(result.counts[s] || '-'));
+    row.push(result.totalUnits || '-');
+    row.push(result.totalTeus || '-');
+    row.push(result.traxens || '');
+    rows.push(row);
+  });
+
+  try {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Column widths
+    ws['!cols'] = [{ wch: 38 }, ...INV_SIZES.map(() => ({ wch: 7 })), { wch: 12 }, { wch: 12 }, { wch: 16 }];
+
+    // Style header row (yellow bg) — SheetJS CE không hỗ trợ style, dùng tên sheet rõ ràng
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory Report');
+
+    const now = new Date();
+    const ds = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0') + now.getFullYear();
+    XLSX.writeFile(wb, `MSC_Inventory_Report_${ds}.xlsx`);
+    toast('Export Excel thành công!');
+  } catch(e) {
+    toast('Lỗi export: ' + e.message);
+  }
 }
 </script>
 
