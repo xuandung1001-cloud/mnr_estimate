@@ -1105,6 +1105,7 @@ window.addEventListener('load', function() {
             if ((session.role||'').toLowerCase() === 'admin') {
               document.getElementById('nav-users').style.display = 'flex';
             }
+            applyPermissions(session.role || 'user', session.permissions || '');
             loadInitialData();
             return;
           }
@@ -1175,7 +1176,7 @@ async function doLogin() {
       state.user.key = key; // lưu tạm trong memory cho admin calls
       // Lưu session vào localStorage
       localStorage.setItem('mnr_session', JSON.stringify({
-        username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user'
+        username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || ''
       }));
       document.getElementById('sb-username').textContent = res.fullname || username;
       document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + formatDate(res.expiry);
@@ -1185,6 +1186,7 @@ async function doLogin() {
       if ((res.role||'').toLowerCase() === 'admin') {
         document.getElementById('nav-users').style.display = 'flex';
       }
+      applyPermissions(res.role || 'user', res.permissions || '');
       loadInitialData();
     } else {
       showLoginError(res.error || 'Đăng nhập thất bại');
@@ -4840,7 +4842,58 @@ async function handleStockUpload(input) {
   reader.readAsArrayBuffer(file);
 }
 
-// ===================== ĐỔI MẬT KHẨU =====================
+// ===================== PHÂN QUYỀN =====================
+const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory'];
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory'; // tariff bị ẩn mặc định
+
+function applyPermissions(role, permissions) {
+  if (!role || role === 'admin') return; // admin thấy tất cả
+  const allowed = permissions ? permissions.split(',').map(s=>s.trim()) : DEFAULT_USER_PERMS.split(',');
+  // Map screen → nav onclick selector
+  const navMap = {
+    estimate:  '[onclick*="estimate"]',
+    revise:    '[onclick*="revise"]',
+    ovm:       '[onclick*="ovm"]',
+    tracking:  '[onclick*="tracking"]',
+    summary:   '[onclick*="summary"]',
+    bulk:      '[onclick*="bulk"]',
+    stock:     '[onclick*="stock"]',
+    tariff:    '[onclick*="tariff"]',
+    report:    '[onclick*="report"]',
+    pictures:  '[onclick*="pictures"]',
+    inventory: '[onclick*="inventory"]',
+  };
+  ALL_SCREENS.forEach(screen => {
+    const el = document.querySelector('.nav-item' + (navMap[screen]||''));
+    if (!el) return;
+    if (allowed.includes(screen)) {
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+}
+
+function onUserRoleChange() {
+  const role = document.getElementById('u-role').value;
+  const block = document.getElementById('u-perms-block');
+  block.style.display = role === 'admin' ? 'none' : 'block';
+}
+
+function setPermCheckboxes(permsStr) {
+  const perms = permsStr ? permsStr.split(',').map(s=>s.trim()) : DEFAULT_USER_PERMS.split(',');
+  ALL_SCREENS.forEach(s => {
+    const cb = document.getElementById('perm-' + s);
+    if (cb) cb.checked = perms.includes(s);
+  });
+}
+
+function getPermCheckboxes() {
+  return ALL_SCREENS.filter(s => {
+    const cb = document.getElementById('perm-' + s);
+    return cb && cb.checked;
+  }).join(',');
+}
 function showChangePwdModal() {
   document.getElementById('cpwd-user').value = '';
   document.getElementById('cpwd-old').value = '';
@@ -4901,7 +4954,7 @@ async function renderUsers() {
         <td>${u.expiry||'—'}</td>
         <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${u.role||'user'}</span></td>
         <td style="text-align:left">
-          <button onclick="showEditUserModal('${u.username}','${u.fullname||''}','${u.expiry||''}','${u.role||'user'}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
+          <button onclick="showEditUserModal('${u.username}','${u.fullname||''}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
           <button onclick="doDeleteUser('${u.username}')" class="btn btn-sm btn-red">Xoá</button>
         </td>
       </tr>
@@ -4920,11 +4973,13 @@ function showAddUserModal() {
   document.getElementById('u-fullname').value = '';
   document.getElementById('u-expiry').value = '31/12/2026';
   document.getElementById('u-role').value = 'user';
+  document.getElementById('u-perms-block').style.display = 'block';
+  setPermCheckboxes(DEFAULT_USER_PERMS);
   document.getElementById('modal-user-error').style.display = 'none';
   document.getElementById('modal-user').style.display = 'flex';
 }
 
-function showEditUserModal(username, fullname, expiry, role) {
+function showEditUserModal(username, fullname, expiry, role, perms) {
   document.getElementById('modal-user-title').textContent = 'Chỉnh sửa User';
   document.getElementById('u-username').value = username;
   document.getElementById('u-username').disabled = true;
@@ -4933,6 +4988,9 @@ function showEditUserModal(username, fullname, expiry, role) {
   document.getElementById('u-fullname').value = fullname;
   document.getElementById('u-expiry').value = expiry;
   document.getElementById('u-role').value = role;
+  const isAdmin = role === 'admin';
+  document.getElementById('u-perms-block').style.display = isAdmin ? 'none' : 'block';
+  setPermCheckboxes(perms || DEFAULT_USER_PERMS);
   document.getElementById('modal-user-error').style.display = 'none';
   document.getElementById('modal-user').style.display = 'flex';
 }
@@ -4965,7 +5023,8 @@ async function doSaveUser() {
       action: 'saveUser',
       admin_username: state.user.username,
       admin_key: state.user.key || '',
-      username, key, fullname, expiry: expiryISO, role
+      username, key, fullname, expiry: expiryISO, role,
+      permissions: role === 'admin' ? 'all' : getPermCheckboxes()
     });
     if (res.success) {
       hideUserModal();
@@ -5354,10 +5413,26 @@ function exportInventoryExcel() {
       </div>
       <div class="fg">
         <div class="fl">Role</div>
-        <select class="fi" id="u-role">
+        <select class="fi" id="u-role" onchange="onUserRoleChange()">
           <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
+      </div>
+    </div>
+    <div id="u-perms-block" style="margin-top:12px">
+      <div class="fl" style="margin-bottom:6px">Màn hình được phép truy cập</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-estimate" value="estimate"> Nhập Báo Giá</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-revise" value="revise"> Chỉnh sửa Báo Giá</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-ovm" value="ovm"> Cập nhật OVM</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-tracking" value="tracking"> Danh sách Báo Giá</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-summary" value="summary"> Tổng hợp</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-bulk" value="bulk"> Xuất Bulk</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-stock" value="stock"> Tồn Rỗng</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-tariff" value="tariff"> Quản lý Bảng Giá</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-report" value="report"> Báo cáo tháng</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-pictures" value="pictures"> Xuất hình ảnh</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
       </div>
     </div>
     <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
