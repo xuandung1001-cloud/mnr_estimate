@@ -4913,31 +4913,47 @@ function renderInventoryReport() {
     <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:70px">TRAXENS Devices</th>
   </tr>`;
 
-  // BODY
+  // BODY — rowspan cho cột TRAXENS theo từng block (phân cách bởi separator)
   const tbody = document.getElementById('inv-tbody');
   const dash = `<span style='color:#9ca3af'>-</span>`;
-  tbody.innerHTML = INV_ROWS.map(rowDef => {
-    if (rowDef.type === 'separator') {
-      return `<tr><td colspan="${INV_SIZES.length + 4}" style="${styles.separator};border:1px solid #e2e8f0"></td></tr>`;
-    }
-    const st = styles[rowDef.type] || styles.sub;
-    const result = calcInvRow(data, rowDef);
-    const cells = INV_SIZES.map(s => {
-      const v = result.counts[s];
-      return `<td style="${tdStyle};${st}">${v > 0 ? v : dash}</td>`;
-    }).join('');
-    const tu = result.totalUnits;
-    const tt = result.totalTeus;
-    // Cột TRAXENS: tất cả để trống
-    const txCell = `<td style="${tdStyle};${st}"></td>`;
-    return `<tr>
-      <td style="${tdLabel};${st}">${rowDef.label}</td>
-      ${cells}
-      <td style="${tdStyle};${st}">${tu > 0 ? tu : dash}</td>
-      <td style="${tdStyle};${st}">${tt > 0 ? tt : dash}</td>
-      ${txCell}
-    </tr>`;
-  }).join('');
+  const txBorder = `border:1px solid #d1d5db`;
+
+  // Tách thành blocks
+  const blocks = [];
+  let curBlock = [];
+  INV_ROWS.forEach(r => {
+    if (r.type === 'separator') { if (curBlock.length) blocks.push(curBlock); curBlock = []; }
+    else curBlock.push(r);
+  });
+  if (curBlock.length) blocks.push(curBlock);
+
+  let html = '';
+  blocks.forEach(block => {
+    const blockSize = block.length;
+    block.forEach((rowDef, bi) => {
+      const st = styles[rowDef.type] || styles.sub;
+      const result = calcInvRow(data, rowDef);
+      const cells = INV_SIZES.map(s => {
+        const v = result.counts[s];
+        return `<td style="${tdStyle};${st}">${v > 0 ? v : dash}</td>`;
+      }).join('');
+      const tu = result.totalUnits;
+      const tt = result.totalTeus;
+      // Cột TRAXENS: chỉ render ô đầu tiên của block với rowspan
+      const txCell = bi === 0
+        ? `<td rowspan="${blockSize}" style="padding:4px 7px;${txBorder};background:#fff;vertical-align:middle;text-align:center"></td>`
+        : '';
+      html += `<tr>
+        <td style="${tdLabel};${st}">${rowDef.label}</td>
+        ${cells}
+        <td style="${tdStyle};${st}">${tu > 0 ? tu : dash}</td>
+        <td style="${tdStyle};${st}">${tt > 0 ? tt : dash}</td>
+        ${txCell}
+      </tr>`;
+    });
+    html += `<tr><td colspan="${INV_SIZES.length + 3}" style="${styles.separator};border:1px solid #e2e8f0"></td><td style="${styles.separator};border:1px solid #e2e8f0"></td></tr>`;
+  });
+  tbody.innerHTML = html;
 }
 
 function exportInventoryExcel() {
@@ -4958,8 +4974,7 @@ function exportInventoryExcel() {
     INV_SIZES.forEach(s => row.push(result.counts[s] || '-'));
     row.push(result.totalUnits || '-');
     row.push(result.totalTeus || '-');
-    // TRAXENS: để trống
-    row.push('');
+    row.push('-');
     rows.push(row);
   });
 
