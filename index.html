@@ -1918,7 +1918,7 @@ function renderCompare() {
                 : cx;
     if (isDeleted) return '<td style="' + baseCls + 'text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
     if (String(orig||'').trim() !== String(app||'').trim()) {
-      var bgOverride = cls === 'auto' ? 'background:#d1fae5;' : cls === 'total' ? 'background:#dbeafe;' : 'background:#fef9c3;';
+      var bgOverride = cls === 'auto' ? 'background:#d1fae5;' : cls === 'total' ? 'background:#FDF6E8;' : 'background:#fef9c3;';
       return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;font-size:10px;color:#6b7280">' + o + '</span><br><span style="font-weight:600;color:#dc2626">' + a + '</span></td>';
     }
     return '<td style="' + baseCls + '">' + a + '</td>';
@@ -2360,7 +2360,7 @@ function renderOvmPreview() {
       <div class="stat-label">Tổng dòng</div><div class="stat-value" style="font-size:18px">${_ovmData.length}</div>
     </div>
     ${sentCount ? `<div class="stat-card" style="padding:8px 12px">
-      <div class="stat-label">Sent for Approval</div><div class="stat-value" style="font-size:18px;color:#1e40af">${sentCount}</div>
+      <div class="stat-label">Sent for Approval</div><div class="stat-value" style="font-size:18px;color:#1A1A1A">${sentCount}</div>
     </div>` : ''}
     ${appCount ? `<div class="stat-card" style="padding:8px 12px">
       <div class="stat-label">Approved</div><div class="stat-value" style="font-size:18px;color:var(--green)">${appCount}</div>
@@ -2514,7 +2514,7 @@ function makeStatusSelect(seq, current) {
   var statuses = ['Pending','Sent for Approval','Approved','Partially Approved','Partially Approved - Revised','Repair Pending','Repaired','Rejected'];
   var colors = {
     'Pending':                      'background:#f1f5f9;color:#64748b',
-    'Sent for Approval':            'background:#dbeafe;color:#1e40af',
+    'Sent for Approval':            'background:#FDF6E8;color:#A06010',
     'Approved':                     'background:#dcfce7;color:#15803d',
     'Partially Approved':           'background:#fef9c3;color:#854d0e',
     'Partially Approved - Revised': 'background:#e0e7ff;color:#3730a3',
@@ -2538,7 +2538,7 @@ async function updateStatusInline(sel, seq) {
 
   var colors = {
     'Pending':                      'background:#f1f5f9;color:#64748b',
-    'Sent for Approval':            'background:#dbeafe;color:#1e40af',
+    'Sent for Approval':            'background:#FDF6E8;color:#A06010',
     'Approved':                     'background:#dcfce7;color:#15803d',
     'Partially Approved':           'background:#fef9c3;color:#854d0e',
     'Partially Approved - Revised': 'background:#e0e7ff;color:#3730a3',
@@ -2716,24 +2716,24 @@ async function toggleEstDetail(tr, contNo, estDate) {
       + '<col style="width:130px"><col style="width:auto">'
       + '</colgroup>'
       + '<thead><tr style="background:#e8f0fe">'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1e40af">STT</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1e40af">Dmg Loc</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1e40af">Component</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1e40af">Dmg Type</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1e40af">Rep Type</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1e40af">Length</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1e40af">Width</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1e40af">Unit</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1e40af">Qty</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">STT</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Dmg Loc</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Component</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Dmg Type</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Rep Type</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Length</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Width</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Unit</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Qty</th>'
       + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#64748b">Total Est.</th>'
       + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#15803d">App Total</th>'
-      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#1e40af">Diff</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1e40af">Status</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1e40af">Remark</th>'
+      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#1A1A1A">Diff</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Status</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Remark</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '<tfoot><tr style="background:#e8f0fe;font-weight:600">'
-      + '<td colspan="9" style="padding:4px 8px;text-align:right;color:#1e40af">Total:</td>'
+      + '<td colspan="9" style="padding:4px 8px;text-align:right;color:#1A1A1A">Total:</td>'
       + '<td style="padding:4px 8px;text-align:right;color:#64748b">' + totEst.toFixed(2) + '</td>'
       + '<td style="padding:4px 8px;text-align:right;color:#15803d">' + totApp.toFixed(2) + '</td>'
       + '<td style="padding:4px 8px;text-align:right;color:' + (Math.abs(totDiff)<0.01?'#15803d':'#dc2626') + '">'
@@ -2790,7 +2790,7 @@ function renderTrackingTable(data) {
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
-      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#E6F1FB;color:#185FA5;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Revise</button>` : ''}</td>
+      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FEFAF0;color:#A06010;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" style="border:none;background:#FCEBEB;color:#791F1F;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" style="border:none;background:#FAEEDA;color:#633806;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px">Revise</button>` : ''}</td>
     </tr>
   `).join('');
 }
@@ -2807,9 +2807,9 @@ function renderSummary() {
   const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
 
   document.getElementById('sum-stats').innerHTML = `
-    <div class="stat-card" style="background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border-left:3px solid #38bdf8">
-      <div class="stat-label" style="color:#0369a1">Tổng containers có PO</div>
-      <div class="stat-value" style="color:#0c4a6e">${total}</div>
+    <div class="stat-card" style="background:#FEFAF0;border-left:3px solid #F5C842">
+      <div class="stat-label" style="color:#1A1A1A">Tổng containers có PO</div>
+      <div class="stat-value" style="color:#1A1A1A">${total}</div>
     </div>
     <div class="stat-card" style="background:linear-gradient(135deg,#ede9fe,#f5f3ff);border-left:3px solid #8b5cf6">
       <div class="stat-label" style="color:#6d28d9">Số Carrier</div>
@@ -4490,7 +4490,7 @@ function badge(status) {
   if (status === 'Repaired') return '<span class="badge b-ok" style="background:#d1fae5;color:#065f46">Repaired</span>';
   if (status === 'Partially Approved') return '<span class="badge b-wa">Partially Approved</span>';
   if (status === 'Partially Approved - Revised') return '<span class="badge b-wa" style="background:#e0e7ff;color:#3730a3">Partially Approved - Revised</span>';
-  if (status === 'Sent for Approval') return '<span class="badge b-gr" style="background:#dbeafe;color:#1e40af">Sent for Approval</span>';
+  if (status === 'Sent for Approval') return '<span class="badge b-gr" style="background:#FDF6E8;color:#A06010">Sent for Approval</span>';
   if (status === 'Repair Pending') return '<span class="badge b-gr" style="background:#cffafe;color:#0e7490">Repair Pending</span>';
   if (status === 'Rejected') return '<span class="badge b-ng">Rejected</span>';
   if (status === 'Canceled') return '<span class="badge b-ng">Canceled</span>';
