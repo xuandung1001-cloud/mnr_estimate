@@ -4970,41 +4970,133 @@ function renderInventoryReport() {
 function exportInventoryExcel() {
   const data = state.stock || [];
   if (!data.length) { toast('Không có dữ liệu!'); return; }
+  toast('Đang tạo file Excel...');
 
-  // Build array of arrays for SheetJS
-  const header = ['DEPOT NAME', ...INV_SIZES, 'Total Units', 'Total TEUs', 'TRAXENS Devices'];
-  const rows = [header];
+  function doExport() {
+    const ExcelJS = window.ExcelJS;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Inventory Report');
 
-  INV_ROWS.forEach(rowDef => {
-    if (rowDef.type === 'separator') {
-      rows.push(Array(header.length).fill(''));
-      return;
-    }
-    const result = calcInvRow(data, rowDef);
-    const row = [rowDef.label];
-    INV_SIZES.forEach(s => row.push(result.counts[s] || '-'));
-    row.push(result.totalUnits || '-');
-    row.push(result.totalTeus || '-');
-    row.push('-');
-    rows.push(row);
-  });
-
-  try {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const COLS = ['ICD THANH PHUOC', ...INV_SIZES, 'Total Units', 'Total TEUs', 'TRAXENS Devices'];
+    const NCOLS = COLS.length; // 19 cột
 
     // Column widths
-    ws['!cols'] = [{ wch: 38 }, ...INV_SIZES.map(() => ({ wch: 7 })), { wch: 12 }, { wch: 12 }, { wch: 16 }];
+    ws.columns = [
+      { width: 36 },
+      ...INV_SIZES.map(() => ({ width: 7 })),
+      { width: 12 }, { width: 12 }, { width: 16 }
+    ];
 
-    // Style header row (yellow bg) — SheetJS CE không hỗ trợ style, dùng tên sheet rõ ràng
-    XLSX.utils.book_append_sheet(wb, ws, 'Inventory Report');
+    // Helper styles
+    const yellowFill  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFF00' } };
+    const totalFill   = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFDE7' } };
+    const whiteFill   = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFFFFF' } };
+    const grayFill    = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF1F5F9' } };
+    const thinBorder  = { style:'thin', color:{ argb:'FFD1D5DB' } };
+    const allBorder   = { top:thinBorder, left:thinBorder, bottom:thinBorder, right:thinBorder };
 
+    function applyBorder(cell) { cell.border = allBorder; }
+
+    // ROW 1 — Header
+    const hRow = ws.addRow(COLS);
+    hRow.eachCell(cell => {
+      cell.fill = yellowFill;
+      cell.font = { bold:true, size:10, color:{ argb:'FF000000' } };
+      cell.alignment = { horizontal:'center', vertical:'middle', wrapText:false };
+      applyBorder(cell);
+    });
+    hRow.getCell(1).alignment = { horizontal:'left', vertical:'middle' };
+    hRow.height = 20;
+
+    // Tách blocks (phân cách bởi separator)
+    const blocks = [];
+    let cur = [];
+    INV_ROWS.forEach(r => {
+      if (r.type === 'separator') { if (cur.length) blocks.push(cur); cur = []; }
+      else cur.push(r);
+    });
+    if (cur.length) blocks.push(cur);
+
+    let excelRowIdx = 2; // sau header
+
+    blocks.forEach(block => {
+      const blockStartRow = excelRowIdx;
+      const blockSize = block.length;
+
+      block.forEach((rowDef, bi) => {
+        const result = calcInvRow(data, rowDef);
+        const isTotal  = rowDef.type === 'total';
+        const isItalic = rowDef.type === 'italic';
+        const fill = isTotal ? totalFill : whiteFill;
+
+        const rowData = [rowDef.label];
+        INV_SIZES.forEach(s => rowData.push(result.counts[s] || null));
+        rowData.push(result.totalUnits || null);
+        rowData.push(result.totalTeus  || null);
+        rowData.push(null); // TRAXENS
+
+        const exRow = ws.addRow(rowData);
+        exRow.height = 16;
+
+        exRow.eachCell({ includeEmpty:true }, (cell, colNo) => {
+          if (colNo > NCOLS) return;
+          cell.fill = fill;
+          cell.font = {
+            bold:   isTotal,
+            italic: isItalic,
+            size:   10,
+            color:  { argb: isItalic ? 'FF4A5568' : 'FF1A202C' }
+          };
+          cell.alignment = { horizontal: colNo === 1 ? 'left' : 'center', vertical:'middle' };
+          applyBorder(cell);
+          // Hiện '-' cho ô số = null (trừ cột label và TRAXENS)
+          if (colNo > 1 && colNo < NCOLS && cell.value === null) cell.value = '-';
+        });
+
+        excelRowIdx++;
+      });
+
+      // Merge cột TRAXENS cho cả block
+      if (blockSize > 1) {
+        ws.mergeCells(blockStartRow, NCOLS, blockStartRow + blockSize - 1, NCOLS);
+      }
+      const mergedCell = ws.getCell(blockStartRow, NCOLS);
+      mergedCell.fill = whiteFill;
+      mergedCell.border = allBorder;
+
+      // Separator row
+      const sepRow = ws.addRow(Array(NCOLS).fill(null));
+      sepRow.height = 8;
+      sepRow.eachCell({ includeEmpty:true }, (cell, colNo) => {
+        if (colNo > NCOLS) return;
+        cell.fill = grayFill;
+        cell.border = { top:thinBorder, bottom:thinBorder };
+      });
+      excelRowIdx++;
+    });
+
+    // Xuất file
     const now = new Date();
     const ds = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0') + now.getFullYear();
-    XLSX.writeFile(wb, `MSC_Inventory_Report_${ds}.xlsx`);
-    toast('Export Excel thành công!');
-  } catch(e) {
-    toast('Lỗi export: ' + e.message);
+    wb.xlsx.writeBuffer().then(buf => {
+      const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `MSC_Inventory_Report_${ds}.xlsx`;
+      a.click(); URL.revokeObjectURL(url);
+      toast('Export Excel thành công!');
+    }).catch(e => toast('Lỗi export: ' + e.message));
+  }
+
+  // Load ExcelJS nếu chưa có
+  if (window.ExcelJS) {
+    doExport();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    s.onload = doExport;
+    s.onerror = () => toast('Không load được ExcelJS!');
+    document.head.appendChild(s);
   }
 }
 </script>
