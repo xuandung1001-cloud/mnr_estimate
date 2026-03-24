@@ -4906,7 +4906,7 @@ function renderInventoryReport() {
   // HEADER
   const thead = document.getElementById('inv-thead');
   thead.innerHTML = `<tr>
-    <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 8px;border:1px solid #d1d5db;text-align:left;min-width:240px">DEPOT NAME</th>
+    <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 8px;border:1px solid #d1d5db;text-align:left;min-width:240px">ICD THANH PHUOC</th>
     ${INV_SIZES.map(s=>`<th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:42px">${s}</th>`).join('')}
     <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:60px">Total Units</th>
     <th style="background:#ffff00;color:#000;font-weight:700;padding:5px 7px;border:1px solid #d1d5db;min-width:60px">Total TEUs</th>
@@ -4928,10 +4928,8 @@ function renderInventoryReport() {
     }).join('');
     const tu = result.totalUnits;
     const tt = result.totalTeus;
-    // Cột TRAXENS: chỉ hiện số ở dòng showTraxens=true (Including Smart Containers), dòng khác để trống
-    const txCell = rowDef.showTraxens
-      ? `<td style="${tdStyle};${st}">${tu > 0 ? tu : dash}</td>`
-      : `<td style="${tdStyle};${st}"></td>`;
+    // Cột TRAXENS: tất cả để trống
+    const txCell = `<td style="${tdStyle};${st}"></td>`;
     return `<tr>
       <td style="${tdLabel};${st}">${rowDef.label}</td>
       ${cells}
@@ -4960,8 +4958,8 @@ function exportInventoryExcel() {
     INV_SIZES.forEach(s => row.push(result.counts[s] || '-'));
     row.push(result.totalUnits || '-');
     row.push(result.totalTeus || '-');
-    // TRAXENS: chỉ hiện ở dòng showTraxens=true
-    row.push(rowDef.showTraxens ? (result.totalUnits || '-') : '');
+    // TRAXENS: để trống
+    row.push('');
     rows.push(row);
   });
 
