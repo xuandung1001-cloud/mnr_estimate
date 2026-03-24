@@ -649,6 +649,7 @@ td input:focus,td select:focus{background:#fffbeb}
                   <th style="width:68px;text-align:right">Total Cost</th>
                   <th style="width:70px;text-align:right" class="td-auto">Total App.</th>
                   <th style="width:110px">Status</th>
+                  <th style="width:130px;cursor:pointer" onclick="sortSummaryByUpdated()">Updated ⇅</th>
                   <th style="width:110px">Remarks</th>
                 </tr>
               </thead>
@@ -2802,15 +2803,37 @@ function renderSummary() {
   filterSummary();
 }
 
+var _sumSortUpdated = false;
+
+function sortSummaryByUpdated() {
+  _sumSortUpdated = !_sumSortUpdated;
+  filterSummary();
+}
+
 function filterSummary() {
-  const q = document.getElementById('sum-search').value.toLowerCase();
+  const q  = document.getElementById('sum-search').value.toLowerCase();
   const ca = document.getElementById('sum-carrier').value;
-  const filtered = state.tracking.filter(r => {
-    if (!r.po_number) return false; // chỉ cont có PO
-    const matchQ = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q) || (r.po_number||'').toLowerCase().includes(q);
+  var filtered = state.tracking.filter(r => {
+    if (!r.po_number) return false;
+    const matchQ  = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q) || (r.po_number||'').toLowerCase().includes(q);
     const matchCa = !ca || r.carrier === ca;
     return matchQ && matchCa;
   });
+  // Sort by updated_at if active
+  if (_sumSortUpdated) {
+    filtered = filtered.slice().sort(function(a, b) {
+      var ta = a.updated_at || '';
+      var tb = b.updated_at || '';
+      // parse DD/MM/YYYY HH:mm:ss
+      function parseTs(s) {
+        if (!s) return 0;
+        var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/);
+        if (!m) return 0;
+        return new Date(m[3],m[2]-1,m[1],m[4],m[5],m[6]).getTime();
+      }
+      return parseTs(tb) - parseTs(ta); // mới nhất lên đầu
+    });
+  }
   renderSummaryTable(filtered);
 }
 
