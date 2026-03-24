@@ -3797,10 +3797,10 @@ function genDashboard() {
       datasets: [{
         label: 'Total No VAT (USD)',
         data: trendVals,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.08)',
+        borderColor: '#E8A820',
+        backgroundColor: 'rgba(245,200,66,0.1)',
         borderWidth: 2.5,
-        pointBackgroundColor: '#3b82f6',
+        pointBackgroundColor: '#E8A820',
         pointRadius: 4,
         tension: 0.35,
         fill: true
@@ -3860,10 +3860,10 @@ function genDashboard() {
         label: 'Total No VAT (USD)',
         data: weekVals,
         backgroundColor: weekVals.map(function(v,i){
-          return i === weekVals.length-1 ? '#0ea5e9' : 'rgba(14,165,233,0.35)';
+          return i === weekVals.length-1 ? '#F5C842' : 'rgba(245,200,66,0.4)';
         }),
         borderColor: weekVals.map(function(v,i){
-          return i === weekVals.length-1 ? '#0284c7' : 'rgba(14,165,233,0.6)';
+          return i === weekVals.length-1 ? '#E8A820' : 'rgba(232,168,32,0.7)';
         }),
         borderWidth: 1,
         borderRadius: 5,
