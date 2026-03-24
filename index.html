@@ -4103,50 +4103,76 @@ async function doExportPictures() {
       'Đang export ' + contList.length + ' containers... (' + _exportSec + 's)';
   }, 1000);
 
+  // Export từng cont một để tránh timeout
+  var allResults = [], allNotFound = [], totalCopied = 0;
+  var folderName = '', folderUrl = '', folderId = '';
+  var firstCont = true;
+
   try {
-    var res = await apiPost({
-      action:    'exportPictures',
-      mode:      _picMode,
-      cont_list: contList,
-      ref_map:   refMap,
-      carrier:   carrier,
-      loai_anh:  loaiAnh
-    });
+    for (var ci = 0; ci < contList.length; ci++) {
+      var contNo = contList[ci];
+      document.getElementById('pic-progress-text').textContent =
+        'Đang export cont ' + (ci+1) + '/' + contList.length + ': ' + contNo + '... (' + _exportSec + 's)';
+
+      var singleRef = {};
+      singleRef[contNo] = refMap[contNo] || '';
+
+      var res = await apiPost({
+        action:      'exportPictures',
+        mode:        _picMode,
+        cont_list:   [contNo],
+        ref_map:     singleRef,
+        carrier:     carrier,
+        loai_anh:    loaiAnh,
+        folder_id:   folderId   // reuse folder từ lần trước
+      });
+
+      if (!res.success) {
+        allNotFound.push(contNo);
+        continue;
+      }
+
+      // Lưu folder info từ lần đầu
+      if (firstCont) {
+        folderName = res.folder_name;
+        folderUrl  = res.folder_url;
+        folderId   = res.folder_id;
+        firstCont  = false;
+      }
+
+      totalCopied += res.total_copied || 0;
+      if (res.results && res.results.length) allResults = allResults.concat(res.results);
+      if (res.not_found && res.not_found.length) allNotFound = allNotFound.concat(res.not_found);
+    }
 
     clearInterval(_exportTimer);
     document.getElementById('pic-progress').style.display = 'none';
     document.getElementById('pic-export-btn').disabled = false;
 
-    if (!res.success) { toast('Lỗi: ' + res.error, 5000); return; }
-
-    var timeoutHtml = res.timed_out
-      ? '<div class="alert" style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:8px 12px;margin-bottom:8px">⚠️ <strong>Xuất bị giới hạn thời gian!</strong> Một số cont chưa được xử lý. Hãy xuất lại các cont còn lại.</div>'
-      : '';
-    var notFoundHtml = res.not_found && res.not_found.length
+    var notFoundHtml = allNotFound.length
       ? `<div class="alert alert-warn" style="margin-top:10px">
-          <strong>Không tìm thấy ảnh (${res.not_found.length} cont):</strong><br>
-          <span style="font-family:monospace;font-size:11px">${res.not_found.join(', ')}</span>
+          <strong>Không tìm thấy ảnh (${allNotFound.length} cont):</strong><br>
+          <span style="font-family:monospace;font-size:11px">${allNotFound.join(', ')}</span>
          </div>` : '';
 
-    var detailRows = (res.results || []).map((r, i) =>
-      `<tr>
+    var detailRows = allResults.map(function(r, i) {
+      return `<tr>
         <td>${i+1}</td>
         <td style="font-family:monospace">${r.cont}</td>
         <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
         <td style="text-align:right;color:var(--blue);font-weight:500">${r.count} ảnh</td>
         <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
-      </tr>`
-    ).join('');
+      </tr>`;
+    }).join('');
 
     document.getElementById('pic-result-body').innerHTML = `
       <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
-        <div class="stat-card"><div class="stat-label">Tổng ảnh đã copy</div><div class="stat-value" style="color:var(--blue)">${res.total_copied}</div></div>
-        <div class="stat-card"><div class="stat-label">Cont có ảnh</div><div class="stat-value" style="color:var(--green)">${res.found_conts} / ${res.total_conts}</div></div>
-        <div class="stat-card"><div class="stat-label">Folder Drive</div><div class="stat-value" style="font-size:13px"><a href="${res.folder_url}" target="_blank" style="color:var(--blue)">📂 Mở Drive</a></div></div>
+        <div class="stat-card"><div class="stat-label">Tổng ảnh đã copy</div><div class="stat-value" style="color:var(--blue)">${totalCopied}</div></div>
+        <div class="stat-card"><div class="stat-label">Cont có ảnh</div><div class="stat-value" style="color:var(--green)">${allResults.length} / ${contList.length}</div></div>
+        <div class="stat-card"><div class="stat-label">Folder Drive</div><div class="stat-value" style="font-size:13px"><a href="${folderUrl}" target="_blank" style="color:var(--blue)">📂 Mở Drive</a></div></div>
       </div>
-      ${timeoutHtml}
       <div class="alert alert-ok">
-        ✓ Export xong! Folder: <strong>${res.folder_name}</strong><br>
+        ✓ Export xong! Folder: <strong>${folderName}</strong><br>
         Drive Desktop sẽ tự sync xuống máy trong vài phút.
       </div>
       ${notFoundHtml}
@@ -4157,13 +4183,13 @@ async function doExportPictures() {
         </table>
       </div>`;
     document.getElementById('pic-result').style.display = 'block';
-    toast('Export xong! ' + res.total_copied + ' ảnh — ' + res.found_conts + '/' + res.total_conts + ' cont', 4000);
+    toast('Export xong! ' + totalCopied + ' ảnh — ' + allResults.length + '/' + contList.length + ' cont', 4000);
 
   } catch(e) {
     clearInterval(_exportTimer);
     document.getElementById('pic-progress').style.display = 'none';
     document.getElementById('pic-export-btn').disabled = false;
-    toast('Lỗi kết nối: ' + e.message, 4000);
+    toast('Lỗi: ' + e.message, 4000);
   }
 }
 
