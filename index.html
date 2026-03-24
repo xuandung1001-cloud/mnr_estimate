@@ -4886,6 +4886,11 @@ function renderInventoryReport() {
   console.log('[INV] Unique size_type values:', uniqueSizes);
   const unmapped = uniqueSizes.filter(s => !INV_SIZES.includes(normalizeSize(s)));
   if (unmapped.length) console.warn('[INV] Unmapped sizes:', unmapped);
+  // DEBUG: log unique trang_thai values
+  const uniqueTT = [...new Set(data.map(r => r.trang_thai_container).filter(Boolean))].sort();
+  console.log('[INV] Unique trang_thai_container:', uniqueTT);
+  const uniqueGrade = [...new Set(data.map(r => r.grade).filter(Boolean))].sort();
+  console.log('[INV] Unique grade:', uniqueGrade);
 
   // CSS styles cho các loại dòng
   const styles = {
