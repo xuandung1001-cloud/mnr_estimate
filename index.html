@@ -3094,7 +3094,7 @@ async function loadBulk() {
   // Mode B: lấy từ estimates (có cột app_*)
   if (state.bulkMode === 'B') {
     var tbody = document.getElementById('bulk-rows');
-    tbody.innerHTML = '<tr><td colspan="13" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
     try {
     var contNosB = searchList.length > 0 ? searchList.join(',') : '__ALL__';
       var res = await apiGet({ action: 'getAllEstimates', container_nos: contNosB });
