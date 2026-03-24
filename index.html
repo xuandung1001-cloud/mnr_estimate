@@ -4112,6 +4112,7 @@ async function doExportPictures() {
         <div class="stat-card"><div class="stat-label">Cont có ảnh</div><div class="stat-value" style="color:var(--green)">${res.found_conts} / ${res.total_conts}</div></div>
         <div class="stat-card"><div class="stat-label">Folder Drive</div><div class="stat-value" style="font-size:13px"><a href="${res.folder_url}" target="_blank" style="color:var(--blue)">📂 Mở Drive</a></div></div>
       </div>
+      ${timeoutHtml}
       <div class="alert alert-ok">
         ✓ Export xong! Folder: <strong>${res.folder_name}</strong><br>
         Drive Desktop sẽ tự sync xuống máy trong vài phút.
