@@ -4759,44 +4759,74 @@ async function handleStockUpload(input) {
 const INV_SIZES = ['20DV','20RE','20OT','20FL','20HF','40DV','40HC','40HP','40OT','40HO','40FL','40HF','40HR','45HC','45HP'];
 const INV_TEU   = s => s && s.startsWith('2') ? 1 : 2;
 
+// Normalize size_type từ emty_stock → match INV_SIZES
+// Handle: '40HC', "40'HC", '42G1', '22G1', '45G1', v.v.
+const SIZE_MAP = {
+  // ISO code → display
+  '22G0':'20DV','22G1':'20DV','22R1':'20RE','22U1':'20OT','22P1':'20FL','22H0':'20HF','22H1':'20HF',
+  '42G0':'40DV','42G1':'40DV',
+  '42H0':'40HC','42H1':'40HC','42H2':'40HC',
+  '42P1':'40HP','42U1':'40OT',
+  '40HO':'40HO',
+  '42R1':'40FL',
+  '42F1':'40HF',
+  '42HR':'40HR',
+  'L2G1':'45HC','L2H0':'45HC','L2H1':'45HC',
+  'L2P1':'45HP',
+};
+function normalizeSize(raw) {
+  const s = String(raw||'').toUpperCase().replace(/'/g,'').trim();
+  // Nếu đã đúng format rồi (20DV, 40HC...)
+  if (INV_SIZES.includes(s)) return s;
+  // Thử ISO map
+  if (SIZE_MAP[s]) return SIZE_MAP[s];
+  // Thử bỏ space/dash
+  const s2 = s.replace(/[\s\-]/g,'');
+  if (INV_SIZES.includes(s2)) return s2;
+  if (SIZE_MAP[s2]) return SIZE_MAP[s2];
+  return s; // trả về raw nếu không match (để debug)
+}
+
 // Định nghĩa các dòng report
-// type: 'total'=bold+bg vàng, 'sub'=in thường+bg trắng, 'italic'=in nghiêng+bg trắng, 'separator'=dòng trống, 'plain'=in thường không bg
+// type: 'total'=bold+bg vàng, 'sub'=in thường, 'italic'=in nghiêng (Smart Containers), 'separator'=dòng trống, 'plain'=thường
+// showTraxens: true → cột TRAXENS Devices hiện số đếm theo size cho dòng này (chỉ dòng Including Smart Containers)
+// traxensFilter: filter riêng cho cột TRAXENS (nếu null thì dùng filter chính)
 const INV_ROWS = [
-  { label: 'TOTAL AV',                        type:'total',  filter: r => isAV(r) },
-  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isTraxens(r) },
-  { label: 'TOTAL DM ( PENDING FOR REPAIR)',  type:'total',  filter: r => isDM(r) },
-  { label: 'TOTAL DM (AWAITING APPROVAL)',    type:'total',  filter: r => isWA(r) },
-  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isTraxens(r) },
-  { label: 'UN SURVEYED',                     type:'sub',    filter: r => (isDM(r)||isWA(r)) && isGrade(r,'U') },
-  { label: '',                                type:'separator', filter: null },
-  { label: 'TOTAL GRADE A',                   type:'total',  filter: r => isGrade(r,'A') },
-  { label: 'AV GRADE A',                      type:'sub',    filter: r => isAV(r) && isGrade(r,'A') },
-  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isGrade(r,'A') && isTraxens(r) },
-  { label: 'DM ( PENDING FOR REPAIR) GRADE A',type:'sub',   filter: r => isDM(r) && isGrade(r,'A') },
-  { label: 'DM (AWAITING APPROVAL) GRADE A',  type:'sub',   filter: r => isWA(r) && isGrade(r,'A') },
-  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'A') && isTraxens(r) },
-  { label: '',                                type:'separator', filter: null },
-  { label: 'TOTAL GRADE B',                   type:'total',  filter: r => isGrade(r,'B') },
-  { label: 'AV GRADE B',                      type:'sub',    filter: r => isAV(r) && isGrade(r,'B') },
-  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isGrade(r,'B') && isTraxens(r) },
-  { label: 'DM ( PENDING FOR REPAIR) GRADE B',type:'sub',   filter: r => isDM(r) && isGrade(r,'B') },
-  { label: 'DM (AWAITING APPROVAL) GRADE B',  type:'sub',   filter: r => isWA(r) && isGrade(r,'B') },
-  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'B') && isTraxens(r) },
-  { label: '',                                type:'separator', filter: null },
-  { label: 'TOTAL GRADE C',                   type:'total',  filter: r => isGrade(r,'C') },
-  { label: 'AV GRADE C',                      type:'sub',    filter: r => isAV(r) && isGrade(r,'C') },
-  { label: 'Including Smart Containers (AV)', type:'italic', filter: r => isAV(r) && isGrade(r,'C') && isTraxens(r) },
-  { label: 'DM ( PENDING FOR REPAIR) GRADE C',type:'sub',   filter: r => isDM(r) && isGrade(r,'C') },
-  { label: 'DM (AWAITING APPROVAL) GRADE C',  type:'sub',   filter: r => isWA(r) && isGrade(r,'C') },
-  { label: 'Including Smart Containers (DM)', type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'C') && isTraxens(r) },
-  { label: '',                                type:'separator', filter: null },
-  { label: 'SELL',                            type:'plain',  filter: r => isSELL(r) },
-  { label: 'OFH',                             type:'plain',  filter: r => isOFH(r) },
-  { label: '',                                type:'separator', filter: null },
-  { label: 'REEFER ONLY : SELECTED FOR NOR (AV)', type:'plain', filter: r => isAV(r) && isReefer(r) },
-  { label: 'REEFER ONLY : SELECTED FOR NOR (DM)', type:'plain', filter: r => (isDM(r)||isWA(r)) && isReefer(r) },
-  { label: '',                                type:'separator', filter: null },
-  { label: 'TOTAL',                           type:'total',  filter: r => true },
+  { label: 'TOTAL AV',                         type:'total',  filter: r => isAV(r),                              showTraxens: false },
+  { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isTraxens(r),              showTraxens: true  },
+  { label: 'TOTAL DM ( PENDING FOR REPAIR)',   type:'total',  filter: r => isDM(r),                              showTraxens: false },
+  { label: 'TOTAL DM (AWAITING APPROVAL)',     type:'total',  filter: r => isWA(r),                              showTraxens: false },
+  { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isTraxens(r),   showTraxens: true  },
+  { label: 'UN SURVEYED',                      type:'sub',    filter: r => (isDM(r)||isWA(r)) && isGrade(r,'U'), showTraxens: false },
+  { label: '',                                 type:'separator', filter: null },
+  { label: 'TOTAL GRADE A',                    type:'total',  filter: r => isGrade(r,'A'),                       showTraxens: false },
+  { label: 'AV GRADE A',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'A'),            showTraxens: false },
+  { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isGrade(r,'A') && isTraxens(r),          showTraxens: true  },
+  { label: 'DM ( PENDING FOR REPAIR) GRADE A', type:'sub',   filter: r => isDM(r) && isGrade(r,'A'),            showTraxens: false },
+  { label: 'DM (AWAITING APPROVAL) GRADE A',   type:'sub',   filter: r => isWA(r) && isGrade(r,'A'),            showTraxens: false },
+  { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'A') && isTraxens(r), showTraxens: true  },
+  { label: '',                                 type:'separator', filter: null },
+  { label: 'TOTAL GRADE B',                    type:'total',  filter: r => isGrade(r,'B'),                       showTraxens: false },
+  { label: 'AV GRADE B',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'B'),            showTraxens: false },
+  { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isGrade(r,'B') && isTraxens(r),          showTraxens: true  },
+  { label: 'DM ( PENDING FOR REPAIR) GRADE B', type:'sub',   filter: r => isDM(r) && isGrade(r,'B'),            showTraxens: false },
+  { label: 'DM (AWAITING APPROVAL) GRADE B',   type:'sub',   filter: r => isWA(r) && isGrade(r,'B'),            showTraxens: false },
+  { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'B') && isTraxens(r), showTraxens: true  },
+  { label: '',                                 type:'separator', filter: null },
+  { label: 'TOTAL GRADE C',                    type:'total',  filter: r => isGrade(r,'C'),                       showTraxens: false },
+  { label: 'AV GRADE C',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'C'),            showTraxens: false },
+  { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isGrade(r,'C') && isTraxens(r),          showTraxens: true  },
+  { label: 'DM ( PENDING FOR REPAIR) GRADE C', type:'sub',   filter: r => isDM(r) && isGrade(r,'C'),            showTraxens: false },
+  { label: 'DM (AWAITING APPROVAL) GRADE C',   type:'sub',   filter: r => isWA(r) && isGrade(r,'C'),            showTraxens: false },
+  { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'C') && isTraxens(r), showTraxens: true  },
+  { label: '',                                 type:'separator', filter: null },
+  { label: 'SELL',                             type:'plain',  filter: r => isSELL(r),                            showTraxens: false },
+  { label: 'OFH',                              type:'plain',  filter: r => isOFH(r),                             showTraxens: false },
+  { label: '',                                 type:'separator', filter: null },
+  { label: 'REEFER ONLY : SELECTED FOR NOR (AV)', type:'plain', filter: r => isAV(r) && isReefer(r),            showTraxens: false },
+  { label: 'REEFER ONLY : SELECTED FOR NOR (DM)', type:'plain', filter: r => (isDM(r)||isWA(r)) && isReefer(r), showTraxens: false },
+  { label: '',                                 type:'separator', filter: null },
+  { label: 'TOTAL',                            type:'total',  filter: r => true,                                 showTraxens: false },
 ];
 
 // Helper filter functions — dễ chỉnh sau khi anh confirm giá trị thực
@@ -4814,22 +4844,17 @@ function isTraxens(r){ return String(r.remarks||'').toLowerCase().includes('trax
 function calcInvRow(data, rowDef) {
   const filtered = data.filter(rowDef.filter);
   const counts = {};
-  let totalUnits = 0, totalTeus = 0, traxens = 0;
+  let totalUnits = 0, totalTeus = 0;
   INV_SIZES.forEach(s => counts[s] = 0);
   filtered.forEach(r => {
-    const s = String(r.size_type||'').toUpperCase().trim();
-    if (counts.hasOwnProperty(s)) {
-      counts[s]++;
-      totalUnits++;
-      totalTeus += INV_TEU(s);
-    } else {
-      // size không match vẫn tính total
-      totalUnits++;
-      totalTeus += INV_TEU(s);
-    }
-    if (isTraxens(r)) traxens++;
+    // Thử size_type trước, fallback sang size_type_iso
+    const raw = r.size_type || r.size_type_iso || '';
+    const s = normalizeSize(raw);
+    if (counts.hasOwnProperty(s)) counts[s]++;
+    totalUnits++;
+    totalTeus += INV_TEU(s);
   });
-  return { counts, totalUnits, totalTeus, traxens };
+  return { counts, totalUnits, totalTeus };
 }
 
 async function refreshInventory() {
@@ -4856,6 +4881,12 @@ function renderInventoryReport() {
   document.getElementById('inv-info').textContent = data.length + ' containers';
   document.getElementById('inv-date').textContent = 'Cập nhật lúc: ' + dateStr;
 
+  // DEBUG: log unique size_type values để confirm format
+  const uniqueSizes = [...new Set(data.map(r => r.size_type).filter(Boolean))].sort();
+  console.log('[INV] Unique size_type values:', uniqueSizes);
+  const unmapped = uniqueSizes.filter(s => !INV_SIZES.includes(normalizeSize(s)));
+  if (unmapped.length) console.warn('[INV] Unmapped sizes:', unmapped);
+
   // CSS styles cho các loại dòng
   const styles = {
     total:     'background:#fffde7;font-weight:700;color:#1a202c',
@@ -4879,6 +4910,7 @@ function renderInventoryReport() {
 
   // BODY
   const tbody = document.getElementById('inv-tbody');
+  const dash = `<span style='color:#9ca3af'>-</span>`;
   tbody.innerHTML = INV_ROWS.map(rowDef => {
     if (rowDef.type === 'separator') {
       return `<tr><td colspan="${INV_SIZES.length + 4}" style="${styles.separator};border:1px solid #e2e8f0"></td></tr>`;
@@ -4887,17 +4919,20 @@ function renderInventoryReport() {
     const result = calcInvRow(data, rowDef);
     const cells = INV_SIZES.map(s => {
       const v = result.counts[s];
-      return `<td style="${tdStyle};${st}">${v > 0 ? v : '<span style=\'color:#9ca3af\'>-</span>'}</td>`;
+      return `<td style="${tdStyle};${st}">${v > 0 ? v : dash}</td>`;
     }).join('');
     const tu = result.totalUnits;
     const tt = result.totalTeus;
-    const tx = result.traxens;
+    // Cột TRAXENS: chỉ hiện số ở dòng showTraxens=true (Including Smart Containers), dòng khác để trống
+    const txCell = rowDef.showTraxens
+      ? `<td style="${tdStyle};${st}">${tu > 0 ? tu : dash}</td>`
+      : `<td style="${tdStyle};${st}"></td>`;
     return `<tr>
       <td style="${tdLabel};${st}">${rowDef.label}</td>
       ${cells}
-      <td style="${tdStyle};${st}">${tu > 0 ? tu : '<span style=\'color:#9ca3af\'>-</span>'}</td>
-      <td style="${tdStyle};${st}">${tt > 0 ? tt : '<span style=\'color:#9ca3af\'>-</span>'}</td>
-      <td style="${tdStyle};${st}">${tx > 0 ? tx : ''}</td>
+      <td style="${tdStyle};${st}">${tu > 0 ? tu : dash}</td>
+      <td style="${tdStyle};${st}">${tt > 0 ? tt : dash}</td>
+      ${txCell}
     </tr>`;
   }).join('');
 }
@@ -4920,7 +4955,8 @@ function exportInventoryExcel() {
     INV_SIZES.forEach(s => row.push(result.counts[s] || '-'));
     row.push(result.totalUnits || '-');
     row.push(result.totalTeus || '-');
-    row.push(result.traxens || '');
+    // TRAXENS: chỉ hiện ở dòng showTraxens=true
+    row.push(rowDef.showTraxens ? (result.totalUnits || '-') : '');
     rows.push(row);
   });
 
