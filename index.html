@@ -4993,7 +4993,8 @@ async function doDeleteUser(username) {
     else toast('Lỗi: ' + (res.error||'Không xoá được'));
   } catch(e) { toast('Lỗi kết nối'); }
 }
-</script>
+
+// ===================== MSC INVENTORY REPORT =====================
 const INV_SIZES = ['20DV','20RE','20OT','20FL','20HF','40DV','40HC','40HP','40OT','40HO','40FL','40HF','40HR','45HC','45HP'];
 const INV_TEU   = s => s && s.startsWith('2') ? 1 : 2;
 
