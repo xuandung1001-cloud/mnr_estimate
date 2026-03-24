@@ -4829,15 +4829,15 @@ const INV_ROWS = [
   { label: 'TOTAL',                            type:'total',  filter: r => true,                                 showTraxens: false },
 ];
 
-// Helper filter functions — dễ chỉnh sau khi anh confirm giá trị thực
-function _tt(r)    { return String(r.trang_thai_container||r.container_status||'').toUpperCase().trim(); }
+// Helper filter functions — dùng container_status (col R)
+function _tt(r)    { return String(r.container_status||'').toUpperCase().trim(); }
 function _gr(r)    { return String(r.grade||'').toUpperCase().trim(); }
 function isAV(r)   { return _tt(r) === 'AV'; }
 function isDM(r)   { return _tt(r) === 'DM'; }
 function isWA(r)   { return _tt(r) === 'WA'; }
 function isSELL(r) { return _tt(r) === 'SL' || _tt(r) === 'SELL'; }
 function isOFH(r)  { return _tt(r) === 'OF' || _tt(r) === 'OFH'; }
-function isReefer(r){ const s = String(r.size_type||'').toUpperCase(); return s.includes('RE') || s.includes('RF'); }
+function isReefer(r){ const s = normalizeSize(r.size_type||r.size_type_iso||''); return s.includes('RE') || s.includes('RF'); }
 function isGrade(r, g) { return _gr(r) === g.toUpperCase(); }
 function isTraxens(r){ return String(r.remarks||'').toLowerCase().includes('traxens'); }
 
@@ -4887,8 +4887,8 @@ function renderInventoryReport() {
   const unmapped = uniqueSizes.filter(s => !INV_SIZES.includes(normalizeSize(s)));
   if (unmapped.length) console.warn('[INV] Unmapped sizes:', unmapped);
   // DEBUG: log unique trang_thai values
-  const uniqueTT = [...new Set(data.map(r => r.trang_thai_container).filter(Boolean))].sort();
-  console.log('[INV] Unique trang_thai_container:', uniqueTT);
+  const uniqueTT = [...new Set(data.map(r => r.container_status).filter(Boolean))].sort();
+  console.log('[INV] Unique container_status:', uniqueTT);
   const uniqueGrade = [...new Set(data.map(r => r.grade).filter(Boolean))].sort();
   console.log('[INV] Unique grade:', uniqueGrade);
 
