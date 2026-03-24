@@ -4103,12 +4103,23 @@ async function doExportPictures() {
       'Đang export ' + contList.length + ' containers... (' + _exportSec + 's)';
   }, 1000);
 
-  // Export từng cont một để tránh timeout
+  // Tạo folder trước, rồi export từng cont một
   var allResults = [], allNotFound = [], totalCopied = 0;
   var folderName = '', folderUrl = '', folderId = '';
-  var firstCont = true;
 
   try {
+    // Bước 1: Tạo folder export trên Drive
+    document.getElementById('pic-progress-text').textContent = 'Đang tạo folder Export... (' + _exportSec + 's)';
+    var initRes = await apiPost({
+      action: 'createExportFolder',
+      carrier: carrier
+    });
+    if (!initRes.success) { throw new Error('Không tạo được folder: ' + initRes.error); }
+    folderName = initRes.folder_name;
+    folderUrl  = initRes.folder_url;
+    folderId   = initRes.folder_id;
+
+    // Bước 2: Export từng cont vào folder đã tạo
     for (var ci = 0; ci < contList.length; ci++) {
       var contNo = contList[ci];
       document.getElementById('pic-progress-text').textContent =
@@ -4118,26 +4129,18 @@ async function doExportPictures() {
       singleRef[contNo] = refMap[contNo] || '';
 
       var res = await apiPost({
-        action:      'exportPictures',
-        mode:        _picMode,
-        cont_list:   [contNo],
-        ref_map:     singleRef,
-        carrier:     carrier,
-        loai_anh:    loaiAnh,
-        folder_id:   folderId   // reuse folder từ lần trước
+        action:    'exportPictures',
+        mode:      _picMode,
+        cont_list: [contNo],
+        ref_map:   singleRef,
+        carrier:   carrier,
+        loai_anh:  loaiAnh,
+        folder_id: folderId
       });
 
       if (!res.success) {
         allNotFound.push(contNo);
         continue;
-      }
-
-      // Lưu folder info từ lần đầu
-      if (firstCont) {
-        folderName = res.folder_name;
-        folderUrl  = res.folder_url;
-        folderId   = res.folder_id;
-        firstCont  = false;
       }
 
       totalCopied += res.total_copied || 0;
