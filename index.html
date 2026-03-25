@@ -272,6 +272,10 @@ td input:focus,td select:focus{background:#FEFAF0}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         MSC Inventory
       </div>
+      <div class="nav-item" id="nav-photos" onclick="nav('photos',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+        Xem Hình Ảnh
+      </div>
     </div>
     <div class="sb-footer">
       <div style="display:flex;align-items:center;gap:8px">
@@ -1063,6 +1067,51 @@ td input:focus,td select:focus{background:#FEFAF0}
         </div>
       </div>
 
+      <!-- SCREEN: XEM HÌNH ẢNH -->
+      <div class="screen" id="screen-photos">
+        <div class="card">
+          <!-- Bộ lọc -->
+          <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
+            <div>
+              <div class="fl" style="margin-bottom:4px">Số Container</div>
+              <input class="fi" id="ph-cont" placeholder="VD: MSDU1234567" style="width:160px;text-transform:uppercase"
+                onkeydown="if(event.key==='Enter') loadPhotosScreen()">
+            </div>
+            <div>
+              <div class="fl" style="margin-bottom:4px">Carrier</div>
+              <select class="fi" id="ph-carrier" style="width:100px">
+                <option value="">-- Chọn --</option>
+              </select>
+            </div>
+            <button class="btn btn-blue" onclick="loadPhotosScreen()">🔍 Tìm ảnh</button>
+            <div id="ph-summary" style="font-size:11px;color:var(--gray);align-self:center"></div>
+          </div>
+
+          <!-- Filter ngày -->
+          <div id="ph-date-filter" style="display:none;margin-bottom:12px">
+            <span style="font-size:11px;font-weight:600;color:#1A1A1A;margin-right:8px">Ngày upload:</span>
+            <span id="ph-date-tabs" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span>
+          </div>
+
+          <!-- Tabs Trước / Sau -->
+          <div id="ph-tabs" style="display:none;margin-bottom:12px;display:flex;gap:0;border-bottom:2px solid var(--border)">
+            <div id="ph-tab-before" onclick="switchPhotoTab('before')"
+              style="padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--amber-accent);margin-bottom:-2px;color:var(--amber)">
+              Trước SC <span id="ph-cnt-before" style="font-size:10px;font-weight:400;color:var(--gray)"></span>
+            </div>
+            <div id="ph-tab-after" onclick="switchPhotoTab('after')"
+              style="padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px">
+              Sau SC <span id="ph-cnt-after" style="font-size:10px;font-weight:400;color:var(--gray)"></span>
+            </div>
+          </div>
+
+          <!-- Grid ảnh -->
+          <div id="ph-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px"></div>
+          <div id="ph-empty" style="text-align:center;color:var(--gray);padding:40px;display:none">Không tìm thấy ảnh</div>
+          <div id="ph-loading" style="text-align:center;padding:40px;display:none"><div class="spinner" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1311,6 +1360,7 @@ function nav(screen, el) {
     report:   { title: 'Báo cáo tháng', actions: [] },
     pictures: { title: 'Xuất hình ảnh', actions: [] },
     inventory: { title: 'MSC Inventory', actions: [] },
+    photos:    { title: 'Xem Hình Ảnh', actions: [] },
     users:     { title: 'Quản lý User', actions: [] }
   };
 
@@ -1321,6 +1371,7 @@ function nav(screen, el) {
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') renderSummary();
   if (screen === 'inventory') renderInventoryReport();
+  if (screen === 'photos')    initPhotosScreen();
   if (screen === 'users') renderUsers();
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
@@ -4968,8 +5019,8 @@ async function handleStockUpload(input) {
 }
 
 // ===================== PHÂN QUYỀN =====================
-const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory'; // tariff bị ẩn mặc định
+const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos'];
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos'; // tariff bị ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -5267,7 +5318,174 @@ async function doExportRetry() {
   }
 }
 
-// ===================== MSC INVENTORY REPORT =====================
+// ===================== XEM HÌNH ẢNH =====================
+var _phData = { before: [], after: [] };
+var _phTab  = 'before';
+var _phDateFilter = 'all';
+
+function initPhotosScreen() {
+  // Populate carrier từ tariff
+  var sel = document.getElementById('ph-carrier');
+  if (sel && state.tariff && state.tariff.length) {
+    var carriers = [...new Set(state.tariff.map(r => r.carrier).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">-- Chọn --</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+  }
+}
+
+async function loadPhotosScreen() {
+  var contNo  = (document.getElementById('ph-cont').value || '').trim().toUpperCase();
+  var carrier = document.getElementById('ph-carrier').value;
+  if (!contNo) { toast('Nhập số container!'); return; }
+  if (!carrier) { toast('Chọn Carrier!'); return; }
+
+  document.getElementById('ph-grid').innerHTML = '';
+  document.getElementById('ph-empty').style.display = 'none';
+  document.getElementById('ph-loading').style.display = 'block';
+  document.getElementById('ph-tabs').style.display = 'none';
+  document.getElementById('ph-date-filter').style.display = 'none';
+  document.getElementById('ph-summary').textContent = '';
+
+  try {
+    var [resBefore, resAfter] = await Promise.all([
+      apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Trước sửa chữa' }),
+      apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Sau sửa chữa' })
+    ]);
+    _phData.before = (resBefore.success && resBefore.photos) ? resBefore.photos : [];
+    _phData.after  = (resAfter.success  && resAfter.photos)  ? resAfter.photos  : [];
+    _phDateFilter  = 'all';
+    _phTab         = 'before';
+
+    document.getElementById('ph-loading').style.display = 'none';
+
+    var total = _phData.before.length + _phData.after.length;
+    if (!total) {
+      document.getElementById('ph-empty').style.display = 'block';
+      document.getElementById('ph-summary').textContent = 'Không tìm thấy ảnh nào cho ' + contNo;
+      return;
+    }
+
+    document.getElementById('ph-summary').textContent =
+      contNo + ' — ' + _phData.before.length + ' ảnh trước, ' + _phData.after.length + ' ảnh sau';
+
+    // Render date filter tabs
+    renderPhotoDateFilter();
+
+    // Show tabs
+    document.getElementById('ph-tabs').style.display = 'flex';
+    switchPhotoTab('before');
+
+  } catch(e) {
+    document.getElementById('ph-loading').style.display = 'none';
+    toast('Lỗi: ' + e.message, 3000);
+  }
+}
+
+function renderPhotoDateFilter() {
+  // Thu thập tất cả ngày từ cả 2 loại
+  var allDates = [...new Set([..._phData.before, ..._phData.after].map(p => p.date))].sort();
+  if (allDates.length <= 1) {
+    document.getElementById('ph-date-filter').style.display = 'none';
+    return;
+  }
+  document.getElementById('ph-date-filter').style.display = 'block';
+  var tabs = '<span onclick="filterPhotoDate(\'all\')" id="phd-all" style="cursor:pointer;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:var(--amber-accent);color:#5A3E00">Tất cả</span>';
+  allDates.forEach(function(d) {
+    tabs += `<span onclick="filterPhotoDate('${d}')" id="phd-${d}" style="cursor:pointer;padding:3px 10px;border-radius:12px;font-size:11px;background:#FEFAF0;border:1px solid #F5EDD0;color:#7A5500">${d}</span>`;
+  });
+  document.getElementById('ph-date-tabs').innerHTML = tabs;
+}
+
+function filterPhotoDate(date) {
+  _phDateFilter = date;
+  // Update tab styles
+  document.querySelectorAll('[id^="phd-"]').forEach(function(el) {
+    el.style.background = '#FEFAF0';
+    el.style.border = '1px solid #F5EDD0';
+    el.style.fontWeight = '400';
+  });
+  var active = document.getElementById('phd-' + date);
+  if (active) { active.style.background = 'var(--amber-accent)'; active.style.fontWeight = '600'; active.style.border = '1px solid #D4A800'; }
+  renderPhotoGrid();
+}
+
+function switchPhotoTab(tab) {
+  _phTab = tab;
+  var before = document.getElementById('ph-tab-before');
+  var after  = document.getElementById('ph-tab-after');
+  if (tab === 'before') {
+    before.style.borderBottomColor = 'var(--amber-accent)'; before.style.color = 'var(--amber)';
+    after.style.borderBottomColor  = 'transparent';         after.style.color  = 'var(--gray)';
+  } else {
+    after.style.borderBottomColor  = 'var(--amber-accent)'; after.style.color  = 'var(--amber)';
+    before.style.borderBottomColor = 'transparent';         before.style.color = 'var(--gray)';
+  }
+  // Update counts
+  document.getElementById('ph-cnt-before').textContent = '(' + _phData.before.length + ')';
+  document.getElementById('ph-cnt-after').textContent  = '(' + _phData.after.length + ')';
+  renderPhotoGrid();
+}
+
+function renderPhotoGrid() {
+  var photos = _phTab === 'before' ? _phData.before : _phData.after;
+  if (_phDateFilter !== 'all') {
+    photos = photos.filter(function(p) { return p.date === _phDateFilter; });
+  }
+  var grid = document.getElementById('ph-grid');
+  if (!photos.length) {
+    grid.innerHTML = '';
+    document.getElementById('ph-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('ph-empty').style.display = 'none';
+  grid.innerHTML = photos.map(function(p, idx) {
+    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:#F5F5F5;aspect-ratio:1;cursor:pointer" onclick="openPhotoLightbox(${idx})">
+      <img src="${p.thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover"
+        onerror="this.src='https://drive.google.com/thumbnail?id=${p.id}&sz=w200'">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:3px 5px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+      <div style="position:absolute;top:4px;right:4px">
+        <button onclick="event.stopPropagation();deletePhotoScreen('${p.id}',${idx})"
+          style="background:rgba(220,38,38,0.85);border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Lưu photos hiện tại để lightbox dùng
+  window._phCurrentPhotos = photos;
+}
+
+function openPhotoLightbox(idx) {
+  var photos = window._phCurrentPhotos || [];
+  if (!photos.length) return;
+  _lbPhotos = photos.map(function(p) { return 'https://drive.google.com/thumbnail?id=' + p.id + '&sz=w1600'; });
+  _lbIdx = idx;
+  openLightbox(_lbPhotos[idx], _lbPhotos, idx);
+}
+
+async function deletePhotoScreen(fileId, idx) {
+  if (!confirm('Xoá ảnh này? Không thể hoàn tác!')) return;
+  try {
+    var res = await apiPost({ action: 'deletePhoto', file_id: fileId });
+    if (res && res.success) {
+      // Xóa khỏi data
+      var arr = _phTab === 'before' ? _phData.before : _phData.after;
+      var photos = _phDateFilter !== 'all' ? arr.filter(p => p.date === _phDateFilter) : arr;
+      var photo = photos[idx];
+      if (photo) {
+        var i = arr.indexOf(photo);
+        if (i >= 0) arr.splice(i, 1);
+      }
+      document.getElementById('ph-summary').textContent =
+        (document.getElementById('ph-cont').value||'').toUpperCase() +
+        ' — ' + _phData.before.length + ' ảnh trước, ' + _phData.after.length + ' ảnh sau';
+      document.getElementById('ph-cnt-before').textContent = '(' + _phData.before.length + ')';
+      document.getElementById('ph-cnt-after').textContent  = '(' + _phData.after.length + ')';
+      renderPhotoGrid();
+      toast('Đã xoá ảnh!', 2000);
+    } else {
+      toast('Lỗi xoá ảnh: ' + (res ? res.error : ''), 3000);
+    }
+  } catch(e) { toast('Lỗi: ' + e.message, 3000); }
+}
 const INV_SIZES = ['20DV','20RE','20OT','20FL','20HF','40DV','40HC','40HP','40OT','40HO','40FL','40HF','40HR','45HC','45HP'];
 const INV_TEU   = s => s && s.startsWith('2') ? 1 : 2;
 
@@ -5651,6 +5869,7 @@ function exportInventoryExcel() {
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-report" value="report"> Báo cáo tháng</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-pictures" value="pictures"> Xuất hình ảnh</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-photos" value="photos"> Xem Hình Ảnh</label>
       </div>
     </div>
     <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
