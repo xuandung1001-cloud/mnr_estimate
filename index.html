@@ -1105,7 +1105,7 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
 
           <!-- Grid ảnh -->
-          <div id="ph-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px"></div>
+          <div id="ph-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
           <div id="ph-empty" style="text-align:center;color:var(--gray);padding:40px;display:none">Không tìm thấy ảnh</div>
           <div id="ph-loading" style="text-align:center;padding:40px;display:none"><div class="spinner" style="margin:0 auto"></div></div>
         </div>
@@ -5433,14 +5433,31 @@ function renderPhotoGrid() {
   }
   document.getElementById('ph-empty').style.display = 'none';
   grid.innerHTML = photos.map(function(p, idx) {
-    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:#F0F0F0;cursor:pointer;aspect-ratio:4/3" onclick="openPhotoLightbox(${idx})">
-      <img src="${p.thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"
-        onerror="this.src='https://drive.google.com/thumbnail?id=${p.id}&sz=w200'">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);padding:3px 6px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:#1A1A1A;cursor:pointer;height:180px" onclick="openPhotoLightbox(${idx})">
+      <img data-src="${p.thumb}" data-fallback="https://drive.google.com/thumbnail?id=${p.id}&sz=w400"
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+        style="width:100%;height:100%;object-fit:contain;display:block">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:6px 6px 4px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
       <button onclick="event.stopPropagation();deletePhotoScreen('${p.id}',${idx})"
         style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,0.85);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:22px;text-align:center;padding:0">×</button>
     </div>`;
   }).join('');
+
+  // IntersectionObserver: chỉ load ảnh khi gần viewport
+  var imgObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var img = entry.target;
+        if (img.dataset.src) {
+          img.src = img.dataset.src;
+          img.onerror = function() { this.src = this.dataset.fallback; };
+          delete img.dataset.src;
+          imgObs.unobserve(img);
+        }
+      }
+    });
+  }, { rootMargin: '200px' });
+  grid.querySelectorAll('img[data-src]').forEach(function(img) { imgObs.observe(img); });
 
   // Lưu photos hiện tại để lightbox dùng
   window._phCurrentPhotos = photos;
