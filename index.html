@@ -49,7 +49,7 @@ body{font-family:Tahoma,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a202c;f
 
 /* CARDS */
 .card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
-.card-title{font-size:12px;font-weight:600;color:#2d3748;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 
 /* FORM */
 .form-grid{display:grid;gap:10px;margin-bottom:10px}
@@ -75,7 +75,7 @@ body{font-family:Tahoma,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a202c;f
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
 th{background:#FEFAF0;padding:6px 7px;text-align:center;font-weight:700;color:#1A1A1A;border:1px solid #F5EDD0;font-size:10px;white-space:nowrap;overflow:hidden;text-transform:none;letter-spacing:0}
-td{padding:5px 7px;border:1px solid #F0F0F0;color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+td{padding:5px 7px;border:1px solid #F0F0F0;color:#1A1A1A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 tr:hover td{background:#FEFAF0}
 td input,td select{border:none;background:transparent;font-size:11px;width:100%;color:#1a202c;outline:none;font-family:inherit;text-align:center}
 td input:focus,td select:focus{background:#FEFAF0}
@@ -135,7 +135,7 @@ td input:focus,td select:focus{background:#FEFAF0}
 /* UPLOAD */
 .upload-area{border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .15s}
 .upload-area:hover{border-color:var(--amber-accent);background:#FEFAF0}
-.upload-title{font-size:12px;font-weight:600;color:#2d3748;margin-bottom:4px}
+.upload-title{font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:4px}
 .upload-sub{font-size:11px;color:var(--gray)}
 
 /* MODE TABS */
@@ -498,16 +498,16 @@ td input:focus,td select:focus{background:#FEFAF0}
               <div style="width:1px;background:#c3dafe;flex-shrink:0;margin:2px 2px"></div>
               <!-- OVM Total -->
               <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:5px 12px;text-align:center;min-width:80px">
-                <div style="font-size:10px;color:#b45309">OVM Total</div>
-                <div style="font-weight:600;font-size:14px;color:#b45309" id="rev-trk-total">—</div>
+                <div style="font-size:10px;color:#A06010">OVM Total</div>
+                <div style="font-weight:600;font-size:14px;color:#A06010" id="rev-trk-total">—</div>
               </div>
               <!-- Revised Total -->
-              <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 12px;text-align:center;min-width:80px">
-                <div style="font-size:10px;color:#15803d">Revised Total</div>
-                <div style="font-weight:600;font-size:14px;color:#15803d" id="rev-tot-total">0.00</div>
+              <div style="background:#FEFAF0;border:1px solid #F5EDD0;border-radius:6px;padding:5px 12px;text-align:center;min-width:80px">
+                <div style="font-size:10px;color:#A06010">Revised Total</div>
+                <div style="font-weight:600;font-size:14px;color:#A06010" id="rev-tot-total">0.00</div>
               </div>
               <!-- Difference + badge -->
-              <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 12px;text-align:center;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center" id="rev-diff-card">
+              <div style="background:#FEFAF0;border:1px solid #F5EDD0;border-radius:6px;padding:5px 12px;text-align:center;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center" id="rev-diff-card">
                 <div style="font-size:10px;color:var(--gray)">Difference</div>
                 <div style="font-weight:600;font-size:13px" id="rev-diff">—</div>
                 <div style="font-size:10px;font-weight:600;margin-top:2px" id="rev-match-badge"></div>
@@ -516,11 +516,11 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
           <!-- COMPARE PANEL -->
           <div id="rev-compare-panel" style="display:none;margin-top:12px">
-            <div style="font-size:12px;font-weight:600;color:#2d3748;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+            <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:8px;display:flex;align-items:center;gap:12px">
               So sánh thay đổi
               <span style="font-size:10px;font-weight:400;display:flex;gap:10px;align-items:center">
                 <span style="background:#fefce8;border:1px solid #fbbf24;padding:1px 7px;border-radius:3px">🟡 Sửa giá trị</span>
-                <span style="background:#f0fdf4;border:1px solid #4ade80;padding:1px 7px;border-radius:3px">🟢 Dòng mới</span>
+                <span style="background:#FEFAF0;border:1px solid #F5EDD0;padding:1px 7px;border-radius:3px">🟢 Dòng mới</span>
                 <span style="background:#fff1f2;border:1px solid #f87171;padding:1px 7px;border-radius:3px">🔴 Bị xoá</span>
               </span>
             </div>
@@ -1087,7 +1087,7 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
 
           <!-- Tabs Trước / Sau -->
-          <div id="ph-tabs" style="display:none;margin-bottom:12px;display:flex;gap:0;border-bottom:2px solid var(--border)">
+          <div id="ph-tabs" style="display:none;margin-top:4px;margin-bottom:12px;display:flex;gap:0;border-bottom:2px solid var(--border)">
             <div id="ph-tab-before" onclick="switchPhotoTab('before')"
               style="padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--amber-accent);margin-bottom:-2px;color:var(--amber)">
               Trước SC <span id="ph-cnt-before" style="font-size:10px;font-weight:400;color:var(--gray)"></span>
@@ -1761,7 +1761,7 @@ function lookupTariff(row) {
     row.style.background = '';
     document.getElementById('est-notfound').style.display = 'none';
     // Highlight row màu xanh nhẹ khi tìm thấy
-    row.style.background = '#f0fdf4';
+    row.style.background = '#FEFAF0';
     setTimeout(() => { row.style.background = ''; }, 1000);
   } else {
     console.log('NO MATCH — searching similar...');
@@ -2019,9 +2019,9 @@ function toggleCompare() {
   } else {
     panel.style.display = 'none';
     btn.textContent = '🔍 So sánh thay đổi';
-    btn.style.background = '#f0fdf4';
-    btn.style.color = '#15803d';
-    btn.style.borderColor = '#86efac';
+    btn.style.background = '#FEFAF0';
+    btn.style.color = '#A06010';
+    btn.style.borderColor = '#F5C842';
   }
 }
 
@@ -2614,8 +2614,8 @@ function renderTrackingStats(s) {
       <div class="stat-sub" style="color:#4ade80">${pct(s.approved)}%</div>
     </div>` : ''}
     ${s.partial ? `<div class="stat-card" style="background:#fffbeb;border-left:3px solid #f59e0b">
-      <div class="stat-label" style="color:#b45309">Partially</div>
-      <div class="stat-value" style="color:#b45309">${s.partial}</div>
+      <div class="stat-label" style="color:#A06010">Partially</div>
+      <div class="stat-value" style="color:#A06010">${s.partial}</div>
       <div class="stat-sub" style="color:#fcd34d">${pct(s.partial)}%</div>
     </div>` : ''}
     ${s.revised ? `<div class="stat-card" style="background:#eef2ff;border-left:3px solid #6366f1">
@@ -2653,7 +2653,7 @@ function makeStatusSelect(seq, current) {
     return '<option value="' + s + '"' + (s === current ? ' selected' : '') + '>' + s + '</option>';
   }).join('');
   var onch = "updateStatusInline(this,'" + seq + "')";
-  return '<select data-prev="' + (current||'') + '" onchange="' + onch + '" style="border:none;border-radius:4px;font-size:10px;font-weight:500;padding:2px 5px;cursor:pointer;width:100%;' + style + '">' + opts + '</select>';
+  return '<select data-prev="' + (current||'') + '" onchange="' + onch + '" style="border:none;border-radius:4px;font-size:11px;font-weight:500;padding:2px 5px;cursor:pointer;width:100%;' + style + '">' + opts + '</select>';
 }
 
 
@@ -2977,12 +2977,12 @@ function renderTrackingTable(data) {
       <td style="color:var(--blue);text-align:center">${r.ref_number||'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
-      <td style="text-align:right;${parseFloat(r.revise_total)>0?'color:#b45309;font-weight:500':'color:var(--gray)'}">${parseFloat(r.revise_total)>0?num(r.revise_total):'—'}</td>
+      <td style="text-align:right;${parseFloat(r.revise_total)>0?'color:#A06010;font-weight:500':'color:var(--gray)'}">${parseFloat(r.revise_total)>0?num(r.revise_total):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
-      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
+      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
+      <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
       <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600">Revise</button>` : ''}</td>
     </tr>
   `).join('');
@@ -3073,7 +3073,7 @@ function renderSummaryTable(data) {
       <td>${formatDate(r.est_date)}</td>
       <td style="color:var(--blue)">${r.ref_number||'—'}</td>
       <td>${formatDate(r.approved_date)||'—'}</td>
-      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
+      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="text-align:right">${num(r.labour_hours)}</td>
@@ -3093,7 +3093,7 @@ function renderSummaryTable(data) {
   const totEl = document.getElementById('sum-totals');
   totEl.style.display = 'flex';
   totEl.innerHTML = `
-    <span style="font-size:11px;color:var(--gray)">Total Cost: <strong style="color:#2d3748">${num(totCost)}</strong></span>
+    <span style="font-size:11px;color:var(--gray)">Total Cost: <strong style="color:#1A1A1A">${num(totCost)}</strong></span>
     <span style="font-size:11px;color:var(--gray)">Total Approved: <strong style="color:var(--green)">${num(totApp)}</strong></span>
     <span style="font-size:11px;color:var(--gray)">Chênh lệch: <strong style="color:${totCost-totApp>0?'var(--amber)':'var(--green)'}">${num(totCost-totApp)}</strong></span>
   `;
@@ -3885,8 +3885,8 @@ function genDashboard() {
       <div class="stat-sub">USD</div>
     </div>
     <div class="stat-card" style="background:#fffbeb;border-left:4px solid #f59e0b">
-      <div class="stat-label" style="color:#b45309">Unit Cost TB</div>
-      <div class="stat-value" style="color:#b45309;font-size:16px">${num(unitCost)}</div>
+      <div class="stat-label" style="color:#A06010">Unit Cost TB</div>
+      <div class="stat-value" style="color:#A06010;font-size:16px">${num(unitCost)}</div>
       <div class="stat-sub">USD / cont</div>
     </div>
     <div class="stat-card" style="background:#eef2ff;border-left:4px solid #6366f1">
@@ -5601,10 +5601,10 @@ function renderInventoryReport() {
   // CSS styles cho các loại dòng
   const styles = {
     total:     'background:#fffde7;font-weight:700;color:#1a202c',
-    sub:       'background:#fff;font-weight:400;color:#2d3748',
+    sub:       'background:#fff;font-weight:400;color:#1A1A1A',
     italic:    'background:#fff;font-style:italic;color:#4a5568;font-weight:400',
     separator: 'background:#f1f5f9;height:10px',
-    plain:     'background:#fff;font-weight:400;color:#2d3748',
+    plain:     'background:#fff;font-weight:400;color:#1A1A1A',
   };
   const tdStyle = 'padding:4px 7px;border:1px solid #d1d5db;text-align:center;white-space:nowrap';
   const tdLabel = 'padding:4px 8px;border:1px solid #d1d5db;text-align:left;white-space:nowrap';
