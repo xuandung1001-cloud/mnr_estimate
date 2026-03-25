@@ -1027,14 +1027,15 @@ td input:focus,td select:focus{background:#FEFAF0}
                 <tr>
                   <th style="width:40px">STT</th>
                   <th style="width:140px">Username</th>
-                  <th style="width:180px">Họ tên</th>
+                  <th style="width:160px">Họ tên</th>
+                  <th style="width:140px">Chức vụ</th>
                   <th style="width:100px">Hết hạn</th>
                   <th style="width:80px">Role</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody id="users-rows">
-                <tr><td colspan="6" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1099,7 +1100,7 @@ window.addEventListener('load', function() {
           if (new Date() <= expiry) {
             state.user = session;
             document.getElementById('sb-username').textContent = session.fullname || session.username;
-            document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + session.expiry;
+            document.getElementById('sb-expiry').textContent = session.title || ((session.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
             if ((session.role||'').toLowerCase() === 'admin') {
@@ -1176,10 +1177,10 @@ async function doLogin() {
       state.user.key = key; // lưu tạm trong memory cho admin calls
       // Lưu session vào localStorage
       localStorage.setItem('mnr_session', JSON.stringify({
-        username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || ''
+        username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || '', title: res.title || ''
       }));
       document.getElementById('sb-username').textContent = res.fullname || username;
-      document.getElementById('sb-expiry').textContent = 'Hết hạn: ' + formatDate(res.expiry);
+      document.getElementById('sb-expiry').textContent = res.title || ((res.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
       // Hiện nav Quản lý User nếu admin
@@ -4943,24 +4944,25 @@ async function renderUsers() {
   tbody.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
     const res = await apiGet({ action: 'getUsers', username: state.user.username, key: state.user.key || localStorage.getItem('mnr_key') || '' });
-    if (!res.success) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
+    if (!res.success) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
     const data = res.data || [];
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px">Chưa có user nào</td></tr>'; return; }
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px">Chưa có user nào</td></tr>'; return; }
     tbody.innerHTML = data.map((u, i) => `
       <tr>
         <td>${i+1}</td>
         <td style="font-weight:600;text-align:left">${u.username}</td>
         <td style="text-align:left">${u.fullname||'—'}</td>
+        <td style="text-align:left">${u.title||'—'}</td>
         <td>${u.expiry||'—'}</td>
         <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${u.role||'user'}</span></td>
         <td style="text-align:left">
-          <button onclick="showEditUserModal('${u.username}','${u.fullname||''}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
+          <button onclick="showEditUserModal('${u.username}','${u.fullname||''}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}','${(u.title||'').replace(/'/g,&quot;\\\'&quot;)}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
           <button onclick="doDeleteUser('${u.username}')" class="btn btn-sm btn-red">Xoá</button>
         </td>
       </tr>
     `).join('');
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:20px">Lỗi: ${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi: ${e.message}</td></tr>`;
   }
 }
 
@@ -4971,6 +4973,7 @@ function showAddUserModal() {
   document.getElementById('u-password').value = '';
   document.getElementById('u-pwd-hint').textContent = '(bắt buộc)';
   document.getElementById('u-fullname').value = '';
+  document.getElementById('u-title').value = '';
   document.getElementById('u-expiry').value = '31/12/2026';
   document.getElementById('u-role').value = 'user';
   document.getElementById('u-perms-block').style.display = 'block';
@@ -4979,13 +4982,14 @@ function showAddUserModal() {
   document.getElementById('modal-user').style.display = 'flex';
 }
 
-function showEditUserModal(username, fullname, expiry, role, perms) {
+function showEditUserModal(username, fullname, expiry, role, perms, title) {
   document.getElementById('modal-user-title').textContent = 'Chỉnh sửa User';
   document.getElementById('u-username').value = username;
   document.getElementById('u-username').disabled = true;
   document.getElementById('u-password').value = '';
   document.getElementById('u-pwd-hint').textContent = '(để trống = giữ nguyên)';
   document.getElementById('u-fullname').value = fullname;
+  document.getElementById('u-title').value = title || '';
   document.getElementById('u-expiry').value = expiry;
   document.getElementById('u-role').value = role;
   const isAdmin = role === 'admin';
@@ -5003,6 +5007,7 @@ async function doSaveUser() {
   const username = document.getElementById('u-username').value.trim();
   const key      = document.getElementById('u-password').value.trim();
   const fullname = document.getElementById('u-fullname').value.trim();
+  const title    = document.getElementById('u-title').value.trim();
   const expiry   = document.getElementById('u-expiry').value.trim();
   const role     = document.getElementById('u-role').value;
   const errEl    = document.getElementById('modal-user-error');
@@ -5023,7 +5028,7 @@ async function doSaveUser() {
       action: 'saveUser',
       admin_username: state.user.username,
       admin_key: state.user.key || '',
-      username, key, fullname, expiry: expiryISO, role,
+      username, key, fullname, title, expiry: expiryISO, role,
       permissions: role === 'admin' ? 'all' : getPermCheckboxes()
     });
     if (res.success) {
@@ -5406,6 +5411,10 @@ function exportInventoryExcel() {
       <div class="fg">
         <div class="fl">Họ tên</div>
         <input class="fi" id="u-fullname" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="fg">
+        <div class="fl">Chức vụ</div>
+        <input class="fi" id="u-title" placeholder="VD: Trưởng bộ phận MNR">
       </div>
       <div class="fg">
         <div class="fl">Hết hạn</div>
