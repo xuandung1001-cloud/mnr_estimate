@@ -19,9 +19,10 @@ body{font-family:Tahoma,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a202c;f
 /* SIDEBAR */
 .sb-header{padding:16px 14px 13px;border-bottom:1px solid #EEEEEE}
 .sb-title{font-size:13px;font-weight:700;color:#1A1A1A;letter-spacing:.01em}
-.sb-sub{font-size:10px;color:#BBB;margin-top:2px}
+.sb-sub{font-size:10px;color:#E53E3E;font-weight:700;margin-top:2px;letter-spacing:.02em}
 .nav-section{padding:6px 0 2px}
-.nav-label{font-size:9px;font-weight:700;color:#AAA;padding:6px 14px 3px;text-transform:uppercase;letter-spacing:.08em}
+.nav-label{font-size:9px;font-weight:800;padding:8px 14px 3px;text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:5px}
+.nav-label::before{content:'';display:inline-block;width:3px;height:10px;border-radius:2px;flex-shrink:0}
 .nav-item{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:1px 7px;font-size:11.5px;color:#333;cursor:pointer;border-left:none;transition:all .12s;border-radius:6px}
 .nav-item:hover{background:#FAFAFA;color:#111}
 .nav-item.active{background:#FEFAF0;color:#111;font-weight:600;border-left:3px solid #F5C842;padding-left:7px}
@@ -30,8 +31,8 @@ body{font-family:Tahoma,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a202c;f
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:.9}
 .nav-item.active .nav-icon{opacity:1}
 .sb-footer{margin-top:auto;padding:12px 14px;border-top:1px solid #F0F0F0}
-.sb-user{font-size:11px;font-weight:600;color:#1A1A1A}
-.sb-expiry{font-size:10px;color:#CCC;margin-top:2px}
+.sb-user{font-size:11px;font-weight:700;color:#1A1A1A}
+.sb-expiry{font-size:10px;color:#888;margin-top:2px;font-weight:500}
 
 /* TOPBAR */
 .tb-title{font-size:17px;font-weight:700;color:#1a202c;letter-spacing:-.01em}
@@ -214,7 +215,7 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Thao tác</div>
+      <div class="nav-label" style="color:#E67E22">&#9632; Thao tác</div>
       <div class="nav-item" onclick="nav('estimate',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#F5C842" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Nhập Báo Giá
@@ -229,7 +230,7 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Theo dõi</div>
+      <div class="nav-label" style="color:#2980B9">&#9632; Theo dõi</div>
       <div class="nav-item" onclick="nav('tracking',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
         Danh sách Báo Giá
@@ -248,7 +249,7 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Hệ thống</div>
+      <div class="nav-label" style="color:#8E44AD">&#9632; Hệ thống</div>
       <div class="nav-item" onclick="nav('tariff',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
         Quản lý Bảng Giá
@@ -259,7 +260,7 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Báo cáo</div>
+      <div class="nav-label" style="color:#27AE60">&#9632; Báo cáo</div>
       <div class="nav-item" onclick="nav('report',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="18"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="16" y1="14" x2="16" y2="18"/></svg>
         Báo cáo tháng
@@ -287,7 +288,7 @@ td input:focus,td select:focus{background:#FEFAF0}
           <div class="sb-expiry" id="sb-expiry">—</div>
         </div>
       </div>
-      <button onclick="doLogout()" style="margin-top:8px;width:100%;font-size:11px;padding:5px 0;border:1px solid #EEEEEE;border-radius:6px;background:#fff;color:#AAA;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#F5F5F5'" onmouseout="this.style.background='#fff'">Đăng xuất</button>
+      <button onclick="doLogout()" style="margin-top:8px;width:100%;font-size:11px;padding:5px 0;border:1px solid #DDD;border-radius:6px;background:#F5F5F5;color:#555;cursor:pointer;font-family:inherit;font-weight:600" onmouseover="this.style.background='#EBEBEB';this.style.color='#222'" onmouseout="this.style.background='#F5F5F5';this.style.color='#555'">Đăng xuất</button>
     </div>
   </div>
 
