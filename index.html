@@ -4307,11 +4307,14 @@ async function doExportPictures() {
     };
 
     var detailRows = allResults.map(function(r, i) {
+      var countDisplay = r.total_found && r.total_found !== r.count
+        ? `<span style="color:var(--red);font-weight:600">${r.count}/${r.total_found}</span>`
+        : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
       return `<tr>
         <td>${i+1}</td>
         <td style="font-family:monospace">${r.cont}</td>
         <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
-        <td style="text-align:right;color:var(--blue);font-weight:500">${r.count} ảnh</td>
+        <td style="text-align:right">${countDisplay} ảnh</td>
         <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
       </tr>`;
     }).join('');
@@ -5118,11 +5121,14 @@ async function doExportRetry() {
          </div>` : '<div class="alert alert-ok" style="margin-top:8px">✓ Đã xuất bổ sung xong tất cả!</div>';
 
     var retryRows = retryResults.map(function(r, i) {
+      var countDisplay = r.total_found && r.total_found !== r.count
+        ? `<span style="color:var(--red);font-weight:600">${r.count}/${r.total_found}</span>`
+        : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
       return `<tr>
         <td>${i+1}</td>
         <td style="font-family:monospace">${r.cont}</td>
         <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
-        <td style="text-align:right;color:var(--green);font-weight:500">${r.count} ảnh</td>
+        <td style="text-align:right">${countDisplay} ảnh</td>
         <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
       </tr>`;
     }).join('');
