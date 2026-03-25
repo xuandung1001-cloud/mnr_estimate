@@ -5433,14 +5433,12 @@ function renderPhotoGrid() {
   }
   document.getElementById('ph-empty').style.display = 'none';
   grid.innerHTML = photos.map(function(p, idx) {
-    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:#F5F5F5;aspect-ratio:1;cursor:pointer" onclick="openPhotoLightbox(${idx})">
-      <img src="${p.thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover"
+    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:#F0F0F0;cursor:pointer;aspect-ratio:4/3" onclick="openPhotoLightbox(${idx})">
+      <img src="${p.thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block"
         onerror="this.src='https://drive.google.com/thumbnail?id=${p.id}&sz=w200'">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:3px 5px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-      <div style="position:absolute;top:4px;right:4px">
-        <button onclick="event.stopPropagation();deletePhotoScreen('${p.id}',${idx})"
-          style="background:rgba(220,38,38,0.85);border:none;color:white;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
-      </div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);padding:3px 6px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+      <button onclick="event.stopPropagation();deletePhotoScreen('${p.id}',${idx})"
+        style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,0.85);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:22px;text-align:center;padding:0">×</button>
     </div>`;
   }).join('');
 
@@ -5451,9 +5449,11 @@ function renderPhotoGrid() {
 function openPhotoLightbox(idx) {
   var photos = window._phCurrentPhotos || [];
   if (!photos.length) return;
-  _lbPhotos = photos.map(function(p) { return 'https://drive.google.com/thumbnail?id=' + p.id + '&sz=w1600'; });
-  _lbIdx = idx;
-  openLightbox(_lbPhotos[idx], _lbPhotos, idx);
+  // Convert sang format _estPhotosData để dùng chung lightboxNav
+  window._estPhotosData = photos.map(function(p) {
+    return { id: p.id, name: p.name, url: 'https://drive.google.com/file/d/' + p.id + '/view' };
+  });
+  openLightboxIdx(idx);
 }
 
 async function deletePhotoScreen(fileId, idx) {
