@@ -1099,6 +1099,7 @@ window.addEventListener('load', function() {
           expiry.setHours(23,59,59,0);
           if (new Date() <= expiry) {
             state.user = session;
+            state.user.key = sessionStorage.getItem('mnr_key') || '';
             document.getElementById('sb-username').textContent = session.fullname || session.username;
             document.getElementById('sb-expiry').textContent = session.title || ((session.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
             document.getElementById('login-screen').style.display = 'none';
@@ -1179,6 +1180,7 @@ async function doLogin() {
       localStorage.setItem('mnr_session', JSON.stringify({
         username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || '', title: res.title || ''
       }));
+      sessionStorage.setItem('mnr_key', key); // lưu key trong tab để dùng khi F5
       document.getElementById('sb-username').textContent = res.fullname || username;
       document.getElementById('sb-expiry').textContent = res.title || ((res.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
       document.getElementById('login-screen').style.display = 'none';
@@ -4528,6 +4530,7 @@ async function deleteEstimate(containerNo, estDate) {
 // ===================== LOGOUT =====================
 function doLogout() {
   localStorage.removeItem('mnr_session');
+  sessionStorage.removeItem('mnr_key');
   location.reload();
 }
 
