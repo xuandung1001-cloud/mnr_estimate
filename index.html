@@ -624,7 +624,7 @@ td input:focus,td select:focus{background:#FEFAF0}
               <input type="checkbox" id="trk-infestation" onchange="filterTracking()"> 🪲 Termite Attack
             </label>
             <label style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
-              <input type="checkbox" id="trk-show-closed" onchange="filterTracking()"> Hiện Rejected/Repaired
+              <input type="checkbox" id="trk-show-closed" onchange="filterTracking()"> <strong>Hiện Rejected</strong>
             </label>
             <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
@@ -2939,7 +2939,7 @@ function renderTrackingTable(data) {
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--blue)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
-      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-blue">Revise</button>` : ''}</td>
+      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600">Revise</button>` : ''}</td>
     </tr>
   `).join('');
 }
@@ -3069,8 +3069,8 @@ async function syncSummary() {
 }
 
 function exportSummary() {
-  exportTableToCSV('sum-rows', 'summary_' + todayStr().replace(/\//g,'-') + '.csv');
-  toast('Đã export CSV!', 2000);
+  exportTableToCSV('sum-rows', 'summary_' + todayStr().replace(/\//g,'-') + '.xlsx');
+  toast('Đang xuất Excel...', 2000);
 }
 
 // ===================== STOCK =====================
@@ -4196,8 +4196,8 @@ function genDetailedReport() {
 }
 
 function exportReport() {
-  exportTableToCSV('rpt-result', 'report_' + document.getElementById('rpt-month').value + '_' + document.getElementById('rpt-year').value + '.csv');
-  toast('Đã export CSV!', 2000);
+  exportTableToCSV('rpt-result', 'report_' + document.getElementById('rpt-month').value + '_' + document.getElementById('rpt-year').value + '.xlsx');
+  toast('Đang xuất Excel...', 2000);
 }
 
 // ===================== PICTURES =====================
@@ -4686,17 +4686,37 @@ function toast(msg, duration = 2500) {
 }
 
 function exportTableToCSV(tbodyId, filename) {
-  const rows = [];
-  document.querySelectorAll('#' + tbodyId + ' tr').forEach(tr => {
-    const cells = [...tr.querySelectorAll('td')].map(td => '"' + td.textContent.replace(/"/g,'""').trim() + '"');
-    if (cells.length) rows.push(cells.join(','));
+  // Đổi .csv → .xlsx
+  filename = filename.replace(/\.csv$/i, '.xlsx');
+
+  function loadXLSX(cb) {
+    if (window.XLSX) { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = cb; document.head.appendChild(s);
+  }
+
+  loadXLSX(function() {
+    // Lấy header từ thead (nếu có)
+    var table = document.getElementById(tbodyId) ? document.getElementById(tbodyId).closest('table') : null;
+    var rows = [];
+    if (table) {
+      var ths = table.querySelectorAll('thead th');
+      if (ths.length) rows.push([...ths].map(th => th.textContent.trim()));
+    }
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(function(tr) {
+      var cells = [...tr.querySelectorAll('td')].map(function(td) {
+        var v = td.textContent.trim();
+        var n = parseFloat(v.replace(/,/g,''));
+        return isNaN(n) ? v : n;
+      });
+      if (cells.length) rows.push(cells);
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, filename);
   });
-  const csv = '\uFEFF' + rows.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
 }
 
 // ===================== QUẢN LÝ TARIFF =====================
