@@ -1086,12 +1086,6 @@ td input:focus,td select:focus{background:#FEFAF0}
             <button class="btn btn-blue" onclick="loadPhotosScreen()">🔍 Tìm ảnh</button>
           </div>
 
-          <!-- Filter ngày -->
-          <div id="ph-date-filter" style="display:none;margin-bottom:12px">
-            <span style="font-size:11px;font-weight:600;color:#1A1A1A;margin-right:8px">Ngày upload:</span>
-            <span id="ph-date-tabs" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span>
-          </div>
-
           <!-- Tabs Trước / Sau -->
           <div id="ph-tabs" style="display:none;margin-bottom:12px;display:flex;gap:0;border-bottom:2px solid var(--border)">
             <div id="ph-tab-before" onclick="switchPhotoTab('before')"
@@ -4273,8 +4267,8 @@ function initPicturesScreen() {
   document.getElementById('pic-tab-a').classList.remove('active');
   var carriers = [...new Set(state.tariff.map(r => r.carrier).filter(Boolean))].sort();
   var sel = document.getElementById('pic-carrier');
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">-- Chọn Carrier --</option>' + carriers.map(c => `<option${c===cur?' selected':''}>${c}</option>`).join('');
+  var cur = sel.value || 'MSC';
+  sel.innerHTML = carriers.map(c => `<option${c===cur?' selected':''}>${c}</option>`).join('');
   setPicMode('B', document.getElementById('pic-tab-b'));
 }
 
@@ -5327,7 +5321,7 @@ function initPhotosScreen() {
   var sel = document.getElementById('ph-carrier');
   if (sel && state.tariff && state.tariff.length) {
     var carriers = [...new Set(state.tariff.map(r => r.carrier).filter(Boolean))].sort();
-    sel.innerHTML = '<option value="">-- Chọn --</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+    sel.innerHTML = carriers.map(c => `<option${c==='MSC'?' selected':''}>${c}</option>`).join('');
   }
 }
 
@@ -5341,7 +5335,6 @@ async function loadPhotosScreen() {
   document.getElementById('ph-empty').style.display = 'none';
   document.getElementById('ph-loading').style.display = 'block';
   document.getElementById('ph-tabs').style.display = 'none';
-  document.getElementById('ph-date-filter').style.display = 'none';
 
   try {
     document.getElementById('ph-loading').style.display = 'block';
@@ -5351,7 +5344,7 @@ async function loadPhotosScreen() {
     var resAfter  = await apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Sau sửa chữa' });
     _phData.before = (resBefore && resBefore.success && resBefore.photos) ? resBefore.photos : [];
     _phData.after  = (resAfter  && resAfter.success  && resAfter.photos)  ? resAfter.photos  : [];
-    _phDateFilter  = 'all';
+_phDateFilter = 'all';
     _phTab         = 'before';
 
     document.getElementById('ph-loading').style.display = 'none';
@@ -5363,7 +5356,7 @@ async function loadPhotosScreen() {
     }
 
     // Render date filter tabs
-    renderPhotoDateFilter();
+
 
     // Show tabs
     document.getElementById('ph-tabs').style.display = 'flex';
@@ -5375,33 +5368,7 @@ async function loadPhotosScreen() {
   }
 }
 
-function renderPhotoDateFilter() {
-  // Thu thập tất cả ngày từ cả 2 loại
-  var allDates = [...new Set([..._phData.before, ..._phData.after].map(p => p.date))].sort();
-  if (allDates.length <= 1) {
-    document.getElementById('ph-date-filter').style.display = 'none';
-    return;
-  }
-  document.getElementById('ph-date-filter').style.display = 'block';
-  var tabs = '<span onclick="filterPhotoDate(\'all\')" id="phd-all" style="cursor:pointer;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:var(--amber-accent);color:#5A3E00">Tất cả</span>';
-  allDates.forEach(function(d) {
-    tabs += `<span onclick="filterPhotoDate('${d}')" id="phd-${d}" style="cursor:pointer;padding:3px 10px;border-radius:12px;font-size:11px;background:#FEFAF0;border:1px solid #F5EDD0;color:#7A5500">${d}</span>`;
-  });
-  document.getElementById('ph-date-tabs').innerHTML = tabs;
-}
 
-function filterPhotoDate(date) {
-  _phDateFilter = date;
-  // Update tab styles
-  document.querySelectorAll('[id^="phd-"]').forEach(function(el) {
-    el.style.background = '#FEFAF0';
-    el.style.border = '1px solid #F5EDD0';
-    el.style.fontWeight = '400';
-  });
-  var active = document.getElementById('phd-' + date);
-  if (active) { active.style.background = 'var(--amber-accent)'; active.style.fontWeight = '600'; active.style.border = '1px solid #D4A800'; }
-  renderPhotoGrid();
-}
 
 function switchPhotoTab(tab) {
   _phTab = tab;
