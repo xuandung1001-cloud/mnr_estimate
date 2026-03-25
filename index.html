@@ -1926,7 +1926,10 @@ async function onReviseInput(val, estDate) {
   const res = await apiGet({ action: 'getEstimates', container_no: val, est_date: estDate || '' });
   if (res.success && res.data.length > 0) {
     const first = res.data[0];
-    document.getElementById('rev-app-date').value = formatDate(first.approval_date) || '';
+    // Ưu tiên lấy approved_date từ tracking, fallback sang estimates
+    const trkForDate = state.tracking.find(t => (t.container_no||'').toUpperCase() === val && !['Repaired','Rejected'].includes(t.approval_status));
+    const appDateFromTrk = trkForDate ? formatDate(trkForDate.approved_date) : '';
+    document.getElementById('rev-app-date').value = appDateFromTrk || formatDate(first.approval_date) || '';
     document.getElementById('rev-carrier').value  = first.carrier   || '';
     document.getElementById('rev-size').value     = first.size_type || '';
     _revOrigData = {};
