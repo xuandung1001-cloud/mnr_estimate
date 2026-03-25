@@ -1084,7 +1084,6 @@ td input:focus,td select:focus{background:#FEFAF0}
               </select>
             </div>
             <button class="btn btn-blue" onclick="loadPhotosScreen()">🔍 Tìm ảnh</button>
-            <div id="ph-summary" style="font-size:11px;color:var(--gray);align-self:center"></div>
           </div>
 
           <!-- Filter ngày -->
@@ -1106,7 +1105,7 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
 
           <!-- Grid ảnh -->
-          <div id="ph-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px"></div>
+          <div id="ph-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px"></div>
           <div id="ph-empty" style="text-align:center;color:var(--gray);padding:40px;display:none">Không tìm thấy ảnh</div>
           <div id="ph-loading" style="text-align:center;padding:40px;display:none"><div class="spinner" style="margin:0 auto"></div></div>
         </div>
@@ -5360,12 +5359,8 @@ async function loadPhotosScreen() {
     var total = _phData.before.length + _phData.after.length;
     if (!total) {
       document.getElementById('ph-empty').style.display = 'block';
-      document.getElementById('ph-summary').textContent = 'Không tìm thấy ảnh nào cho ' + contNo;
       return;
     }
-
-    document.getElementById('ph-summary').textContent =
-      contNo + ' — ' + _phData.before.length + ' ảnh trước, ' + _phData.after.length + ' ảnh sau';
 
     // Render date filter tabs
     renderPhotoDateFilter();
@@ -5474,9 +5469,6 @@ async function deletePhotoScreen(fileId, idx) {
         var i = arr.indexOf(photo);
         if (i >= 0) arr.splice(i, 1);
       }
-      document.getElementById('ph-summary').textContent =
-        (document.getElementById('ph-cont').value||'').toUpperCase() +
-        ' — ' + _phData.before.length + ' ảnh trước, ' + _phData.after.length + ' ảnh sau';
       document.getElementById('ph-cnt-before').textContent = '(' + _phData.before.length + ')';
       document.getElementById('ph-cnt-after').textContent  = '(' + _phData.after.length + ')';
       renderPhotoGrid();
