@@ -5345,10 +5345,13 @@ async function loadPhotosScreen() {
   document.getElementById('ph-summary').textContent = '';
 
   try {
+    document.getElementById('ph-loading').style.display = 'block';
+    document.getElementById('ph-loading').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto 8px"></div><div style="font-size:11px;color:var(--gray)">Đang tải ảnh Trước SC...</div></div>';
     var resBefore = await apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Trước sửa chữa' });
+    document.getElementById('ph-loading').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto 8px"></div><div style="font-size:11px;color:var(--gray)">Đang tải ảnh Sau SC...</div></div>';
     var resAfter  = await apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Sau sửa chữa' });
-    _phData.before = (resBefore.success && resBefore.photos) ? resBefore.photos : [];
-    _phData.after  = (resAfter.success  && resAfter.photos)  ? resAfter.photos  : [];
+    _phData.before = (resBefore && resBefore.success && resBefore.photos) ? resBefore.photos : [];
+    _phData.after  = (resAfter  && resAfter.success  && resAfter.photos)  ? resAfter.photos  : [];
     _phDateFilter  = 'all';
     _phTab         = 'before';
 
