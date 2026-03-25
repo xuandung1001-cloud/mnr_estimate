@@ -3038,7 +3038,7 @@ function renderSummaryTable(data) {
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
-      <td style="text-align:center">${r.updated_at ? formatDate(r.updated_at) : '—'}</td>
+      <td style="text-align:center">${r.updated_at ? (r.updated_at.split(' ')[0]) : '—'}</td>
       <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${(r.remarks2||r.remarks1||'').replace(/"/g,'&quot;')}">${r.remarks2||r.remarks1||'—'}</td>
     </tr>
   `).join('');
