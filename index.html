@@ -4956,7 +4956,7 @@ async function renderUsers() {
         <td>${u.expiry||'—'}</td>
         <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${u.role||'user'}</span></td>
         <td style="text-align:left">
-          <button onclick="showEditUserModal('${u.username}','${u.fullname||''}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}','${(u.title||'').replace(/'/g,&quot;\\\'&quot;)}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
+          <button onclick="showEditUserModal('${u.username}','${(u.fullname||'').replace(/'/g,'\`')}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}','${(u.title||'').replace(/'/g,'\`')}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
           <button onclick="doDeleteUser('${u.username}')" class="btn btn-sm btn-red">Xoá</button>
         </td>
       </tr>
