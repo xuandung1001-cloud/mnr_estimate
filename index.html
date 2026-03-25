@@ -4589,7 +4589,11 @@ async function deleteEstimate(containerNo, estDate) {
   try {
     var res = await apiPost({ action: 'deleteEstimate', container_no: containerNo, est_date: estDate || '' });
     if (res && res.success) {
-      state.tracking = state.tracking.filter(function(r) { return r.container_no !== containerNo; });
+      state.tracking = state.tracking.filter(function(r) {
+        if (r.container_no !== containerNo) return true;
+        if (estDate && r.est_date && formatDate(r.est_date) !== formatDate(estDate)) return true;
+        return false;
+      });
       renderTracking();
       toast(res.message, 3000);
     } else { toast('Lỗi: ' + (res ? res.error : 'No response'), 4000); }
