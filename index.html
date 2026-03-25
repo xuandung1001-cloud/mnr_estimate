@@ -2708,8 +2708,75 @@ async function saveTrackingRemark(input, containerNo, estDate) {
 }
 
 function exportTracking() {
-  exportTableToCSV('trk-rows', 'est_tracking_' + todayStr().replace(/\//g,'-') + '.csv');
-  toast('Đã export CSV!', 2000);
+  var data = state.tracking || [];
+  if (!data.length) { toast('Không có dữ liệu!'); return; }
+
+  // Lấy data đang filter hiện tại
+  var q  = document.getElementById('trk-search').value.toLowerCase();
+  var st = document.getElementById('trk-status').value;
+  var ca = document.getElementById('trk-carrier').value;
+  var showClosed  = document.getElementById('trk-show-closed').checked;
+  var onlyTermite = document.getElementById('trk-infestation').checked;
+  var CLOSED = ['Repaired','Rejected'];
+
+  var filtered = data.filter(function(r) {
+    if (!showClosed && CLOSED.includes(r.approval_status)) return false;
+    if (onlyTermite && r.special_flag !== 'Termite Attack') return false;
+    if (st && r.approval_status !== st) return false;
+    if (ca && r.carrier !== ca) return false;
+    if (q) {
+      var s = ((r.container_no||'') + (r.ref_number||'') + (r.po_number||'')).toLowerCase();
+      if (!s.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) { toast('Không có dữ liệu để xuất!'); return; }
+
+  function loadXLSX(cb) {
+    if (window.XLSX) { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = cb; document.head.appendChild(s);
+  }
+
+  loadXLSX(function() {
+    var headers = ['STT','Equipment No','Carrier','Size','Est. Date','Total Est.',
+                   'Ref No','App. Date','Total App.','Total Rev.','Status',
+                   'Repair Date','PO Number','PO Date','Remarks'];
+    var rows = [headers];
+    filtered.forEach(function(r, i) {
+      rows.push([
+        i + 1,
+        r.container_no || '',
+        r.carrier || '',
+        r.size || '',
+        formatDate(r.est_date) || '',
+        parseFloat(r.total_cost) || 0,
+        r.ref_number || '',
+        formatDate(r.approved_date) || '',
+        parseFloat(r.total_approved) || 0,
+        parseFloat(r.revise_total) || 0,
+        r.approval_status || '',
+        formatDate(r.repair_date) || '',
+        r.po_number || '',
+        formatDate(r.po_date) || '',
+        r.remarks1 || r.remarks2 || ''
+      ]);
+    });
+
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      {wch:5},{wch:14},{wch:8},{wch:6},{wch:12},{wch:10},
+      {wch:22},{wch:12},{wch:10},{wch:10},{wch:28},
+      {wch:12},{wch:22},{wch:12},{wch:30}
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Tracking');
+    var ds = todayStr().replace(/\//g,'-');
+    XLSX.writeFile(wb, 'EST_Tracking_' + ds + '.xlsx');
+    toast('Export Excel thành công! ' + filtered.length + ' dòng', 2500);
+  });
 }
 
 
