@@ -4295,8 +4295,16 @@ async function doExportPictures() {
     var notFoundHtml = allNotFound.length
       ? `<div class="alert alert-warn" style="margin-top:10px">
           <strong>Không tìm thấy ảnh (${allNotFound.length} cont):</strong><br>
-          <span style="font-family:monospace;font-size:11px">${allNotFound.join(', ')}</span>
+          <span style="font-family:monospace;font-size:11px">${allNotFound.join(', ')}</span><br>
+          <button onclick="doExportRetry()" class="btn btn-sm btn-blue" style="margin-top:8px">↻ Xuất bổ sung ${allNotFound.length} cont này vào folder cũ</button>
          </div>` : '';
+
+    // Lưu context để xuất bổ sung
+    window._lastExportCtx = {
+      carrier, folderId, folderName, folderUrl,
+      notFound: allNotFound,
+      refMap, loaiAnh
+    };
 
     var detailRows = allResults.map(function(r, i) {
       return `<tr>
@@ -5056,6 +5064,88 @@ async function doDeleteUser(username) {
     if (res.success) { toast('Đã xoá user!'); renderUsers(); }
     else toast('Lỗi: ' + (res.error||'Không xoá được'));
   } catch(e) { toast('Lỗi kết nối'); }
+}
+
+// ===================== XUẤT BỔ SUNG =====================
+async function doExportRetry() {
+  var ctx = window._lastExportCtx;
+  if (!ctx || !ctx.notFound || !ctx.notFound.length) { toast('Không có cont nào cần bổ sung!'); return; }
+
+  toast('Đang xuất bổ sung ' + ctx.notFound.length + ' cont...', 3000);
+  document.getElementById('pic-progress').style.display = 'block';
+  document.getElementById('pic-progress-text').textContent = 'Đang xuất bổ sung...';
+
+  var _sec = 0;
+  var _timer = setInterval(function() {
+    _sec++;
+    document.getElementById('pic-progress-text').textContent = 'Đang xuất bổ sung... (' + _sec + 's)';
+  }, 1000);
+
+  try {
+    var retryResults = [], retryNotFound = [], retryCopied = 0;
+
+    for (var ci = 0; ci < ctx.notFound.length; ci++) {
+      var contNo = ctx.notFound[ci];
+      document.getElementById('pic-progress-text').textContent =
+        'Xuất bổ sung [' + (ci+1) + '/' + ctx.notFound.length + '] ' + contNo + '... (' + _sec + 's)';
+      var res = await apiPost({
+        action: 'exportPictures',
+        cont_list: [contNo],
+        carrier: ctx.carrier,
+        loai_anh: ctx.loaiAnh,
+        mode: _picMode,
+        ref_map: ctx.refMap,
+        folder_id: ctx.folderId
+      });
+      if (res.success) {
+        retryCopied += res.total_copied || 0;
+        if (res.results && res.results.length) retryResults = retryResults.concat(res.results);
+        if (res.not_found && res.not_found.length) retryNotFound = retryNotFound.concat(res.not_found);
+      }
+    }
+
+    clearInterval(_timer);
+    document.getElementById('pic-progress').style.display = 'none';
+
+    // Cập nhật _lastExportCtx
+    window._lastExportCtx.notFound = retryNotFound;
+
+    var stillNotFound = retryNotFound.length
+      ? `<div class="alert alert-warn" style="margin-top:8px">
+          <strong>Vẫn không tìm thấy (${retryNotFound.length} cont):</strong><br>
+          <span style="font-family:monospace;font-size:11px">${retryNotFound.join(', ')}</span><br>
+          <button onclick="doExportRetry()" class="btn btn-sm btn-blue" style="margin-top:8px">↻ Thử lại</button>
+         </div>` : '<div class="alert alert-ok" style="margin-top:8px">✓ Đã xuất bổ sung xong tất cả!</div>';
+
+    var retryRows = retryResults.map(function(r, i) {
+      return `<tr>
+        <td>${i+1}</td>
+        <td style="font-family:monospace">${r.cont}</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
+        <td style="text-align:right;color:var(--green);font-weight:500">${r.count} ảnh</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
+      </tr>`;
+    }).join('');
+
+    // Append vào pic-result-body
+    var extra = document.createElement('div');
+    extra.innerHTML = `
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:8px">Kết quả xuất bổ sung — ${retryCopied} ảnh</div>
+        ${stillNotFound}
+        ${retryRows ? `<div class="tbl-wrap" style="margin-top:8px"><table>
+          <thead><tr><th>STT</th><th>Container</th><th>Ref No</th><th style="text-align:right">Số ảnh</th><th>Tên file mẫu</th></tr></thead>
+          <tbody>${retryRows}</tbody></table></div>` : ''}
+      </div>`;
+    document.getElementById('pic-result-body').appendChild(extra);
+    document.getElementById('pic-result').scrollIntoView({ behavior: 'smooth' });
+    toast('Xuất bổ sung xong! ' + retryCopied + ' ảnh thêm', 3000);
+
+  } catch(e) {
+    clearInterval(_timer);
+    document.getElementById('pic-progress').style.display = 'none';
+    toast('Lỗi: ' + e.message, 4000);
+  }
 }
 
 // ===================== MSC INVENTORY REPORT =====================
