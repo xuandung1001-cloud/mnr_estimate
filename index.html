@@ -5505,21 +5505,21 @@ const INV_ROWS = [
   { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isTraxens(r),   showTraxens: true  },
   { label: 'UN SURVEYED',                      type:'sub',    filter: r => _tt(r)==='DM' && isGrade(r,'U'), showTraxens: false },
   { label: '',                                 type:'separator', filter: null },
-  { label: 'TOTAL GRADE A',                    type:'total',  filter: r => isGrade(r,'A'),                       showTraxens: false },
+  { label: 'TOTAL GRADE A',                    type:'total',  filter: r => (isAV(r)||isDM(r)||isWA(r)) && isGrade(r,'A'),    showTraxens: false },
   { label: 'AV GRADE A',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'A'),            showTraxens: false },
   { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isGrade(r,'A') && isTraxens(r),          showTraxens: true  },
   { label: 'DM ( PENDING FOR REPAIR) GRADE A', type:'sub',   filter: r => isDM(r) && isGrade(r,'A'),            showTraxens: false },
   { label: 'DM (AWAITING APPROVAL) GRADE A',   type:'sub',   filter: r => isWA(r) && isGrade(r,'A'),            showTraxens: false },
   { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'A') && isTraxens(r), showTraxens: true  },
   { label: '',                                 type:'separator', filter: null },
-  { label: 'TOTAL GRADE B',                    type:'total',  filter: r => isGrade(r,'B'),                       showTraxens: false },
+  { label: 'TOTAL GRADE B',                    type:'total',  filter: r => (isAV(r)||isDM(r)||isWA(r)) && isGrade(r,'B'),    showTraxens: false },
   { label: 'AV GRADE B',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'B'),            showTraxens: false },
   { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isGrade(r,'B') && isTraxens(r),          showTraxens: true  },
   { label: 'DM ( PENDING FOR REPAIR) GRADE B', type:'sub',   filter: r => isDM(r) && isGrade(r,'B'),            showTraxens: false },
   { label: 'DM (AWAITING APPROVAL) GRADE B',   type:'sub',   filter: r => isWA(r) && isGrade(r,'B'),            showTraxens: false },
   { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isGrade(r,'B') && isTraxens(r), showTraxens: true  },
   { label: '',                                 type:'separator', filter: null },
-  { label: 'TOTAL GRADE C',                    type:'total',  filter: r => isGrade(r,'C'),                       showTraxens: false },
+  { label: 'TOTAL GRADE C',                    type:'total',  filter: r => (isAV(r)||isDM(r)||isWA(r)) && isGrade(r,'C'),    showTraxens: false },
   { label: 'AV GRADE C',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'C'),            showTraxens: false },
   { label: 'Including Smart Containers (AV)',  type:'italic', filter: r => isAV(r) && isGrade(r,'C') && isTraxens(r),          showTraxens: true  },
   { label: 'DM ( PENDING FOR REPAIR) GRADE C', type:'sub',   filter: r => isDM(r) && isGrade(r,'C'),            showTraxens: false },
@@ -5541,7 +5541,7 @@ function _gr(r)    { return String(r.grade||'').toUpperCase().trim(); }
 function isAV(r)   { return _tt(r) === 'AV'; }
 function isDM(r)   { return _tt(r) === 'DM' && _gr(r) !== 'D'; } // loại grade D
 function isWA(r)   { return _tt(r) === 'WA' && _gr(r) !== 'D'; } // loại grade D
-function isSELL(r) { return _tt(r) === 'SL' || _tt(r) === 'SELL'; }
+function isSELL(r) { return (_tt(r) === 'SL' || _tt(r) === 'SELL') && isGrade(r,'O'); }
 function isOFH(r)  { return _tt(r) === 'OF' || _tt(r) === 'OFH'; } // OF-O count vào đây
 function isReefer(r){ const s = normalizeSize(r.size_type||r.size_type_iso||''); return s.includes('RE') || s.includes('RF'); }
 function isGrade(r, g) { return _gr(r) === g.toUpperCase(); }
