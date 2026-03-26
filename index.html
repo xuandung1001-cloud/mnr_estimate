@@ -5503,7 +5503,7 @@ const INV_ROWS = [
   { label: 'TOTAL DM ( PENDING FOR REPAIR)',   type:'total',  filter: r => isDM(r),                              showTraxens: false },
   { label: 'TOTAL DM (AWAITING APPROVAL)',     type:'total',  filter: r => isWA(r),                              showTraxens: false },
   { label: 'Including Smart Containers (DM)',  type:'italic', filter: r => (isDM(r)||isWA(r)) && isTraxens(r),   showTraxens: true  },
-  { label: 'UN SURVEYED',                      type:'sub',    filter: r => (isDM(r)||isWA(r)) && isGrade(r,'U'), showTraxens: false },
+  { label: 'UN SURVEYED',                      type:'sub',    filter: r => _tt(r)==='DM' && isGrade(r,'U'), showTraxens: false },
   { label: '',                                 type:'separator', filter: null },
   { label: 'TOTAL GRADE A',                    type:'total',  filter: r => isGrade(r,'A'),                       showTraxens: false },
   { label: 'AV GRADE A',                       type:'sub',    filter: r => isAV(r) && isGrade(r,'A'),            showTraxens: false },
@@ -5532,17 +5532,17 @@ const INV_ROWS = [
   { label: 'REEFER ONLY : SELECTED FOR NOR (AV)', type:'plain', filter: r => isAV(r) && isReefer(r),            showTraxens: false },
   { label: 'REEFER ONLY : SELECTED FOR NOR (DM)', type:'plain', filter: r => (isDM(r)||isWA(r)) && isReefer(r), showTraxens: false },
   { label: '',                                 type:'separator', filter: null },
-  { label: 'TOTAL',                            type:'total',  filter: r => true,                                 showTraxens: false },
+  { label: 'TOTAL', type:'total', filter: r => isAV(r) || isDM(r) || isWA(r) || isSELL(r) || isOFH(r) || (_tt(r)==='DM' && isGrade(r,'U')), showTraxens: false },
 ];
 
 // Helper filter functions — dùng container_status (col R)
 function _tt(r)    { return String(r.container_status||'').toUpperCase().trim(); }
 function _gr(r)    { return String(r.grade||'').toUpperCase().trim(); }
 function isAV(r)   { return _tt(r) === 'AV'; }
-function isDM(r)   { return _tt(r) === 'DM'; }
-function isWA(r)   { return _tt(r) === 'WA'; }
+function isDM(r)   { return _tt(r) === 'DM' && _gr(r) !== 'D'; } // loại grade D
+function isWA(r)   { return _tt(r) === 'WA' && _gr(r) !== 'D'; } // loại grade D
 function isSELL(r) { return _tt(r) === 'SL' || _tt(r) === 'SELL'; }
-function isOFH(r)  { return _tt(r) === 'OF' || _tt(r) === 'OFH'; }
+function isOFH(r)  { return _tt(r) === 'OF' || _tt(r) === 'OFH'; } // OF-O count vào đây
 function isReefer(r){ const s = normalizeSize(r.size_type||r.size_type_iso||''); return s.includes('RE') || s.includes('RF'); }
 function isGrade(r, g) { return _gr(r) === g.toUpperCase(); }
 function isTraxens(r){ return String(r.remarks||'').toLowerCase().includes('traxens'); }
