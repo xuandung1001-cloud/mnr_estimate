@@ -1304,19 +1304,20 @@ async function loadInitialData() {
     }
   } catch(e) { console.error('Stock load error:', e); }
 
-  // Tracking, Summary, Estimates: fetch song song
+  // Tracking + Summary: fetch trước để hiện dashboard nhanh
   try {
-    var [trkRes, sumRes, estAllRes] = await Promise.all([
-      apiGet({ action: 'getTracking' }),
-      apiGet({ action: 'getSummary' }),
-      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' })
-    ]);
-    if (trkRes && trkRes.success)    state.tracking  = trkRes.data;
-    if (sumRes && sumRes.success)    state.summary   = sumRes.data;
-    if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
-    // Render dashboard với data mới
+    var trkRes = await apiGet({ action: 'getTracking' });
+    var sumRes = await apiGet({ action: 'getSummary' });
+    if (trkRes && trkRes.success) state.tracking = trkRes.data;
+    if (sumRes && sumRes.success) state.summary  = sumRes.data;
     genDashboard();
   } catch(e) { console.error('Data load error:', e); }
+
+  // Estimates: fetch riêng sau — không block dashboard
+  try {
+    var estAllRes = await apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' });
+    if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
+  } catch(e) { console.error('Estimates load error:', e); }
 
   if (!hasCachedTariff || !hasCachedStock) {
     toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
@@ -4795,8 +4796,11 @@ async function runSetupHeaders() {
 async function refreshCache() {
   localStorage.removeItem('mnr_tariff');
   localStorage.removeItem('mnr_stock');
-  toast('Đang tải lại Tariff + Stock...');
+  toast('Đang xoá cache...');
   try {
+    // Xoá cả GAS server cache
+    await apiPost({ action: 'clearCache' });
+    toast('Đang tải lại Tariff + Stock...');
     var tariffRes = await apiGet({ action: 'getTariff' });
     if (tariffRes && tariffRes.success) {
       state.tariff = tariffRes.data;
