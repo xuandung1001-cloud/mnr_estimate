@@ -5539,8 +5539,8 @@ const INV_ROWS = [
 function _tt(r)    { return String(r.container_status||'').toUpperCase().trim(); }
 function _gr(r)    { return String(r.grade||'').toUpperCase().trim(); }
 function isAV(r)   { return _tt(r) === 'AV'; }
-function isDM(r)   { return _tt(r) === 'DM' && _gr(r) !== 'D'; } // loại grade D
-function isWA(r)   { return _tt(r) === 'WA' && _gr(r) !== 'D'; } // loại grade D
+function isDM(r)   { const g = _gr(r); return _tt(r) === 'DM' && (g==='A'||g==='B'||g==='C'); }
+function isWA(r)   { const g = _gr(r); return _tt(r) === 'WA' && (g==='A'||g==='B'||g==='C'); }
 function isSELL(r) { return (_tt(r) === 'SL' || _tt(r) === 'SELL') && isGrade(r,'O'); }
 function isOFH(r)  { return _tt(r) === 'OF' || _tt(r) === 'OFH'; } // OF-O count vào đây
 function isReefer(r){ const s = normalizeSize(r.size_type||r.size_type_iso||''); return s.includes('RE') || s.includes('RF'); }
