@@ -1094,7 +1094,7 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
 
           <!-- 4 KPI cards -->
-          <div class="stats-row" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px">
+          <div class="stats-row" style="grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:16px">
             <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #1D9E75">
               <div class="stat-label" style="color:#0F6E56">Doanh thu MNR</div>
               <div class="stat-value" style="color:#0F6E56;font-size:16px" id="wh-dt">—</div>
@@ -1115,6 +1115,11 @@ td input:focus,td select:focus{background:#FEFAF0}
               <div class="stat-value" style="color:#A06010;font-size:16px" id="wh-ton-vnd">—</div>
               <div class="stat-sub">lũy kế đến tháng</div>
             </div>
+            <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #16a34a">
+              <div class="stat-label" style="color:#15803d">Lợi nhuận gộp</div>
+              <div class="stat-value" style="color:#15803d;font-size:16px" id="wh-profit">—</div>
+              <div class="stat-sub">Doanh thu - Xuất kho</div>
+            </div>
           </div>
         </div>
 
@@ -1128,7 +1133,7 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin:8px 0 10px">
             <span><span style="display:inline-block;width:10px;height:10px;background:#F5C842;border-radius:2px;margin-right:4px"></span>Nhập kho</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:#E8A800;border-radius:2px;margin-right:4px"></span>Xuất kho</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#85B7EB;border-radius:2px;margin-right:4px"></span>Xuất kho</span>
             <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:18px;height:2px;background:#1D9E75"></span>Tồn cuối tháng</span>
           </div>
           <div style="position:relative;width:100%;height:260px"><canvas id="wh-chart1"></canvas></div>
@@ -5753,6 +5758,9 @@ function renderWarehouse() {
   document.getElementById('wh-xuat-vnd').textContent = xuatVND > 0 ? _whFmtVND(xuatVND) : '—';
   document.getElementById('wh-nhap-vnd').textContent = nhapVND > 0 ? _whFmtVND(nhapVND) : '—';
   document.getElementById('wh-ton-vnd').textContent  = tonVND  > 0 ? _whFmtVND(tonVND)  : '—';
+  var profitVND = (dtUSD * rate) - xuatVND;
+  document.getElementById('wh-profit').textContent = profitVND !== 0 ? _whFmtVND(profitVND) : '—';
+  document.getElementById('wh-profit').style.color = profitVND >= 0 ? '#15803d' : '#dc2626';
 
   if (typeof Chart === 'undefined') {
     var s = document.createElement('script');
@@ -5798,7 +5806,7 @@ function renderWhChart1() {
   // Highlight tháng đang chọn
   var hlIdx = labels.indexOf(_fmtMonth(mk));
   var nhapColors = nhap.map(function(_,i){ return i===hlIdx ? '#C9A020' : '#F5C842'; });
-  var xuatColors = xuat.map(function(_,i){ return i===hlIdx ? '#8A6A00' : '#E8A800'; });
+  var xuatColors = xuat.map(function(_,i){ return i===hlIdx ? '#185FA5' : '#85B7EB'; });
 
   if (_whChart1) _whChart1.destroy();
   _whChart1 = new Chart(document.getElementById('wh-chart1'), {
