@@ -1072,54 +1072,70 @@ td input:focus,td select:focus{background:#FEFAF0}
       <!-- KHO VẬT TƯ -->
       <div class="screen" id="screen-warehouse">
         <div style="padding:16px 20px 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="font-size:13px;color:var(--gray)" id="wh-updated"></div>
-            <button class="btn btn-sm" onclick="refreshWarehouse()">&#8635; Refresh</button>
+          <!-- Toolbar: tháng/năm + tỷ giá + refresh -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div style="font-size:12px;color:var(--gray)">Tháng:</div>
+            <select id="wh-month" onchange="renderWarehouse()" style="font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px">
+              <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+              <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
+              <option value="7">T7</option><option value="8">T8</option><option value="9">T9</option>
+              <option value="10">T10</option><option value="11">T11</option><option value="12">T12</option>
+            </select>
+            <select id="wh-year" onchange="renderWarehouse()" style="font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px">
+              <option value="2025">2025</option><option value="2026">2026</option>
+            </select>
+            <div style="font-size:12px;color:var(--gray);margin-left:8px">Tỷ giá USD:</div>
+            <input id="wh-rate" type="number" value="25000" min="1" style="width:90px;font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px" onchange="renderWarehouse()">
+            <span style="font-size:12px;color:var(--gray)">VND/USD</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+              <div style="font-size:12px;color:var(--gray)" id="wh-updated"></div>
+              <button class="btn btn-sm" onclick="refreshWarehouse()">&#8635; Refresh</button>
+            </div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px" id="wh-cards">
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Tổng vật tư</div><div style="font-size:22px;font-weight:600" id="wh-total">—</div></div>
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Còn hàng</div><div style="font-size:22px;font-weight:600;color:#16a34a" id="wh-ok">—</div></div>
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Sắp hết</div><div style="font-size:22px;font-weight:600;color:#d97706" id="wh-low">—</div></div>
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Hết hàng</div><div style="font-size:22px;font-weight:600;color:#dc2626" id="wh-out">—</div></div>
+
+          <!-- 4 KPI cards -->
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px">
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Doanh thu MNR</div>
+              <div style="font-size:18px;font-weight:700;color:#1D9E75" id="wh-dt">—</div>
+              <div style="font-size:10px;color:var(--gray)" id="wh-dt-sub"></div>
+            </div>
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Xuất kho tháng</div>
+              <div style="font-size:18px;font-weight:700;color:#D85A30" id="wh-xuat-vnd">—</div>
+            </div>
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Nhập kho tháng</div>
+              <div style="font-size:18px;font-weight:700;color:#378ADD" id="wh-nhap-vnd">—</div>
+            </div>
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
+              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Tồn kho tháng</div>
+              <div style="font-size:18px;font-weight:700;color:#534AB7" id="wh-ton-vnd">—</div>
+            </div>
           </div>
         </div>
 
-        <!-- Chart 1: Nhập/Xuất/Tồn + Doanh thu -->
+        <!-- Chart 1: Nhập/Xuất/Tồn số lượng + filter vật tư -->
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:0 20px 16px;padding:16px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div style="font-size:13px;font-weight:600">Nhập / Xuất / Tồn cuối tháng &amp; Doanh thu MNR</div>
-            <select id="wh-metric" onchange="renderWhChart1()" style="font-size:12px;padding:3px 7px;border:1px solid #e5e7eb;border-radius:6px">
-              <option value="sl">Số lượng</option>
-              <option value="vnd">Giá trị (triệu đ)</option>
+            <div style="font-size:13px;font-weight:600">Nhập / Xuất / Tồn theo số lượng</div>
+            <select id="wh-vt-filter" onchange="renderWhChart1()" style="font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;max-width:220px">
+              <option value="">-- Tất cả vật tư --</option>
             </select>
           </div>
-          <div style="font-size:11px;color:var(--gray);margin-bottom:10px">Cột: nhập/xuất kho vật tư &nbsp;|&nbsp; Đường xanh: tồn cuối tháng &nbsp;|&nbsp; Đường cam: doanh thu MNR (USD)</div>
-          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-bottom:10px">
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin:8px 0 10px">
             <span><span style="display:inline-block;width:10px;height:10px;background:#378ADD;border-radius:2px;margin-right:4px"></span>Nhập kho</span>
             <span><span style="display:inline-block;width:10px;height:10px;background:#D85A30;border-radius:2px;margin-right:4px"></span>Xuất kho</span>
-            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:18px;height:2px;background:#1D9E75"></span>Tồn cuối</span>
-            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:18px;height:2px;background:#FB923C"></span>Doanh thu MNR (USD)</span>
+            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:18px;height:2px;background:#1D9E75"></span>Tồn cuối tháng</span>
           </div>
           <div style="position:relative;width:100%;height:260px"><canvas id="wh-chart1"></canvas></div>
         </div>
 
-        <!-- Chart 2 & 3 -->
-        <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,0.7fr);gap:16px;margin:0 20px 20px">
-          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px">
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Top 10 vật tư xuất nhiều nhất</div>
-            <div style="font-size:11px;color:var(--gray);margin-bottom:12px">Lũy kế từ đầu kỳ</div>
-            <div style="position:relative;width:100%;height:340px"><canvas id="wh-chart2"></canvas></div>
-          </div>
-          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px">
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Tình trạng tồn kho</div>
-            <div style="font-size:11px;color:var(--gray);margin-bottom:12px" id="wh-tong-label">245 mặt hàng</div>
-            <div style="position:relative;width:100%;height:200px"><canvas id="wh-chart3"></canvas></div>
-            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;font-size:11px;color:var(--gray);justify-content:center">
-              <span><span style="display:inline-block;width:10px;height:10px;background:#639922;border-radius:2px;margin-right:4px"></span>Còn hàng</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:#EF9F27;border-radius:2px;margin-right:4px"></span>Sắp hết</span>
-              <span><span style="display:inline-block;width:10px;height:10px;background:#E24B4A;border-radius:2px;margin-right:4px"></span>Hết hàng</span>
-            </div>
-          </div>
+        <!-- Chart 2: Top 10 -->
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:0 20px 20px;padding:16px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px">Top 10 vật tư xuất nhiều nhất</div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:12px" id="wh-top10-sub">Lũy kế đến tháng đang xem</div>
+          <div style="position:relative;width:100%;height:340px"><canvas id="wh-chart2"></canvas></div>
         </div>
       </div>
 
@@ -5641,7 +5657,24 @@ function calcInvRow(data, rowDef) {
 
 // ===================== WAREHOUSE =====================
 var _whData = null;
-var _whChart1 = null, _whChart2 = null, _whChart3 = null;
+var _whChart1 = null, _whChart2 = null;
+
+function _whFmtVND(val) {
+  if (!val || val === 0) return '—';
+  if (val >= 1e9) return (val/1e9).toFixed(1) + ' tỷ';
+  if (val >= 1e6) return (val/1e6).toFixed(1) + ' triệu';
+  return Math.round(val).toLocaleString('vi-VN');
+}
+
+function _whGetMonthKey() {
+  var m = document.getElementById('wh-month').value;
+  var y = document.getElementById('wh-year').value;
+  return y + '-' + String(m).padStart(2,'0');
+}
+
+function _whGetRate() {
+  return parseFloat(document.getElementById('wh-rate').value) || 25000;
+}
 
 async function refreshWarehouse() {
   document.getElementById('wh-updated').textContent = 'Đang tải...';
@@ -5649,9 +5682,23 @@ async function refreshWarehouse() {
     var res = await apiGet({ action: 'getWarehouseReport' });
     if (res && res.success) {
       _whData = res;
-      renderWarehouse();
+      // Set default tháng hiện tại
       var now = new Date();
-      document.getElementById('wh-updated').textContent = 'Cập nhật lúc: '
+      document.getElementById('wh-month').value = String(now.getMonth()+1);
+      document.getElementById('wh-year').value  = String(now.getFullYear());
+      // Populate filter vật tư
+      var sel = document.getElementById('wh-vt-filter');
+      sel.innerHTML = '<option value="">-- Tất cả vật tư --</option>';
+      if (res.vt_list) {
+        res.vt_list.forEach(function(v) {
+          var opt = document.createElement('option');
+          opt.value = v.ma;
+          opt.textContent = v.ma + ' — ' + v.ten;
+          sel.appendChild(opt);
+        });
+      }
+      renderWarehouse();
+      document.getElementById('wh-updated').textContent = 'Cập nhật: '
         + now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     } else {
       document.getElementById('wh-updated').textContent = 'Lỗi: ' + (res&&res.error||'Không tải được');
@@ -5664,11 +5711,22 @@ async function refreshWarehouse() {
 function renderWarehouse() {
   if (!_whData) return;
   var d = _whData;
-  document.getElementById('wh-total').textContent = d.ton_status.tong;
-  document.getElementById('wh-ok').textContent    = d.ton_status.con_hang;
-  document.getElementById('wh-low').textContent   = d.ton_status.sap_het;
-  document.getElementById('wh-out').textContent   = d.ton_status.het_hang;
-  document.getElementById('wh-tong-label').textContent = d.ton_status.tong + ' mặt hàng';
+  var mk = _whGetMonthKey();
+  var rate = _whGetRate();
+  var idx = d.months.indexOf(mk);
+
+  // KPI cards
+  var dtUSD  = idx >= 0 ? (d.doanh_thu[idx] || 0) : 0;
+  var xuatVND = idx >= 0 ? (d.tien_xuat[idx] || 0) : 0;
+  var nhapVND = idx >= 0 ? (d.tien_nhap[idx] || 0) : 0;
+  var tonVND  = idx >= 0 ? (d.tien_ton[idx]  || 0) : 0;
+
+  document.getElementById('wh-dt').textContent      = _whFmtVND(dtUSD * rate);
+  document.getElementById('wh-dt-sub').textContent  = dtUSD > 0 ? ('$' + dtUSD.toLocaleString() + ' USD') : '';
+  document.getElementById('wh-xuat-vnd').textContent = _whFmtVND(xuatVND);
+  document.getElementById('wh-nhap-vnd').textContent = _whFmtVND(nhapVND);
+  document.getElementById('wh-ton-vnd').textContent  = _whFmtVND(tonVND);
+
   if (typeof Chart === 'undefined') {
     var s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
@@ -5686,29 +5744,45 @@ function _fmtMonth(mk) {
 
 function renderWhChart1() {
   if (!_whData || typeof Chart === 'undefined') return;
-  var metric = document.getElementById('wh-metric').value;
   var d = _whData;
-  var labels = d.months.map(_fmtMonth);
-  var nhap = metric === 'sl' ? d.nhap : d.tien_nhap;
-  var xuat = metric === 'sl' ? d.xuat : d.tien_xuat;
-  var datasets = [
-    { label:'Nhập kho',  data:nhap, type:'bar',  backgroundColor:'#378ADD', borderRadius:3, yAxisID:'y', order:2 },
-    { label:'Xuất kho',  data:xuat, type:'bar',  backgroundColor:'#D85A30', borderRadius:3, yAxisID:'y', order:2 },
-    { label:'Doanh thu MNR (USD)', data:d.doanh_thu, type:'line', borderColor:'#FB923C', backgroundColor:'transparent', borderWidth:2, pointBackgroundColor:'#FB923C', pointRadius:3, tension:0.3, yAxisID:'y2', order:1 }
-  ];
-  if (metric === 'sl') {
-    datasets.splice(2, 0, { label:'Tồn cuối tháng', data:d.ton, type:'line', borderColor:'#1D9E75', backgroundColor:'transparent', borderWidth:2, pointBackgroundColor:'#1D9E75', pointRadius:3, tension:0.3, yAxisID:'y', order:1 });
+  var vtFilter = document.getElementById('wh-vt-filter').value;
+  var mk = _whGetMonthKey();
+
+  var labels, nhap, xuat, ton;
+  if (vtFilter && d.vt_monthly && d.vt_monthly[vtFilter]) {
+    var vtd = d.vt_monthly[vtFilter];
+    labels = vtd.months.map(_fmtMonth);
+    nhap = vtd.nhap;
+    xuat = vtd.xuat;
+    ton  = vtd.ton;
+  } else {
+    labels = d.months.map(_fmtMonth);
+    nhap = d.nhap;
+    xuat = d.xuat;
+    ton  = d.ton;
   }
+
+  // Highlight tháng đang chọn
+  var hlIdx = labels.indexOf(_fmtMonth(mk));
+  var nhapColors = nhap.map(function(_,i){ return i===hlIdx ? '#1A5FAD' : '#378ADD'; });
+  var xuatColors = xuat.map(function(_,i){ return i===hlIdx ? '#A33A1E' : '#D85A30'; });
+
   if (_whChart1) _whChart1.destroy();
   _whChart1 = new Chart(document.getElementById('wh-chart1'), {
-    data: { labels:labels, datasets:datasets },
+    data: {
+      labels: labels,
+      datasets: [
+        { label:'Nhập kho', data:nhap, type:'bar', backgroundColor:nhapColors, borderRadius:3, order:2 },
+        { label:'Xuất kho', data:xuat, type:'bar', backgroundColor:xuatColors, borderRadius:3, order:2 },
+        { label:'Tồn cuối', data:ton,  type:'line', borderColor:'#1D9E75', backgroundColor:'transparent', borderWidth:2, pointBackgroundColor:'#1D9E75', pointRadius:3, tension:0.3, order:1 }
+      ]
+    },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false} },
       scales:{
-        x:  { ticks:{autoSkip:false,font:{size:10}}, grid:{display:false} },
-        y:  { position:'left',  ticks:{font:{size:10},callback:function(v){return v.toLocaleString();}}, grid:{color:'rgba(128,128,128,0.1)'} },
-        y2: { position:'right', ticks:{font:{size:10},callback:function(v){return '$'+v.toLocaleString();}}, grid:{display:false} }
+        x: { ticks:{autoSkip:false,font:{size:10}}, grid:{display:false} },
+        y: { ticks:{font:{size:10},callback:function(v){return v.toLocaleString();}}, grid:{color:'rgba(128,128,128,0.1)'} }
       }
     }
   });
@@ -5716,22 +5790,33 @@ function renderWhChart1() {
 
 function _buildWhCharts() {
   var d = _whData;
+  var mk = _whGetMonthKey();
   renderWhChart1();
+
+  // Top 10 — tính đến tháng đang xem
+  var mkIdx = d.months.indexOf(mk);
+  var top10 = d.top10_monthly ? d.top10_monthly.filter(function(t){ return t.mk <= mk; }) : d.top10;
+  // Gom theo mã
+  var agg = {};
+  (d.top10_monthly || d.top10).forEach(function(t){
+    if (t.mk && t.mk > mk) return;
+    if (!agg[t.ma]) agg[t.ma] = { ma:t.ma, ten:t.ten, sl:0 };
+    agg[t.ma].sl += (t.sl||0);
+  });
+  var top10arr = Object.values(agg).sort(function(a,b){return b.sl-a.sl;}).slice(0,10);
+  if (!top10arr.length) top10arr = d.top10;
+
+  document.getElementById('wh-top10-sub').textContent = 'Lũy kế đến ' + _fmtMonth(mk);
+
   if (_whChart2) _whChart2.destroy();
   _whChart2 = new Chart(document.getElementById('wh-chart2'), {
     type:'bar',
-    data:{ labels:d.top10.map(function(t){return t.ma;}), datasets:[{ data:d.top10.map(function(t){return t.sl;}), backgroundColor:'#534AB7', borderRadius:3 }] },
+    data:{ labels:top10arr.map(function(t){return t.ma;}), datasets:[{ data:top10arr.map(function(t){return t.sl;}), backgroundColor:'#534AB7', borderRadius:3 }] },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(ctx){ var item=d.top10[ctx.dataIndex]; return item.ten+': '+ctx.parsed.x.toLocaleString(); }}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(ctx){ var item=top10arr[ctx.dataIndex]; return (item.ten||item.ma)+': '+ctx.parsed.x.toLocaleString(); }}} },
       scales:{ x:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'}}, y:{ticks:{font:{size:11}},grid:{display:false}} }
     }
-  });
-  if (_whChart3) _whChart3.destroy();
-  _whChart3 = new Chart(document.getElementById('wh-chart3'), {
-    type:'doughnut',
-    data:{ labels:['Còn hàng','Sắp hết','Hết hàng'], datasets:[{ data:[d.ton_status.con_hang,d.ton_status.sap_het,d.ton_status.het_hang], backgroundColor:['#639922','#EF9F27','#E24B4A'], borderWidth:0, hoverOffset:4 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, cutout:'65%' }
   });
 }
 
