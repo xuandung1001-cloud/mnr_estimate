@@ -1487,7 +1487,7 @@ function nav(screen, el) {
   if (screen === 'warehouse' && !_whData) refreshWarehouse();
   if (screen === 'photos')    initPhotosScreen();
   if (screen === 'users') renderUsers();
-  if (screen === 'actlog') loadActLog();
+  if (screen === 'actlog') { _actLogData = []; document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Nhấn Refresh để tải log</td></tr>'; document.getElementById('log-count').textContent = ''; }
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
   if (screen === 'pictures') initPicturesScreen();
