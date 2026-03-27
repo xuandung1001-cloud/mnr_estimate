@@ -5258,7 +5258,8 @@ var _actLogData = [];
 async function loadActLog() {
   document.getElementById('log-count').textContent = 'Đang tải...';
   try {
-    var res = await apiGet({ action: 'getActivityLog' });
+    var res = await apiGet({ action: 'getActivityLog', _t: Date.now() });
+    console.log('[actlog] response:', JSON.stringify(res).substring(0, 200));
     if (res && res.success) {
       _actLogData = res.data || [];
       renderActLog();
