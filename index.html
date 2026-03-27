@@ -1399,29 +1399,26 @@ async function loadInitialData() {
 
   // Tariff & Stock: cache sessionStorage — chỉ fetch lần đầu mỗi session
   try {
-    const cachedTariff = localStorage.getItem('mnr_tariff');
+    var cachedTariff = localStorage.getItem('mnr_tariff');
+    // Tariff + Stock fetch song song: tariff dùng cache nếu có, stock luôn fetch mới
+    var fetchPromises = [apiGet({ action: 'getEmtyStock' })];
+    if (!cachedTariff) fetchPromises.push(apiGet({ action: 'getTariff' }));
+
+    var fetchResults = await Promise.all(fetchPromises);
+    var stockRes2  = fetchResults[0];
+    var tariffRes2 = fetchResults[1];
+
+    if (stockRes2 && stockRes2.success) {
+      state.stock = stockRes2.data;
+      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+    }
     if (cachedTariff) {
       state.tariff = JSON.parse(cachedTariff);
-      console.log('Tariff from cache:', state.tariff.length);
-    } else {
-      var tariffRes = await apiGet({ action: 'getTariff' });
-      if (tariffRes && tariffRes.success) {
-        state.tariff = tariffRes.data;
-        localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
-        console.log('Tariff fetched:', state.tariff.length);
-      }
+    } else if (tariffRes2 && tariffRes2.success) {
+      state.tariff = tariffRes2.data;
+      localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
     }
-  } catch(e) { console.error('Tariff load error:', e); }
-
-  try {
-    // Luôn fetch stock mới từ server (không dùng cache) để đảm bảo data mới nhất sau autoImportStock
-    var stockRes = await apiGet({ action: 'getEmtyStock' });
-    if (stockRes && stockRes.success) {
-      state.stock = stockRes.data;
-      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
-      console.log('Stock fetched:', state.stock.length);
-    }
-  } catch(e) { console.error('Stock load error:', e); }
+  } catch(e) { console.error('Tariff/Stock load error:', e); }
 
   // Tracking + Summary + Estimates: fetch song song
   var _expEl = document.getElementById('sb-expiry');
@@ -1876,9 +1873,7 @@ function lookupTariff(row) {
   _allMatches.sort((a, b) => getLenRange(a) - getLenRange(b));
   const match = _allMatches[0] || null;
 
-  console.log('Lookup:', {carrier, szType, dmgLoc, comp, dmgType, repType, unit, qty, lenVal});
   if (match) {
-    console.log('MATCH:', match);
     const h   = round2(parseFloat(match.hour     || 0) * qty);
     const m   = round2(parseFloat(match.material || 0) * qty);
     const l   = round2(parseFloat(match.labour   || 0) * qty);
@@ -1893,13 +1888,11 @@ function lookupTariff(row) {
     row.style.background = '#FEFAF0';
     setTimeout(() => { row.style.background = ''; }, 1000);
   } else {
-    console.log('NO MATCH — searching similar...');
     // Debug: tìm dòng gần đúng nhất
     const partial = state.tariff.find(t =>
       (t.damage_location||'').toUpperCase().includes(dmgLoc) &&
       (t.component||'').toUpperCase().includes(comp)
     );
-    if (partial) console.log('Partial match (no reptype/unit filter):', partial);
     row.querySelector('.h-val').textContent = '—';
     row.querySelector('.m-val').textContent = '—';
     row.querySelector('.l-val').textContent = '—';
@@ -5319,7 +5312,6 @@ async function loadActLog() {
     var filterUser = document.getElementById('log-filter-user').value.trim();
     var filterAction = document.getElementById('log-filter-action').value;
     var res = await apiGet({ action: 'getActivityLog', _t: Date.now(), filter_user: filterUser, filter_action: filterAction });
-    console.log('[actlog] response:', JSON.stringify(res).substring(0, 200));
     if (res && res.success) {
       _actLogData = res.data || [];
       renderActLog();
@@ -6053,14 +6045,9 @@ function renderInventoryReport() {
 
   // DEBUG: log unique size_type values để confirm format
   const uniqueSizes = [...new Set(data.map(r => r.size_type).filter(Boolean))].sort();
-  console.log('[INV] Unique size_type values:', uniqueSizes);
   const unmapped = uniqueSizes.filter(s => !INV_SIZES.includes(normalizeSize(s)));
-  if (unmapped.length) console.warn('[INV] Unmapped sizes:', unmapped);
   // DEBUG: log unique trang_thai values
   const uniqueTT = [...new Set(data.map(r => r.container_status).filter(Boolean))].sort();
-  console.log('[INV] Unique container_status:', uniqueTT);
-  const uniqueGrade = [...new Set(data.map(r => r.grade).filter(Boolean))].sort();
-  console.log('[INV] Unique grade:', uniqueGrade);
 
   // CSS styles cho các loại dòng
   const styles = {
