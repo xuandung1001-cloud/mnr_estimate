@@ -1261,6 +1261,7 @@ window.addEventListener('load', function() {
           expiry.setHours(23,59,59,0);
           if (new Date() <= expiry) {
             state.user = session;
+            state.user.username = session.username || '';
             state.user.key = sessionStorage.getItem('mnr_key') || '';
             document.getElementById('sb-username').textContent = session.fullname || session.username;
             document.getElementById('sb-expiry').textContent = session.title || ((session.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
@@ -5258,7 +5259,9 @@ var _actLogData = [];
 async function loadActLog() {
   document.getElementById('log-count').textContent = 'Đang tải...';
   try {
-    var res = await apiGet({ action: 'getActivityLog', _t: Date.now() });
+    var filterUser = document.getElementById('log-filter-user').value.trim();
+    var filterAction = document.getElementById('log-filter-action').value;
+    var res = await apiGet({ action: 'getActivityLog', _t: Date.now(), filter_user: filterUser, filter_action: filterAction });
     console.log('[actlog] response:', JSON.stringify(res).substring(0, 200));
     if (res && res.success) {
       _actLogData = res.data || [];
