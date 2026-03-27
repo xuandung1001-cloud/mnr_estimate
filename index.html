@@ -1818,6 +1818,10 @@ async function saveEstimate() {
   const eqNo = document.getElementById('eq-no').value.trim();
   if (!eqNo) { toast('Vui lòng nhập Equipment No!'); return; }
 
+  // Disable nút Lưu để tránh bấm 2 lần
+  const saveBtn = document.querySelector('[onclick="saveEstimate()"]');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
+
   const lines = [];
   document.querySelectorAll('#est-rows tr').forEach((row, idx) => {
     const inputs = row.querySelectorAll('input');
@@ -1870,6 +1874,9 @@ async function saveEstimate() {
     }
   } catch(e) {
     toast('Lỗi kết nối: ' + e.message, 4000);
+  } finally {
+    // Luôn re-enable nút sau khi xong
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Lưu Estimate'; }
   }
 }
 
@@ -2261,6 +2268,11 @@ function resetRevise() {
 async function saveRevise() {
   const eqNo = document.getElementById('rev-eq').value.trim();
   if (!eqNo) { toast('Vui lòng nhập Equipment No!'); return; }
+
+  // Disable nút Lưu để tránh bấm 2 lần
+  const saveBtn = document.querySelector('[onclick="saveRevise()"]');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
+
   const lines = [];
   document.querySelectorAll('#rev-rows tr').forEach(function(row) {
     const inputs = row.querySelectorAll('input');
@@ -2288,24 +2300,27 @@ async function saveRevise() {
     const isRej = lineStatus === 'Rejected';
     lines.push({
       repair_seq:            seq,
-      app_damage_location:   inputs[0].value.trim(),
-      app_component:         inputs[1].value.trim(),
-      app_damage_type:       inputs[2].value.trim(),
-      app_repair_type:       inputs[3].value.trim(),
+      app_damage_location:   inputs[0].value.trim().toUpperCase(),
+      app_component:         inputs[1].value.trim().toUpperCase(),
+      app_damage_type:       inputs[2].value.trim().toUpperCase(),
+      app_repair_type:       inputs[3].value.trim().toUpperCase(),
       app_length:            inputs[4].value,
       app_width:             inputs[5].value,
-      app_unit:              inputs[6].value.trim(),
+      app_unit:              inputs[6].value.trim().toUpperCase(),
       app_quantity:          parseFloat(inputs[7].value) || 1,
       app_labour_hours:      isRej ? 0 : parseFloat(row.querySelector('.rv-h')?.textContent || 0),
       app_material_cost:     isRej ? 0 : parseFloat(row.querySelector('.rv-m')?.textContent || 0),
       app_labour_cost:       isRej ? 0 : parseFloat(row.querySelector('.rv-l')?.textContent || 0),
       app_total_approved:    isRej ? 0 : parseFloat(row.querySelector('.rv-t')?.textContent || 0),
-      app_responsible_party: inputs[8]?.value.trim() || '',
+      app_responsible_party: inputs[8]?.value.trim().toUpperCase() || '',
       approval_status:       lineStatus,
       app_remark:            inputs[9]?.value || ''
     });
   });
-  if (!lines.length) { toast('Chưa có hạng mục!'); return; }
+  if (!lines.length) {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Lưu Revise'; }
+    toast('Chưa có hạng mục!'); return;
+  }
   // Cont status: tất cả Approved → Approved, còn lại → Partially Approved - Revised
   const contStatus = lines.every(l => l.approval_status === 'Approved') ? 'Approved' : 'Partially Approved - Revised';
   toast('Đang lưu Revise...');
@@ -2323,6 +2338,9 @@ async function saveRevise() {
       resetRevise();
     } else { toast('Lỗi: ' + res.error, 4000); }
   } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
+  finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Lưu Revise'; }
+  }
 }
 
 // ===================== OVM =====================
