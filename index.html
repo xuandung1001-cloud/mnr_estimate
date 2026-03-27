@@ -1094,23 +1094,26 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
 
           <!-- 4 KPI cards -->
-          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px">
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
-              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Doanh thu MNR</div>
-              <div style="font-size:18px;font-weight:700;color:#1D9E75" id="wh-dt">—</div>
-              <div style="font-size:10px;color:var(--gray)" id="wh-dt-sub"></div>
+          <div class="stats-row" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px">
+            <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #1D9E75">
+              <div class="stat-label" style="color:#0F6E56">Doanh thu MNR</div>
+              <div class="stat-value" style="color:#0F6E56;font-size:16px" id="wh-dt">—</div>
+              <div class="stat-sub" id="wh-dt-sub">tháng đang xem</div>
             </div>
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
-              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Xuất kho tháng</div>
-              <div style="font-size:18px;font-weight:700;color:#D85A30" id="wh-xuat-vnd">—</div>
+            <div class="stat-card" style="background:#fff7ed;border-left:4px solid #D85A30">
+              <div class="stat-label" style="color:#993C1D">Xuất kho tháng</div>
+              <div class="stat-value" style="color:#993C1D;font-size:16px" id="wh-xuat-vnd">—</div>
+              <div class="stat-sub">giá trị xuất (VNĐ)</div>
             </div>
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
-              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Nhập kho tháng</div>
-              <div style="font-size:18px;font-weight:700;color:#378ADD" id="wh-nhap-vnd">—</div>
+            <div class="stat-card" style="background:#eff6ff;border-left:4px solid #378ADD">
+              <div class="stat-label" style="color:#185FA5">Nhập kho tháng</div>
+              <div class="stat-value" style="color:#185FA5;font-size:16px" id="wh-nhap-vnd">—</div>
+              <div class="stat-sub">giá trị nhập (VNĐ)</div>
             </div>
-            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px">
-              <div style="font-size:11px;color:var(--gray);margin-bottom:4px">Tồn kho tháng</div>
-              <div style="font-size:18px;font-weight:700;color:#534AB7" id="wh-ton-vnd">—</div>
+            <div class="stat-card" style="background:#f5f3ff;border-left:4px solid #534AB7">
+              <div class="stat-label" style="color:#3C3489">Tồn kho tháng</div>
+              <div class="stat-value" style="color:#3C3489;font-size:16px" id="wh-ton-vnd">—</div>
+              <div class="stat-sub">lũy kế đến tháng</div>
             </div>
           </div>
         </div>
@@ -5708,24 +5711,49 @@ async function refreshWarehouse() {
   }
 }
 
+function _whParseDate(s) {
+  if (!s) return null;
+  if (s instanceof Date) return s;
+  // format dd/MM/yyyy hoặc yyyy-MM-dd
+  var p = String(s).split('/');
+  if (p.length === 3) return new Date(p[2], p[1]-1, p[0]);
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function renderWarehouse() {
   if (!_whData) return;
   var d = _whData;
   var mk = _whGetMonthKey();
   var rate = _whGetRate();
-  var idx = d.months.indexOf(mk);
+  var selMonth = parseInt(mk.split('-')[1]) - 1; // 0-based
+  var selYear  = parseInt(mk.split('-')[0]);
 
-  // KPI cards
-  var dtUSD  = idx >= 0 ? (d.doanh_thu[idx] || 0) : 0;
+  // Doanh thu MNR: lấy từ state.tracking (giống genDashboard)
+  // Filter: po_date thuộc tháng đang chọn + status = Repaired
+  var dtUSD = 0;
+  if (state.tracking && state.tracking.length) {
+    var trFiltered = state.tracking.filter(function(r) {
+      var pd = _whParseDate(r.po_date);
+      if (!pd) return false;
+      return pd.getMonth() === selMonth && pd.getFullYear() === selYear
+        && r.approval_status === 'Repaired';
+    });
+    var totalApp = trFiltered.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0); }, 0);
+    dtUSD = Math.round(totalApp / 1.1 * 100) / 100;
+  }
+
+  // Nhập/Xuất/Tồn: lấy từ _whData theo monthKey
+  var idx = d.months.indexOf(mk);
   var xuatVND = idx >= 0 ? (d.tien_xuat[idx] || 0) : 0;
   var nhapVND = idx >= 0 ? (d.tien_nhap[idx] || 0) : 0;
   var tonVND  = idx >= 0 ? (d.tien_ton[idx]  || 0) : 0;
 
-  document.getElementById('wh-dt').textContent      = _whFmtVND(dtUSD * rate);
-  document.getElementById('wh-dt-sub').textContent  = dtUSD > 0 ? ('$' + dtUSD.toLocaleString() + ' USD') : '';
-  document.getElementById('wh-xuat-vnd').textContent = _whFmtVND(xuatVND);
-  document.getElementById('wh-nhap-vnd').textContent = _whFmtVND(nhapVND);
-  document.getElementById('wh-ton-vnd').textContent  = _whFmtVND(tonVND);
+  document.getElementById('wh-dt').textContent      = dtUSD > 0 ? _whFmtVND(dtUSD * rate) : '—';
+  document.getElementById('wh-dt-sub').textContent  = dtUSD > 0 ? ('$' + dtUSD.toLocaleString('vi-VN') + ' USD · No VAT') : 'Chưa có dữ liệu tháng này';
+  document.getElementById('wh-xuat-vnd').textContent = xuatVND > 0 ? _whFmtVND(xuatVND) : '—';
+  document.getElementById('wh-nhap-vnd').textContent = nhapVND > 0 ? _whFmtVND(nhapVND) : '—';
+  document.getElementById('wh-ton-vnd').textContent  = tonVND  > 0 ? _whFmtVND(tonVND)  : '—';
 
   if (typeof Chart === 'undefined') {
     var s = document.createElement('script');
