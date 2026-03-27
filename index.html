@@ -257,6 +257,10 @@ td input:focus,td select:focus{background:#FEFAF0}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Quản lý User
       </div>
+      <div class="nav-item" id="nav-actlog" style="display:none" onclick="nav('actlog',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Nhật ký hoạt động
+      </div>
     </div>
     <div class="nav-section">
       <div class="nav-label" style="border-color:#10B981">Báo cáo</div>
@@ -1020,6 +1024,43 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
 
       <!-- QUẢN LÝ USER -->
+      <!-- NHẬT KÝ HOẠT ĐỘNG -->
+      <div class="screen" id="screen-actlog">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input id="log-filter-user" class="fi" placeholder="Tìm user..." style="width:140px" oninput="renderActLog()">
+              <select id="log-filter-action" class="fi" style="width:180px" onchange="renderActLog()">
+                <option value="">Tất cả thao tác</option>
+                <option>Tạo Estimate</option>
+                <option>Revise Estimate</option>
+                <option>Xoá Estimate</option>
+                <option>Cập nhật OVM</option>
+                <option>Cập nhật Tracking</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:12px;color:var(--gray)" id="log-count"></span>
+              <button class="btn btn-sm" onclick="loadActLog()">&#8635; Refresh</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12px" id="log-table">
+              <thead>
+                <tr style="background:var(--bg2)">
+                  <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap">Thời gian</th>
+                  <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">User</th>
+                  <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Thao tác</th>
+                  <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Container</th>
+                  <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)">Chi tiết</th>
+                </tr>
+              </thead>
+              <tbody id="log-tbody"><tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Nhấn Refresh để tải log...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="screen" id="screen-users">
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1227,6 +1268,7 @@ window.addEventListener('load', function() {
             document.getElementById('app').style.display = 'flex';
             if ((session.role||'').toLowerCase() === 'admin') {
               document.getElementById('nav-users').style.display = 'flex';
+              document.getElementById('nav-actlog').style.display = 'flex';
             }
             applyPermissions(session.role || 'user', session.permissions || '');
             loadInitialData();
@@ -1309,6 +1351,7 @@ async function doLogin() {
       // Hiện nav Quản lý User nếu admin
       if ((res.role||'').toLowerCase() === 'admin') {
         document.getElementById('nav-users').style.display = 'flex';
+        document.getElementById('nav-actlog').style.display = 'flex';
       }
       applyPermissions(res.role || 'user', res.permissions || '');
       loadInitialData();
@@ -1430,7 +1473,8 @@ function nav(screen, el) {
     inventory: { title: 'MSC Inventory', actions: [] },
     warehouse: { title: 'Kho Vật Tư MNR', actions: [] },
     photos:    { title: 'Xem Hình Ảnh', actions: [] },
-    users:     { title: 'Quản lý User', actions: [] }
+    users:     { title: 'Quản lý User', actions: [] },
+    actlog:    { title: 'Nhật ký hoạt động', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
@@ -1443,6 +1487,7 @@ function nav(screen, el) {
   if (screen === 'warehouse' && !_whData) refreshWarehouse();
   if (screen === 'photos')    initPhotosScreen();
   if (screen === 'users') renderUsers();
+  if (screen === 'actlog') loadActLog();
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
   if (screen === 'pictures') initPicturesScreen();
@@ -1937,6 +1982,7 @@ async function saveEstimate() {
   try {
     const res = await apiPost({
       action: 'saveEstimate',
+      username: state.user && state.user.username || '',
       container_no: eqNo,
       carrier: document.getElementById('carrier').value,
       size_type: document.getElementById('size-type').value,
@@ -2410,7 +2456,7 @@ async function saveRevise() {
   toast('Đang lưu Revise...');
   try {
     const res = await apiPost({
-      action: 'saveRevise', container_no: eqNo,
+      action: 'saveRevise', username: state.user && state.user.username || '', container_no: eqNo,
       approval_status: contStatus,
       approved_date: document.getElementById('rev-app-date').value,
       remarks: document.getElementById('rev-remarks').value, lines
@@ -2637,7 +2683,7 @@ async function confirmOvm() {
   const btn = document.getElementById('ovm-confirm-btn');
   btn.disabled = true; btn.textContent = 'Đang cập nhật...';
   try {
-    var res = await apiPost({ action: 'importOVM', rows: _ovmData });
+    var res = await apiPost({ action: 'importOVM', username: state.user && state.user.username || '', rows: _ovmData });
     if (res.success) {
       var trkRes = await apiGet({ action: 'getTracking' });
       if (trkRes.success) state.tracking = trkRes.data;
@@ -2774,7 +2820,7 @@ async function updateStatusInline(sel, seq) {
   toast('Đang lưu...');
   try {
     var res = await apiPost({
-      action: 'updateTrackingStatus',
+      action: 'updateTrackingStatus', username: state.user && state.user.username || '',
       seq: seq,
       approval_status: newStatus
     });
@@ -2805,7 +2851,7 @@ async function saveTrackingRepairDate(input, seq) {
   if (!trk) return;
   if (val === (formatDate(trk.repair_date)||'')) return;
   try {
-    var res = await apiPost({ action: 'updateTrackingRepairDate', seq: seq, repair_date: val });
+    var res = await apiPost({ action: 'updateTrackingRepairDate', username: state.user && state.user.username || '', seq: seq, repair_date: val });
     if (res && res.success) {
       trk.repair_date = val;
       toast('Đã lưu Repair Date', 1500);
@@ -2831,7 +2877,7 @@ async function saveTrackingRemark(input, containerNo, estDate) {
   if (val === (trk.remarks1||trk.remarks2||'')) return;
   try {
     var res = await apiPost({
-      action: 'updateTrackingRemark',
+      action: 'updateTrackingRemark', username: state.user && state.user.username || '',
       seq: trk.seq,
       remarks1: val
     });
@@ -4742,7 +4788,7 @@ async function deleteEstimate(containerNo, estDate) {
   if (!confirm('Xoá estimate của ' + containerNo + '?\nKhông thể hoàn tác!')) return;
   toast('Đang xoá...');
   try {
-    var res = await apiPost({ action: 'deleteEstimate', container_no: containerNo, est_date: estDate || '' });
+    var res = await apiPost({ action: 'deleteEstimate', username: state.user && state.user.username || '', container_no: containerNo, est_date: estDate || '' });
     if (res && res.success) {
       state.tracking = state.tracking.filter(function(r) {
         if (r.container_no !== containerNo) return true;
@@ -5110,7 +5156,7 @@ async function handleStockUpload(input) {
 }
 
 // ===================== PHÂN QUYỀN =====================
-const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse'];
+const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','actlog'];
 const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos'; // tariff, warehouse ẩn mặc định
 
 function applyPermissions(role, permissions) {
@@ -5130,6 +5176,7 @@ function applyPermissions(role, permissions) {
     pictures:  '[onclick*="pictures"]',
     inventory: '[onclick*="inventory"]',
     warehouse: '[id="nav-warehouse"]',
+    actlog:    '[id="nav-actlog"]',
   };
   ALL_SCREENS.forEach(screen => {
     const el = document.querySelector('.nav-item' + (navMap[screen]||''));
@@ -5205,6 +5252,61 @@ async function doChangePwd() {
 }
 
 // ===================== QUẢN LÝ USER =====================
+// ===================== ACTIVITY LOG =====================
+var _actLogData = [];
+
+async function loadActLog() {
+  document.getElementById('log-count').textContent = 'Đang tải...';
+  try {
+    var res = await apiGet({ action: 'getActivityLog' });
+    if (res && res.success) {
+      _actLogData = res.data || [];
+      renderActLog();
+    } else {
+      document.getElementById('log-count').textContent = 'Lỗi tải log';
+    }
+  } catch(e) {
+    document.getElementById('log-count').textContent = 'Lỗi kết nối';
+  }
+}
+
+function renderActLog() {
+  var filterUser   = (document.getElementById('log-filter-user').value || '').toLowerCase().trim();
+  var filterAction = document.getElementById('log-filter-action').value || '';
+  var rows = _actLogData.filter(function(r) {
+    if (filterUser   && r.username.toLowerCase().indexOf(filterUser) < 0) return false;
+    if (filterAction && r.action !== filterAction) return false;
+    return true;
+  });
+
+  document.getElementById('log-count').textContent = rows.length + ' bản ghi';
+
+  var ACTION_COLOR = {
+    'Tạo Estimate':       '#16a34a',
+    'Revise Estimate':    '#d97706',
+    'Xoá Estimate':       '#dc2626',
+    'Cập nhật OVM':       '#7c3aed',
+    'Cập nhật Tracking':  '#0369a1'
+  };
+
+  var html = rows.length === 0
+    ? '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Không có bản ghi nào</td></tr>'
+    : rows.map(function(r, i) {
+        var color = ACTION_COLOR[r.action] || '#64748b';
+        return '<tr style="background:' + (i%2===0?'#fff':'var(--bg)') + '">'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;color:var(--gray)">' + r.timestamp + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600">' + (r.username||'—') + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border)">'
+          +   '<span style="background:' + color + '22;color:' + color + ';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">' + (r.action||'—') + '</span>'
+          + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-family:monospace;font-size:12px">' + (r.container_no||'—') + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gray);font-size:11px">' + (r.detail||'—') + '</td>'
+          + '</tr>';
+      }).join('');
+
+  document.getElementById('log-tbody').innerHTML = html;
+}
+
 async function renderUsers() {
   const tbody = document.getElementById('users-rows');
   if (!state.user) return;
