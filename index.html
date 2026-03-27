@@ -2463,10 +2463,9 @@ async function saveRevise() {
       remarks: document.getElementById('rev-remarks').value, lines
     });
     if (res.success) {
-      const trkRes = await apiGet({ action: 'getTracking' });
-      if (trkRes.success) state.tracking = trkRes.data;
       toast('Đã lưu Revise! Status: ' + contStatus, 3000);
       resetRevise();
+      apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
     } else { toast('Lỗi: ' + res.error, 4000); }
   } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
   finally {
@@ -2490,12 +2489,6 @@ async function handleOvmFile(input) {
       document.head.appendChild(s);
     });
   }
-
-  toast('Đang tải tracking...');
-  try {
-    const trkRes = await apiGet({ action: 'getTracking' });
-    if (trkRes && trkRes.success) state.tracking = trkRes.data;
-  } catch(e) { console.error('Tracking reload error:', e); }
 
   toast('Đang đọc file...');
   const fileBuffer = await new Promise((resolve, reject) => {
@@ -2686,9 +2679,8 @@ async function confirmOvm() {
   try {
     var res = await apiPost({ action: 'importOVM', username: state.user && state.user.username || '', rows: _ovmData });
     if (res.success) {
-      var trkRes = await apiGet({ action: 'getTracking' });
-      if (trkRes.success) state.tracking = trkRes.data;
       cancelOvm();
+      apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
       var msg = 'Cập nhật xong! ' + res.updated + ' containers';
       if (res.skipped)   msg += ' · Bỏ qua: ' + res.skipped;
       if (res.not_found && res.not_found.length) msg += ' · Không tìm thấy: ' + res.not_found.length;
@@ -4775,9 +4767,8 @@ async function saveEditEstimate(containerNo, estDate) {
       lines:        lines
     });
     if (res && res.success) {
-      var tr2 = await apiGet({ action: 'getTracking' });
-      if (tr2 && tr2.success) state.tracking = tr2.data;
       toast('Đã lưu! ' + (res.lines_saved || lines.length) + ' hạng mục', 3000);
+      apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
       cancelEditEstimate();
     } else {
       toast('Lỗi: ' + (res ? (res.error || JSON.stringify(res)) : 'No response'), 4000);
