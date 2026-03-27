@@ -272,6 +272,10 @@ td input:focus,td select:focus{background:#FEFAF0}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         MSC Inventory
       </div>
+      <div class="nav-item" id="nav-warehouse" onclick="nav('warehouse',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Kho Vật Tư
+      </div>
       <div class="nav-item" id="nav-photos" onclick="nav('photos',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
         Xem Hình Ảnh
@@ -1065,6 +1069,60 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
 
       <!-- SCREEN: XEM HÌNH ẢNH -->
+      <!-- KHO VẬT TƯ -->
+      <div class="screen" id="screen-warehouse">
+        <div style="padding:16px 20px 0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:13px;color:var(--gray)" id="wh-updated"></div>
+            <button class="btn btn-sm" onclick="refreshWarehouse()">&#8635; Refresh</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px" id="wh-cards">
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Tổng vật tư</div><div style="font-size:22px;font-weight:600" id="wh-total">—</div></div>
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Còn hàng</div><div style="font-size:22px;font-weight:600;color:#16a34a" id="wh-ok">—</div></div>
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Sắp hết</div><div style="font-size:22px;font-weight:600;color:#d97706" id="wh-low">—</div></div>
+            <div style="background:var(--bg2);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:var(--gray);margin-bottom:4px">Hết hàng</div><div style="font-size:22px;font-weight:600;color:#dc2626" id="wh-out">—</div></div>
+          </div>
+        </div>
+
+        <!-- Chart 1: Nhập/Xuất/Tồn + Doanh thu -->
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:0 20px 16px;padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:13px;font-weight:600">Nhập / Xuất / Tồn cuối tháng &amp; Doanh thu MNR</div>
+            <select id="wh-metric" onchange="renderWhChart1()" style="font-size:12px;padding:3px 7px;border:1px solid #e5e7eb;border-radius:6px">
+              <option value="sl">Số lượng</option>
+              <option value="vnd">Giá trị (triệu đ)</option>
+            </select>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px">Cột: nhập/xuất kho vật tư &nbsp;|&nbsp; Đường xanh: tồn cuối tháng &nbsp;|&nbsp; Đường cam: doanh thu MNR (USD)</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin-bottom:10px">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#378ADD;border-radius:2px;margin-right:4px"></span>Nhập kho</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#D85A30;border-radius:2px;margin-right:4px"></span>Xuất kho</span>
+            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:18px;height:2px;background:#1D9E75"></span>Tồn cuối</span>
+            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:18px;height:2px;background:#FB923C"></span>Doanh thu MNR (USD)</span>
+          </div>
+          <div style="position:relative;width:100%;height:260px"><canvas id="wh-chart1"></canvas></div>
+        </div>
+
+        <!-- Chart 2 & 3 -->
+        <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,0.7fr);gap:16px;margin:0 20px 20px">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Top 10 vật tư xuất nhiều nhất</div>
+            <div style="font-size:11px;color:var(--gray);margin-bottom:12px">Lũy kế từ đầu kỳ</div>
+            <div style="position:relative;width:100%;height:340px"><canvas id="wh-chart2"></canvas></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Tình trạng tồn kho</div>
+            <div style="font-size:11px;color:var(--gray);margin-bottom:12px" id="wh-tong-label">245 mặt hàng</div>
+            <div style="position:relative;width:100%;height:200px"><canvas id="wh-chart3"></canvas></div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;font-size:11px;color:var(--gray);justify-content:center">
+              <span><span style="display:inline-block;width:10px;height:10px;background:#639922;border-radius:2px;margin-right:4px"></span>Còn hàng</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:#EF9F27;border-radius:2px;margin-right:4px"></span>Sắp hết</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:#E24B4A;border-radius:2px;margin-right:4px"></span>Hết hàng</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="screen" id="screen-photos">
         <div class="card">
           <!-- Bộ lọc -->
@@ -1346,6 +1404,7 @@ function nav(screen, el) {
     report:   { title: 'Báo cáo tháng', actions: [] },
     pictures: { title: 'Xuất hình ảnh', actions: [] },
     inventory: { title: 'MSC Inventory', actions: [] },
+    warehouse: { title: 'Kho Vật Tư MNR', actions: [] },
     photos:    { title: 'Xem Hình Ảnh', actions: [] },
     users:     { title: 'Quản lý User', actions: [] }
   };
@@ -1357,6 +1416,7 @@ function nav(screen, el) {
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') renderSummary();
   if (screen === 'inventory') renderInventoryReport();
+  if (screen === 'warehouse' && !_whData) refreshWarehouse();
   if (screen === 'photos')    initPhotosScreen();
   if (screen === 'users') renderUsers();
   if (screen === 'stock') renderStock();
@@ -5026,8 +5086,8 @@ async function handleStockUpload(input) {
 }
 
 // ===================== PHÂN QUYỀN =====================
-const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos'; // tariff bị ẩn mặc định
+const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse'];
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos'; // tariff, warehouse ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -5045,6 +5105,7 @@ function applyPermissions(role, permissions) {
     report:    '[onclick*="report"]',
     pictures:  '[onclick*="pictures"]',
     inventory: '[onclick*="inventory"]',
+    warehouse: '[id="nav-warehouse"]',
   };
   ALL_SCREENS.forEach(screen => {
     const el = document.querySelector('.nav-item' + (navMap[screen]||''));
@@ -5577,6 +5638,103 @@ function calcInvRow(data, rowDef) {
   return { counts, totalUnits, totalTeus };
 }
 
+
+// ===================== WAREHOUSE =====================
+var _whData = null;
+var _whChart1 = null, _whChart2 = null, _whChart3 = null;
+
+async function refreshWarehouse() {
+  document.getElementById('wh-updated').textContent = 'Đang tải...';
+  try {
+    var res = await apiGet({ action: 'getWarehouseReport' });
+    if (res && res.success) {
+      _whData = res;
+      renderWarehouse();
+      var now = new Date();
+      document.getElementById('wh-updated').textContent = 'Cập nhật lúc: '
+        + now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    } else {
+      document.getElementById('wh-updated').textContent = 'Lỗi: ' + (res&&res.error||'Không tải được');
+    }
+  } catch(e) {
+    document.getElementById('wh-updated').textContent = 'Lỗi kết nối';
+  }
+}
+
+function renderWarehouse() {
+  if (!_whData) return;
+  var d = _whData;
+  document.getElementById('wh-total').textContent = d.ton_status.tong;
+  document.getElementById('wh-ok').textContent    = d.ton_status.con_hang;
+  document.getElementById('wh-low').textContent   = d.ton_status.sap_het;
+  document.getElementById('wh-out').textContent   = d.ton_status.het_hang;
+  document.getElementById('wh-tong-label').textContent = d.ton_status.tong + ' mặt hàng';
+  if (typeof Chart === 'undefined') {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+    s.onload = function() { _buildWhCharts(); };
+    document.head.appendChild(s);
+  } else {
+    _buildWhCharts();
+  }
+}
+
+function _fmtMonth(mk) {
+  var parts = mk.split('-');
+  return 'T' + parseInt(parts[1]) + '/' + parts[0].slice(2);
+}
+
+function renderWhChart1() {
+  if (!_whData || typeof Chart === 'undefined') return;
+  var metric = document.getElementById('wh-metric').value;
+  var d = _whData;
+  var labels = d.months.map(_fmtMonth);
+  var nhap = metric === 'sl' ? d.nhap : d.tien_nhap;
+  var xuat = metric === 'sl' ? d.xuat : d.tien_xuat;
+  var datasets = [
+    { label:'Nhập kho',  data:nhap, type:'bar',  backgroundColor:'#378ADD', borderRadius:3, yAxisID:'y', order:2 },
+    { label:'Xuất kho',  data:xuat, type:'bar',  backgroundColor:'#D85A30', borderRadius:3, yAxisID:'y', order:2 },
+    { label:'Doanh thu MNR (USD)', data:d.doanh_thu, type:'line', borderColor:'#FB923C', backgroundColor:'transparent', borderWidth:2, pointBackgroundColor:'#FB923C', pointRadius:3, tension:0.3, yAxisID:'y2', order:1 }
+  ];
+  if (metric === 'sl') {
+    datasets.splice(2, 0, { label:'Tồn cuối tháng', data:d.ton, type:'line', borderColor:'#1D9E75', backgroundColor:'transparent', borderWidth:2, pointBackgroundColor:'#1D9E75', pointRadius:3, tension:0.3, yAxisID:'y', order:1 });
+  }
+  if (_whChart1) _whChart1.destroy();
+  _whChart1 = new Chart(document.getElementById('wh-chart1'), {
+    data: { labels:labels, datasets:datasets },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:  { ticks:{autoSkip:false,font:{size:10}}, grid:{display:false} },
+        y:  { position:'left',  ticks:{font:{size:10},callback:function(v){return v.toLocaleString();}}, grid:{color:'rgba(128,128,128,0.1)'} },
+        y2: { position:'right', ticks:{font:{size:10},callback:function(v){return '$'+v.toLocaleString();}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+function _buildWhCharts() {
+  var d = _whData;
+  renderWhChart1();
+  if (_whChart2) _whChart2.destroy();
+  _whChart2 = new Chart(document.getElementById('wh-chart2'), {
+    type:'bar',
+    data:{ labels:d.top10.map(function(t){return t.ma;}), datasets:[{ data:d.top10.map(function(t){return t.sl;}), backgroundColor:'#534AB7', borderRadius:3 }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(ctx){ var item=d.top10[ctx.dataIndex]; return item.ten+': '+ctx.parsed.x.toLocaleString(); }}} },
+      scales:{ x:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.1)'}}, y:{ticks:{font:{size:11}},grid:{display:false}} }
+    }
+  });
+  if (_whChart3) _whChart3.destroy();
+  _whChart3 = new Chart(document.getElementById('wh-chart3'), {
+    type:'doughnut',
+    data:{ labels:['Còn hàng','Sắp hết','Hết hàng'], datasets:[{ data:[d.ton_status.con_hang,d.ton_status.sap_het,d.ton_status.het_hang], backgroundColor:['#639922','#EF9F27','#E24B4A'], borderWidth:0, hoverOffset:4 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, cutout:'65%' }
+  });
+}
+
 async function refreshInventory() {
   // Force reload stock từ server
   try {
@@ -5860,6 +6018,7 @@ function exportInventoryExcel() {
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-pictures" value="pictures"> Xuất hình ảnh</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-photos" value="photos"> Xem Hình Ảnh</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-warehouse" value="warehouse"> Kho Vật Tư</label>
       </div>
     </div>
     <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
