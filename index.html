@@ -1422,20 +1422,18 @@ async function loadInitialData() {
     }
   } catch(e) { console.error('Stock load error:', e); }
 
-  // Tracking + Summary: fetch trước để hiện dashboard nhanh
+  // Tracking + Summary + Estimates: fetch song song
   try {
-    var trkRes = await apiGet({ action: 'getTracking' });
-    var sumRes = await apiGet({ action: 'getSummary' });
-    if (trkRes && trkRes.success) state.tracking = trkRes.data;
-    if (sumRes && sumRes.success) state.summary  = sumRes.data;
+    var results = await Promise.all([
+      apiGet({ action: 'getTracking' }),
+      apiGet({ action: 'getSummary' }),
+      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' })
+    ]);
+    if (results[0] && results[0].success) state.tracking  = results[0].data;
+    if (results[1] && results[1].success) state.summary   = results[1].data;
+    if (results[2] && results[2].data)    state.estimates  = results[2].data;
     genDashboard();
   } catch(e) { console.error('Data load error:', e); }
-
-  // Estimates: fetch riêng sau — không block dashboard
-  try {
-    var estAllRes = await apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' });
-    if (estAllRes && estAllRes.data) state.estimates = estAllRes.data;
-  } catch(e) { console.error('Estimates load error:', e); }
 
   if (!hasCachedTariff || !hasCachedStock) {
     toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
@@ -2987,7 +2985,6 @@ async function toggleEstDetail(tr, contNo, estDate) {
   try {
     // Dùng state.estimates đã load sẵn — không cần gọi API
     var estData = [];
-    console.log('[detail] state.estimates length:', state.estimates && state.estimates.length, 'contNo:', contNo, 'estDate:', estDate);
     if (state.estimates && state.estimates.length) {
       var contNoUp = String(contNo).toUpperCase().trim();
       var estDateN = estDate ? String(estDate).trim() : '';
@@ -2999,7 +2996,6 @@ async function toggleEstDetail(tr, contNo, estDate) {
     }
     // Fallback: gọi API nếu không có trong cache
     if (!estData.length) {
-      console.log('[detail] FALLBACK to API - not found in state.estimates');
       var res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
       estData = (res && res.success) ? res.data : [];
     }
