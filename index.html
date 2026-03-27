@@ -1995,11 +1995,9 @@ async function saveEstimate() {
     });
     if (res.success) {
       toast('Đã lưu thành công! ' + res.lines_saved + ' hạng mục', 3000);
-      resetEstimate(); // Reset form ngay lập tức
-      // Reload tracking ngầm
-      apiGet({ action: 'getTracking' }).then(function(trkRes) {
-        if (trkRes && trkRes.success) state.tracking = trkRes.data;
-      });
+      resetEstimate();
+      apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
+      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' }).then(function(r){ if(r&&r.data) state.estimates=r.data; });
     } else {
       toast('Lỗi: ' + res.error, 4000);
     }
@@ -2466,6 +2464,7 @@ async function saveRevise() {
       toast('Đã lưu Revise! Status: ' + contStatus, 3000);
       resetRevise();
       apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
+      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' }).then(function(r){ if(r&&r.data) state.estimates=r.data; });
     } else { toast('Lỗi: ' + res.error, 4000); }
   } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
   finally {
@@ -2986,9 +2985,22 @@ async function toggleEstDetail(tr, contNo, estDate) {
   _estDetailOpen = contNo;
 
   try {
-    // Luôn gọi API để lấy data mới nhất (không dùng cache)
-    var res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
-    var estData = (res && res.success) ? res.data : [];
+    // Dùng state.estimates đã load sẵn — không cần gọi API
+    var estData = [];
+    if (state.estimates && state.estimates.length) {
+      var contNoUp = String(contNo).toUpperCase().trim();
+      var estDateN = estDate ? String(estDate).trim() : '';
+      estData = state.estimates.filter(function(e) {
+        var matchCont = String(e.container_no||'').toUpperCase().trim() === contNoUp;
+        var matchDate = !estDateN || String(e.estimate_date||e.est_date||'').trim() === estDateN;
+        return matchCont && matchDate;
+      });
+    }
+    // Fallback: gọi API nếu không có trong cache
+    if (!estData.length) {
+      var res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
+      estData = (res && res.success) ? res.data : [];
+    }
 
 
     if (!estData || !estData.length) {
