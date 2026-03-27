@@ -2987,6 +2987,7 @@ async function toggleEstDetail(tr, contNo, estDate) {
   try {
     // Dùng state.estimates đã load sẵn — không cần gọi API
     var estData = [];
+    console.log('[detail] state.estimates length:', state.estimates && state.estimates.length, 'contNo:', contNo, 'estDate:', estDate);
     if (state.estimates && state.estimates.length) {
       var contNoUp = String(contNo).toUpperCase().trim();
       var estDateN = estDate ? String(estDate).trim() : '';
@@ -2998,6 +2999,7 @@ async function toggleEstDetail(tr, contNo, estDate) {
     }
     // Fallback: gọi API nếu không có trong cache
     if (!estData.length) {
+      console.log('[detail] FALLBACK to API - not found in state.estimates');
       var res = await apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate });
       estData = (res && res.success) ? res.data : [];
     }
