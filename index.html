@@ -1423,6 +1423,9 @@ async function loadInitialData() {
   } catch(e) { console.error('Stock load error:', e); }
 
   // Tracking + Summary + Estimates: fetch song song
+  var _expEl = document.getElementById('sb-expiry');
+  var _expOrig = _expEl ? _expEl.textContent : '';
+  if (_expEl) _expEl.textContent = '⏳ Đang tải dữ liệu...';
   try {
     var results = await Promise.all([
       apiGet({ action: 'getTracking' }),
@@ -1432,8 +1435,12 @@ async function loadInitialData() {
     if (results[0] && results[0].success) state.tracking  = results[0].data;
     if (results[1] && results[1].success) state.summary   = results[1].data;
     if (results[2] && results[2].data)    state.estimates  = results[2].data;
+    if (_expEl) _expEl.textContent = _expOrig;
     genDashboard();
-  } catch(e) { console.error('Data load error:', e); }
+  } catch(e) {
+    console.error('Data load error:', e);
+    if (_expEl) _expEl.textContent = _expOrig;
+  }
 
   if (!hasCachedTariff || !hasCachedStock) {
     toast('Đã tải: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
@@ -2979,6 +2986,12 @@ async function toggleEstDetail(tr, contNo, estDate) {
   detailTr.className = 'est-detail-row';
   detailTr.innerHTML = '<td colspan="' + cols + '" style="padding:0;background:#f8fafc;border-bottom:2px solid var(--blue)">'
     + '<div style="padding:10px 16px;font-size:11px;color:var(--gray)">Đang tải chi tiết...</div></td>';
+  // Loading message tùy trạng thái
+  var loadingMsg = (state.estimates && state.estimates.length)
+    ? 'Đang hiển thị...'
+    : 'Đang tải dữ liệu lần đầu...';
+  detailTr.querySelector('div').textContent = loadingMsg;
+
   tr.parentNode.insertBefore(detailTr, tr.nextSibling);
   _estDetailOpen = contNo;
 
@@ -4943,12 +4956,16 @@ async function refreshCache() {
     // Xoá cả GAS server cache
     await apiPost({ action: 'clearCache' });
     toast('Đang tải lại Tariff + Stock...');
-    var tariffRes = await apiGet({ action: 'getTariff' });
+    var _reloadResults = await Promise.all([
+      apiGet({ action: 'getTariff' }),
+      apiGet({ action: 'getEmtyStock' })
+    ]);
+    var tariffRes = _reloadResults[0];
+    var stockRes  = _reloadResults[1];
     if (tariffRes && tariffRes.success) {
       state.tariff = tariffRes.data;
       localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
     }
-    var stockRes = await apiGet({ action: 'getEmtyStock' });
     if (stockRes && stockRes.success) {
       state.stock = stockRes.data;
       localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
@@ -5544,10 +5561,13 @@ async function loadPhotosScreen() {
 
   try {
     document.getElementById('ph-loading').style.display = 'block';
-    document.getElementById('ph-loading').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto 8px"></div><div style="font-size:11px;color:var(--gray)">Đang tải ảnh Trước SC...</div></div>';
-    var resBefore = await apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Trước sửa chữa' });
-    document.getElementById('ph-loading').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto 8px"></div><div style="font-size:11px;color:var(--gray)">Đang tải ảnh Sau SC...</div></div>';
-    var resAfter  = await apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Sau sửa chữa' });
+    document.getElementById('ph-loading').innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto 8px"></div><div style="font-size:11px;color:var(--gray)">Đang tải ảnh...</div></div>';
+    var _photoResults = await Promise.all([
+      apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Trước sửa chữa' }),
+      apiGet({ action: 'getPhotosByFolder', container_no: contNo, carrier: carrier, loai_anh: 'Sau sửa chữa' })
+    ]);
+    var resBefore = _photoResults[0];
+    var resAfter  = _photoResults[1];
     _phData.before = (resBefore && resBefore.success && resBefore.photos) ? resBefore.photos : [];
     _phData.after  = (resAfter  && resAfter.success  && resAfter.photos)  ? resAfter.photos  : [];
 _phDateFilter = 'all';
