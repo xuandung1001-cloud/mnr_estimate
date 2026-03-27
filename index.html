@@ -5664,8 +5664,7 @@ var _whChart1 = null, _whChart2 = null;
 
 function _whFmtVND(val) {
   if (!val || val === 0) return '—';
-  if (val >= 1e9) return (val/1e9).toFixed(1) + ' tỷ';
-  if (val >= 1e6) return (val/1e6).toFixed(1) + ' triệu';
+  if (val >= 1e6) return Math.round(val/1e6).toLocaleString('vi-VN') + ' triệu';
   return Math.round(val).toLocaleString('vi-VN');
 }
 
@@ -5783,6 +5782,12 @@ function renderWhChart1() {
     nhap = vtd.nhap;
     xuat = vtd.xuat;
     ton  = vtd.ton;
+  } else if (vtFilter) {
+    // Vật tư này không có trong top 50 vt_monthly → báo cho user
+    labels = d.months.map(_fmtMonth);
+    nhap = d.months.map(function(){ return 0; });
+    xuat = d.months.map(function(){ return 0; });
+    ton  = d.months.map(function(){ return 0; });
   } else {
     labels = d.months.map(_fmtMonth);
     nhap = d.nhap;
