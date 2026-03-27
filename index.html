@@ -707,7 +707,7 @@ td input:focus,td select:focus{background:#FEFAF0}
                 </tr>
               </thead>
               <tbody id="sum-rows">
-                <tr><td colspan="17" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="19" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -5365,7 +5365,7 @@ function renderActLog() {
 async function renderUsers() {
   const tbody = document.getElementById('users-rows');
   if (!state.user) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
     const res = await apiGet({ action: 'getUsers', username: state.user.username, key: state.user.key || localStorage.getItem('mnr_key') || '' });
     if (!res.success) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
