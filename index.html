@@ -679,6 +679,7 @@ td input:focus,td select:focus{background:#FEFAF0}
             <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
+            <button class="btn btn-sm" onclick="syncAndReloadSummary()" id="btn-sync-summary">&#8635; Sync</button>
             <button class="btn btn-sm" onclick="exportSummary()">Export Excel</button>
           </div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
@@ -1488,7 +1489,7 @@ function nav(screen, el) {
 
   if (screen === 'report' && state.tracking && state.tracking.length) genDashboard();
   if (screen === 'tracking') renderTracking();
-  if (screen === 'summary') renderSummary();
+  if (screen === 'summary') autoSyncSummary();
   if (screen === 'inventory') renderInventoryReport();
   if (screen === 'warehouse' && !_whData) refreshWarehouse();
   if (screen === 'photos')    initPhotosScreen();
@@ -2003,6 +2004,7 @@ async function saveEstimate() {
       resetEstimate();
       apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
       apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' }).then(function(r){ if(r&&r.data) state.estimates=r.data; });
+      _sumSynced = false; // cần sync lại khi vào Tổng hợp
     } else {
       toast('Lỗi: ' + res.error, 4000);
     }
@@ -2468,8 +2470,10 @@ async function saveRevise() {
     if (res.success) {
       toast('Đã lưu Revise! Status: ' + contStatus, 3000);
       resetRevise();
+      _sumSynced = false;
       apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
       apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' }).then(function(r){ if(r&&r.data) state.estimates=r.data; });
+      _sumSynced = false; // cần sync lại khi vào Tổng hợp
     } else { toast('Lỗi: ' + res.error, 4000); }
   } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
   finally {
@@ -2684,6 +2688,7 @@ async function confirmOvm() {
     var res = await apiPost({ action: 'importOVM', username: state.user && state.user.username || '', rows: _ovmData });
     if (res.success) {
       cancelOvm();
+      _sumSynced = false;
       apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
       var msg = 'Cập nhật xong! ' + res.updated + ' containers';
       if (res.skipped)   msg += ' · Bỏ qua: ' + res.skipped;
@@ -3254,6 +3259,40 @@ function renderSummaryTable(data) {
     <span style="font-size:11px;color:var(--gray)">Total Approved: <strong style="color:var(--green)">${num(totApp)}</strong></span>
     <span style="font-size:11px;color:var(--gray)">Chênh lệch: <strong style="color:${totCost-totApp>0?'var(--amber)':'var(--green)'}">${num(totCost-totApp)}</strong></span>
   `;
+}
+
+var _sumSynced = false; // flag: đã sync trong session này chưa
+
+async function autoSyncSummary() {
+  if (!_sumSynced) {
+    // Lần đầu vào → sync ngầm
+    await syncAndReloadSummary(true);
+  } else {
+    // Đã sync rồi → render từ state
+    renderSummary();
+  }
+}
+
+async function syncAndReloadSummary(silent) {
+  var btn = document.getElementById('btn-sync-summary');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
+  if (!silent) toast('Đang sync Tổng hợp...');
+  try {
+    const res = await apiPost({ action: 'syncSummary' });
+    if (res.success) {
+      const sumRes = await apiGet({ action: 'getSummary' });
+      if (sumRes.success) state.summary = sumRes.data;
+      _sumSynced = true;
+      renderSummary();
+      if (!silent) toast('Sync xong! ' + res.synced + ' containers', 3000);
+    } else {
+      if (!silent) toast('Lỗi: ' + res.error, 4000);
+    }
+  } catch(e) {
+    if (!silent) toast('Lỗi kết nối', 4000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Sync'; }
+  }
 }
 
 async function syncSummary() {
