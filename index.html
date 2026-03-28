@@ -1364,6 +1364,11 @@ async function doLogin() {
         document.getElementById('nav-actlog').style.display = 'flex';
       }
       applyPermissions(res.role || 'user', res.permissions || '');
+      if (res.days_left !== undefined && res.days_left <= 7) {
+        setTimeout(function() {
+          toast('⚠️ Tài khoản sẽ hết hạn trong ' + res.days_left + ' ngày. Liên hệ admin để gia hạn!', 6000);
+        }, 1500);
+      }
       loadInitialData();
     } else {
       showLoginError(res.error || 'Đăng nhập thất bại');
@@ -3384,7 +3389,7 @@ function renderStockTable(data) {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
-  tbody.innerHTML = data.slice(0, 200).map((r, i) => `
+  tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${r.seq||i+1}</td>
       <td>${r.carrier||''}</td>
@@ -6304,6 +6309,60 @@ function exportInventoryExcel() {
     document.head.appendChild(s);
   }
 }
+
+// ===================== OFFLINE INDICATOR =====================
+(function() {
+  var _offlineBanner = null;
+  function _showOffline() {
+    if (_offlineBanner) return;
+    _offlineBanner = document.createElement('div');
+    _offlineBanner.id = 'offline-banner';
+    _offlineBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;text-align:center;padding:7px 16px;font-size:13px;font-weight:500;letter-spacing:.3px';
+    _offlineBanner.textContent = '⚠ Mất kết nối mạng — Các thao tác sẽ không được lưu cho đến khi có mạng trở lại';
+    document.body.appendChild(_offlineBanner);
+  }
+  function _hideOffline() {
+    if (!_offlineBanner) return;
+    _offlineBanner.remove();
+    _offlineBanner = null;
+    toast('Đã kết nối mạng trở lại', 3000);
+  }
+  window.addEventListener('offline', _showOffline);
+  window.addEventListener('online',  _hideOffline);
+  if (!navigator.onLine) _showOffline();
+})();
+
+// ===================== SESSION MID-EXPIRY CHECK =====================
+(function() {
+  function _checkSession() {
+    if (!state || !state.user) return;
+    var saved = localStorage.getItem('mnr_session');
+    if (!saved) {
+      toast('Phiên đăng nhập đã hết hạn. Đang chuyển về trang đăng nhập...', 4000);
+      setTimeout(function() { location.reload(); }, 4000);
+      return;
+    }
+    try {
+      var session = JSON.parse(saved);
+      if (!session || !session.expiry) return;
+      var parts = session.expiry.split('/');
+      if (parts.length !== 3) return;
+      var expiry = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+      expiry.setHours(23, 59, 59, 0);
+      var now = new Date();
+      var diffMs = expiry - now;
+      if (diffMs < 0) {
+        localStorage.removeItem('mnr_session');
+        toast('Tài khoản đã hết hạn. Đang chuyển về trang đăng nhập...', 4000);
+        setTimeout(function() { location.reload(); }, 4000);
+      } else if (diffMs < 5 * 60 * 1000) {
+        toast('⚠ Phiên đăng nhập sẽ hết hạn trong vài phút!', 5000);
+      }
+    } catch(e) {}
+  }
+  // Kiểm tra mỗi 60 giây
+  setInterval(_checkSession, 60000);
+})();
 </script>
 
 <datalist id="dl-unit"><option value="QTY"><option value="CMT"></datalist>

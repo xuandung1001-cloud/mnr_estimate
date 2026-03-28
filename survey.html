@@ -850,6 +850,13 @@ function setCont() {
 function handleFiles(input) {
   var files = Array.from(input.files);
   if (!files.length) return;
+  var MAX_FILE_MB = 20;
+  var oversized = files.filter(function(f) { return f.size > MAX_FILE_MB * 1024 * 1024; });
+  if (oversized.length) {
+    toast('⚠ ' + oversized.length + ' ảnh vượt quá ' + MAX_FILE_MB + 'MB sẽ bị bỏ qua: ' + oversized.map(function(f){ return f.name; }).join(', '), 5000);
+    files = files.filter(function(f) { return f.size <= MAX_FILE_MB * 1024 * 1024; });
+    if (!files.length) { input.value = ''; return; }
+  }
   toast('Đang nén ' + files.length + ' ảnh...');
 
   var processed = 0;
