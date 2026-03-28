@@ -5891,13 +5891,13 @@ function renderWhVtDropdown(q) {
     return (v.ma + ' ' + v.ten).toLowerCase().indexOf(q.toLowerCase()) >= 0;
   }) : _whVtList;
   var items = [{ma:'', ten:'Tất cả vật tư'}].concat(filtered.slice(0, 100));
-  dd.innerHTML = items.map(function(v) {
+    dd.innerHTML = items.map(function(v) {
     var label = v.ma ? (v.ma + ' — ' + v.ten) : v.ten;
-    var sel = _whVtSelected === v.ma;
-    return '<div data-val="' + v.ma + '" onclick="selectWhVt(this)" style="padding:6px 10px;font-size:12px;cursor:pointer;'
-      + (sel ? 'background:#FFF8E7;font-weight:600' : '')
-      + '" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='' + (sel?'#FFF8E7':'') + ''">'
-      + label + '</div>';
+    var isSel = _whVtSelected === v.ma;
+    var bgStyle = isSel ? 'background:#FFF8E7;font-weight:600;' : '';
+    var hoverOn = 'this.style.background=\'#f3f4f6\'';
+    var hoverOff = 'this.style.background=\'' + (isSel ? '#FFF8E7' : 'transparent') + '\'';
+    return '<div data-val="' + v.ma + '" onclick="selectWhVt(this)" style="padding:6px 10px;font-size:12px;cursor:pointer;' + bgStyle + '" onmouseover="' + hoverOn + '" onmouseout="' + hoverOff + '">' + label + '</div>';
   }).join('');
 }
 
