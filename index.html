@@ -1267,6 +1267,8 @@ window.addEventListener('load', function() {
             state.user = session;
             state.user.username = session.username || '';
             state.user.key = sessionStorage.getItem('mnr_key') || '';
+            var _dLeft = Math.ceil((expiry - new Date()) / (1000*60*60*24));
+            setTimeout(function(){ checkExpiryWarning(_dLeft, session.expiry); }, 500);
             document.getElementById('sb-username').textContent = session.fullname || session.username;
             document.getElementById('sb-expiry').textContent = session.title || ((session.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
             document.getElementById('login-screen').style.display = 'none';
@@ -1300,11 +1302,6 @@ let state = {
   ovmData: []
 };
 
-// ===================== UTILS =====================
-function escapeHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
 // ===================== API =====================
 async function apiGet(params) {
   const url = API + '?' + new URLSearchParams(params);
@@ -1333,6 +1330,28 @@ async function apiPost(data) {
 }
 
 // ===================== LOGIN =====================
+
+function checkExpiryWarning(daysLeft, expiry) {
+  if (!daysLeft) return;
+  if (daysLeft <= 7) {
+    var msg = daysLeft <= 0
+      ? 'Tài khoản đã hết hạn!'
+      : ('Tài khoản sắp hết hạn sau ' + daysLeft + ' ngày (' + expiry + '). Liên hệ admin để gia hạn.');
+    var color = daysLeft <= 3 ? '#dc2626' : '#d97706';
+    var banner = document.getElementById('expiry-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'expiry-banner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;padding:8px 16px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;';
+      banner.onclick = function() { this.style.display='none'; };
+      document.body.appendChild(banner);
+    }
+    banner.style.background = color;
+    banner.style.color = '#fff';
+    banner.innerHTML = '⚠ ' + msg + ' &nbsp;<span style="opacity:.7;font-weight:400">(Click để đóng)</span>';
+    banner.style.display = 'block';
+  }
+}
 async function doLogin() {
   const username = document.getElementById('login-user').value.trim();
   const key = document.getElementById('login-key').value.trim();
@@ -1349,6 +1368,7 @@ async function doLogin() {
       state.user = res;
       state.user.username = username;
       state.user.key = key; // lưu tạm trong memory cho admin calls
+      checkExpiryWarning(res.days_left, res.expiry);
       // Lưu session vào localStorage
       localStorage.setItem('mnr_session', JSON.stringify({
         username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || '', title: res.title || ''
@@ -2488,6 +2508,7 @@ var _ovmData = [];
 async function handleOvmFile(input) {
   const file = input.files[0];
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('File quá lớn! Tối đa 10MB.', 3000); input.value = ''; return; }
   input.value = '';
 
   if (typeof XLSX === 'undefined') {
@@ -2996,8 +3017,7 @@ async function toggleEstDetail(tr, contNo, estDate) {
   var loadingMsg = (state.estimates && state.estimates.length)
     ? 'Đang hiển thị...'
     : 'Đang tải dữ liệu lần đầu...';
-  var _loadingDiv = detailTr.querySelector('div');
-  if (_loadingDiv) _loadingDiv.textContent = loadingMsg;
+  detailTr.querySelector('div').textContent = loadingMsg;
 
   tr.parentNode.insertBefore(detailTr, tr.nextSibling);
   _estDetailOpen = contNo;
@@ -3022,8 +3042,7 @@ async function toggleEstDetail(tr, contNo, estDate) {
 
 
     if (!estData || !estData.length) {
-      var _emptyTd = detailTr.querySelector('td');
-      if (_emptyTd) _emptyTd.innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--gray);font-style:italic">Không có chi tiết.</div>';
+      detailTr.querySelector('td').innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--gray);font-style:italic">Không có chi tiết.</div>';
       return;
     }
 
@@ -3063,8 +3082,7 @@ async function toggleEstDetail(tr, contNo, estDate) {
     var totApp = estData.reduce(function(s,e){ return s+(parseFloat(e.app_total_approved)||0); }, 0);
     var totDiff = totApp - totEst;
 
-    var _detailTd = detailTr.querySelector('td');
-    if (_detailTd) _detailTd.innerHTML =
+    detailTr.querySelector('td').innerHTML =
       '<div style="padding:8px 16px 0">'
       + '<table style="width:100%;font-size:11px;border-collapse:collapse;table-layout:fixed">'
       + '<colgroup>'
@@ -3101,8 +3119,7 @@ async function toggleEstDetail(tr, contNo, estDate) {
       + '</table></div>'
       + '<div style="padding:4px 16px 8px;text-align:right;font-size:10px;color:#888">Click vào số cont để đóng</div>';
   } catch(e) {
-    var _errTd = detailTr.querySelector('td');
-    if (_errTd) _errTd.innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--red)">Lỗi: ' + escapeHtml(e.message) + '</div>';
+    detailTr.querySelector('td').innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--red)">Lỗi: ' + e.message + '</div>';
   }
 }
 
@@ -3384,7 +3401,7 @@ function renderStockTable(data) {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
-  tbody.innerHTML = data.slice(0, 200).map((r, i) => `
+  tbody.innerHTML = data.map((r, i) => `
     <tr>
       <td>${r.seq||i+1}</td>
       <td>${r.carrier||''}</td>
@@ -5081,6 +5098,7 @@ function renderTariffTable(data) {
 async function handleTariffFile(input) {
   const file = input.files[0];
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('File quá lớn! Tối đa 10MB.', 3000); input.value = ''; return; }
   toast('Đang đọc file Tariff...');
 
   if (typeof XLSX === 'undefined') {
@@ -5168,6 +5186,7 @@ function cancelTariff() {
 async function handleStockUpload(input) {
   const file = input.files[0];
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('File quá lớn! Tối đa 10MB.', 3000); input.value = ''; return; }
 
   toast('Đang đọc file TOS...');
 
