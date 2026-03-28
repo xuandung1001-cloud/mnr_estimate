@@ -1169,9 +1169,12 @@ td input:focus,td select:focus{background:#FEFAF0}
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:0 20px 16px;padding:16px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600">Nhập / Xuất / Tồn theo số lượng</div>
-            <select id="wh-vt-filter" onchange="renderWhChart1()" style="font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;max-width:220px">
-              <option value="">-- Tất cả vật tư --</option>
-            </select>
+            <div style="position:relative">
+              <input id="wh-vt-input" type="text" placeholder="-- Tất cả vật tư --" autocomplete="off"
+                style="font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px;width:260px"
+                oninput="filterWhVtList()" onfocus="showWhVtList()" onblur="hideWhVtListDelay()">
+              <div id="wh-vt-dropdown" style="display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e5e7eb;border-radius:6px;max-height:260px;overflow-y:auto;z-index:99;min-width:320px;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
+            </div>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--gray);margin:8px 0 10px">
             <span><span style="display:inline-block;width:10px;height:10px;background:#F5C842;border-radius:2px;margin-right:4px"></span>Nhập kho</span>
@@ -5854,16 +5857,9 @@ async function refreshWarehouse() {
       document.getElementById('wh-month').value = String(now.getMonth()+1);
       document.getElementById('wh-year').value  = String(now.getFullYear());
       // Populate filter vật tư
-      var sel = document.getElementById('wh-vt-filter');
-      sel.innerHTML = '<option value="">-- Tất cả vật tư --</option>';
-      if (res.vt_list) {
-        res.vt_list.forEach(function(v) {
-          var opt = document.createElement('option');
-          opt.value = v.ma;
-          opt.textContent = v.ma + ' — ' + v.ten;
-          sel.appendChild(opt);
-        });
-      }
+      window._whVtList = res.vt_list || [];
+      window._whVtSelected = '';
+      renderWhVtDropdown('');
       renderWarehouse();
       document.getElementById('wh-updated').textContent = 'Cập nhật: '
         + now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -5883,6 +5879,58 @@ function _whParseDate(s) {
   if (p.length === 3) return new Date(p[2], p[1]-1, p[0]);
   var d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
+}
+
+var _whVtList = [];
+var _whVtSelected = '';
+
+function renderWhVtDropdown(q) {
+  var dd = document.getElementById('wh-vt-dropdown');
+  if (!dd) return;
+  var filtered = q ? _whVtList.filter(function(v) {
+    return (v.ma + ' ' + v.ten).toLowerCase().indexOf(q.toLowerCase()) >= 0;
+  }) : _whVtList;
+  var items = [{ma:'', ten:'Tất cả vật tư'}].concat(filtered.slice(0, 100));
+  dd.innerHTML = items.map(function(v) {
+    var label = v.ma ? (v.ma + ' — ' + v.ten) : v.ten;
+    var sel = _whVtSelected === v.ma;
+    return '<div data-val="' + v.ma + '" onclick="selectWhVt(this)" style="padding:6px 10px;font-size:12px;cursor:pointer;'
+      + (sel ? 'background:#FFF8E7;font-weight:600' : '')
+      + '" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='' + (sel?'#FFF8E7':'') + ''">'
+      + label + '</div>';
+  }).join('');
+}
+
+function filterWhVtList() {
+  var q = document.getElementById('wh-vt-input').value;
+  renderWhVtDropdown(q);
+  document.getElementById('wh-vt-dropdown').style.display = 'block';
+}
+
+function showWhVtList() {
+  renderWhVtDropdown(document.getElementById('wh-vt-input').value);
+  document.getElementById('wh-vt-dropdown').style.display = 'block';
+}
+
+function hideWhVtListDelay() {
+  setTimeout(function() {
+    var dd = document.getElementById('wh-vt-dropdown');
+    if (dd) dd.style.display = 'none';
+  }, 200);
+}
+
+function selectWhVt(el) {
+  _whVtSelected = el.getAttribute('data-val');
+  var inp = document.getElementById('wh-vt-input');
+  if (_whVtSelected === '') {
+    inp.value = '';
+    inp.placeholder = '-- Tất cả vật tư --';
+  } else {
+    var item = _whVtList.find(function(v){ return v.ma === _whVtSelected; });
+    inp.value = item ? (item.ma + ' — ' + item.ten) : _whVtSelected;
+  }
+  document.getElementById('wh-vt-dropdown').style.display = 'none';
+  renderWhChart1();
 }
 
 function renderWarehouse() {
@@ -5940,7 +5988,7 @@ function _fmtMonth(mk) {
 function renderWhChart1() {
   if (!_whData || typeof Chart === 'undefined') return;
   var d = _whData;
-  var vtFilter = document.getElementById('wh-vt-filter').value;
+  var vtFilter = _whVtSelected || '';
   var mk = _whGetMonthKey();
 
   var labels, nhap, xuat, ton;
