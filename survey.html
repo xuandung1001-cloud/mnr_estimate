@@ -605,6 +605,11 @@ async function apiPost(data) {
   try { return JSON.parse(text); } catch(e) { return { success: false, error: e.message }; }
 }
 
+// ===================== UTILS =====================
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ===================== TOAST =====================
 function toast(msg, dur) {
   var el = document.getElementById('toast');
@@ -752,7 +757,7 @@ async function loadViewPhotos() {
     });
 
     if (!res.success) {
-      res_div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:13px">Lỗi: ' + (res.error || 'Unknown') + '</div>';
+      res_div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:13px">Lỗi: ' + escapeHtml(res.error || 'Unknown') + '</div>';
       return;
     }
 
@@ -764,10 +769,10 @@ async function loadViewPhotos() {
     // Render grid
     var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
     res.photos.forEach(function(p) {
-      html += '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg)" id="vphoto-' + p.id + '">';
-      html += '<a href="' + p.url + '" target="_blank"><img src="' + p.thumb + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"></a>';
-      html += '<button id="delbtn-' + p.id + '" style="position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(192,57,43,0.85);border:none;border-radius:50%;color:white;font-size:13px;cursor:pointer">×</button>';
-      html += '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:8px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>';
+      html += '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg)" id="vphoto-' + escapeHtml(p.id) + '">';
+      html += '<a href="' + escapeHtml(p.url) + '" target="_blank"><img src="' + escapeHtml(p.thumb) + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"></a>';
+      html += '<button id="delbtn-' + escapeHtml(p.id) + '" style="position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(192,57,43,0.85);border:none;border-radius:50%;color:white;font-size:13px;cursor:pointer">×</button>';
+      html += '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:8px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(p.name) + '</div>';
       html += '</div>';
     });
     html += '</div>';
@@ -784,7 +789,7 @@ async function loadViewPhotos() {
     });
 
   } catch(e) {
-    res_div.innerHTML = '<div style="color:var(--red);font-size:12px;padding:16px">Lỗi: ' + e.message + '</div>';
+    res_div.innerHTML = '<div style="color:var(--red);font-size:12px;padding:16px">Lỗi: ' + escapeHtml(e.message) + '</div>';
   }
 }
 
