@@ -824,6 +824,7 @@ td input:focus,td select:focus{background:#FEFAF0}
         <div class="card">
           <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
             <select class="fi" id="rpt-month" onchange="genDashboard()" style="width:120px">
+              <option value="ALL">— Cả năm —</option>
               <option>JANUARY</option><option>FEBRUARY</option><option>MARCH</option>
               <option>APRIL</option><option>MAY</option><option>JUNE</option>
               <option>JULY</option><option>AUGUST</option><option>SEPTEMBER</option>
@@ -4196,6 +4197,7 @@ function genDashboard() {
   const carrier = document.getElementById('rpt-carrier').value;
   const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
   const monthIdx = MONTHS.indexOf(month);
+  const isAllYear = (month === 'ALL');
 
   // Show dashboard, hide summary
   document.getElementById('rpt-dashboard').style.display = 'block';
@@ -4205,7 +4207,7 @@ function genDashboard() {
   const filtered = state.tracking.filter(r => {
     const d = parseReportDate(r.po_date);
     if (!d) return false;
-    const matchMonth = d.getMonth() === monthIdx && d.getFullYear() === year;
+    const matchMonth = isAllYear ? d.getFullYear() === year : (d.getMonth() === monthIdx && d.getFullYear() === year);
     const matchCarrier = !carrier || r.carrier === carrier;
     return matchMonth && matchCarrier && r.approval_status === 'Repaired';
   });
@@ -4222,7 +4224,7 @@ function genDashboard() {
     <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #22c55e">
       <div class="stat-label" style="color:#15803d">Tổng containers</div>
       <div class="stat-value" style="color:#15803d">${filtered.length}</div>
-      <div class="stat-sub">${month} ${year}</div>
+      <div class="stat-sub">${isAllYear ? 'Cả năm ' + year : month + ' ' + year}</div>
     </div>
     <div class="stat-card" style="background:#eff6ff;border-left:4px solid #3b82f6">
       <div class="stat-label" style="color:#1d4ed8">Total No VAT</div>
@@ -4283,10 +4285,10 @@ function genDashboard() {
     const d = parseReportDate(r.approved_date);
     const matchCarrier2 = !carrier || r.carrier === carrier;
     // Nếu có approved_date trong tháng → lấy
-    if (d && d.getMonth() === monthIdx && d.getFullYear() === year && matchCarrier2) return true;
+    if (d && (isAllYear ? d.getFullYear() === year : (d.getMonth() === monthIdx && d.getFullYear() === year)) && matchCarrier2) return true;
     // Nếu không có approved_date nhưng có po_date trong tháng → lấy
     const dp = parseReportDate(r.po_date);
-    if (dp && dp.getMonth() === monthIdx && dp.getFullYear() === year && matchCarrier2) return true;
+    if (dp && (isAllYear ? dp.getFullYear() === year : (dp.getMonth() === monthIdx && dp.getFullYear() === year)) && matchCarrier2) return true;
     return false;
   });
 
@@ -4431,11 +4433,13 @@ function genSummaryReport() {
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
   const carrier = document.getElementById('rpt-carrier').value;
+  const isAllYear = (month === 'ALL');
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
 
   const filtered = state.tracking.filter(r => {
     const d = parseReportDate(r.po_date);
-    const matchMonth = !d ? false : (d.getMonth() === monthIdx && d.getFullYear() == year);
+    if (!d) return false;
+    const matchMonth = isAllYear ? d.getFullYear() == year : (d.getMonth() === monthIdx && d.getFullYear() == year);
     const matchCarrier = !carrier || r.carrier === carrier;
     return matchMonth && matchCarrier;
   });
@@ -4463,7 +4467,7 @@ function genSummaryReport() {
   `;
 
   if (!filtered.length) {
-    document.getElementById('rpt-result').innerHTML = '<div class="alert alert-warn">Không có dữ liệu cho tháng ' + month + ' ' + year + '</div>';
+    document.getElementById('rpt-result').innerHTML = '<div class="alert alert-warn">Không có dữ liệu cho ' + (isAllYear ? 'năm ' : 'tháng ' + month + ' ') + year + '</div>';
     return;
   }
 
@@ -4477,7 +4481,7 @@ function genSummaryReport() {
   }));
 
   document.getElementById('rpt-result').innerHTML = `
-    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Summary Report — ${month} ${year}</div>
+    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Summary Report — ${isAllYear ? 'Cả năm' : month} ${year}</div>
     <div class="tbl-wrap">
     <table style="table-layout:fixed">
       <colgroup>
@@ -4526,17 +4530,19 @@ function genDetailedReport() {
   document.getElementById('rpt-summary-card').style.display = 'block';
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
+  const isAllYear = (month === 'ALL');
   const monthIdx = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'].indexOf(month);
   const filtered = state.tracking.filter(r => {
     const d = parseReportDate(r.po_date);
-    return d && d.getMonth() === monthIdx && d.getFullYear() == year;
+    if (!d) return false;
+    return isAllYear ? d.getFullYear() == year : (d.getMonth() === monthIdx && d.getFullYear() == year);
   });
   if (!filtered.length) {
-    document.getElementById('rpt-result').innerHTML = '<div class="alert alert-warn">Không có dữ liệu cho tháng ' + month + ' ' + year + '</div>';
+    document.getElementById('rpt-result').innerHTML = '<div class="alert alert-warn">Không có dữ liệu cho ' + (isAllYear ? 'năm ' : 'tháng ' + month + ' ') + year + '</div>';
     return;
   }
   document.getElementById('rpt-result').innerHTML = `
-    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Detailed Statement — ${month} ${year}</div>
+    <div style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px">Detailed Statement — ${isAllYear ? 'Cả năm' : month} ${year}</div>
     <div class="tbl-wrap">
     <table style="table-layout:fixed">
       <colgroup>
