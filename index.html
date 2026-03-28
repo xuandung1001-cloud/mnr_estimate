@@ -1300,6 +1300,11 @@ let state = {
   ovmData: []
 };
 
+// ===================== UTILS =====================
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ===================== API =====================
 async function apiGet(params) {
   const url = API + '?' + new URLSearchParams(params);
@@ -2991,7 +2996,8 @@ async function toggleEstDetail(tr, contNo, estDate) {
   var loadingMsg = (state.estimates && state.estimates.length)
     ? 'Đang hiển thị...'
     : 'Đang tải dữ liệu lần đầu...';
-  detailTr.querySelector('div').textContent = loadingMsg;
+  var _loadingDiv = detailTr.querySelector('div');
+  if (_loadingDiv) _loadingDiv.textContent = loadingMsg;
 
   tr.parentNode.insertBefore(detailTr, tr.nextSibling);
   _estDetailOpen = contNo;
@@ -3016,7 +3022,8 @@ async function toggleEstDetail(tr, contNo, estDate) {
 
 
     if (!estData || !estData.length) {
-      detailTr.querySelector('td').innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--gray);font-style:italic">Không có chi tiết.</div>';
+      var _emptyTd = detailTr.querySelector('td');
+      if (_emptyTd) _emptyTd.innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--gray);font-style:italic">Không có chi tiết.</div>';
       return;
     }
 
@@ -3056,7 +3063,8 @@ async function toggleEstDetail(tr, contNo, estDate) {
     var totApp = estData.reduce(function(s,e){ return s+(parseFloat(e.app_total_approved)||0); }, 0);
     var totDiff = totApp - totEst;
 
-    detailTr.querySelector('td').innerHTML =
+    var _detailTd = detailTr.querySelector('td');
+    if (_detailTd) _detailTd.innerHTML =
       '<div style="padding:8px 16px 0">'
       + '<table style="width:100%;font-size:11px;border-collapse:collapse;table-layout:fixed">'
       + '<colgroup>'
@@ -3093,7 +3101,8 @@ async function toggleEstDetail(tr, contNo, estDate) {
       + '</table></div>'
       + '<div style="padding:4px 16px 8px;text-align:right;font-size:10px;color:#888">Click vào số cont để đóng</div>';
   } catch(e) {
-    detailTr.querySelector('td').innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--red)">Lỗi: ' + e.message + '</div>';
+    var _errTd = detailTr.querySelector('td');
+    if (_errTd) _errTd.innerHTML = '<div style="padding:10px 16px;font-size:11px;color:var(--red)">Lỗi: ' + escapeHtml(e.message) + '</div>';
   }
 }
 
