@@ -143,17 +143,6 @@ td input:focus,td select:focus{background:#FEFAF0}
 .mode-tab{padding:5px 14px;font-size:12px;cursor:pointer;background:var(--white);color:var(--gray);border:none;font-family:inherit;transition:all .15s}
 .mode-tab:hover{background:#F5F5F5}
 .mode-tab.active{background:var(--amber-accent);color:#7A5500;font-weight:600}
-
-/* CONTAINER HISTORY MODAL */
-#cont-history-modal {
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;
-  align-items:center;justify-content:center;
-}
-#cont-history-modal.show { display:flex; }
-#cont-history-box {
-  background:#fff;border-radius:12px;padding:20px;width:640px;max-width:95vw;
-  max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.18);
-}
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -656,13 +645,7 @@ td input:focus,td select:focus{background:#FEFAF0}
             <label style="font-size:11px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap">
               <input type="checkbox" id="trk-show-closed" onchange="filterTracking()"> <strong>Hiện Rejected</strong>
             </label>
-            <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
-              <span style="font-size:11px;color:var(--gray)">Từ</span>
-              <input class="fi" type="date" id="trk-date-from" onchange="filterTracking()" style="font-size:11px;padding:4px 6px;width:130px" title="Lọc từ ngày (Est. Date)">
-              <span style="font-size:11px;color:var(--gray)">đến</span>
-              <input class="fi" type="date" id="trk-date-to" onchange="filterTracking()" style="font-size:11px;padding:4px 6px;width:130px" title="Lọc đến ngày (Est. Date)">
-            </div>
-            <button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
+<button class="btn btn-sm" onclick="exportTracking()">Export Excel</button>
           </div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table>
@@ -1447,49 +1430,6 @@ function hideGlobalSearch() {
   if (box) box.style.display = 'none';
 }
 
-// ===================== CONTAINER HISTORY =====================
-async function showContHistory(contNo) {
-  var modal = document.getElementById('cont-history-modal');
-  var body  = document.getElementById('cont-history-body');
-  document.getElementById('cont-history-title').textContent = 'Lịch sử: ' + contNo;
-  document.getElementById('cont-history-sub').textContent = 'Tất cả thao tác liên quan container này';
-  body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--gray)"><div class="spinner" style="margin:0 auto 6px"></div>Đang tải...</td></tr>';
-  modal.classList.add('show');
-
-  try {
-    var res = await apiGet({ action: 'getActivityLog', _t: Date.now(), filter_cont: contNo });
-    var logs = res && res.success ? (res.data || []) : [];
-
-    if (!logs.length) {
-      body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--gray)">Chưa có lịch sử thao tác</td></tr>';
-      return;
-    }
-
-    var ACTION_COLOR = { 'Tạo Estimate':'#16a34a','Revise Estimate':'#d97706','Xoá Estimate':'#dc2626','Cập nhật OVM':'#7c3aed','Cập nhật Tracking':'#0369a1' };
-    body.innerHTML = logs.map(function(r, i) {
-      var color = ACTION_COLOR[r.action] || '#888';
-      return '<tr style="background:' + (i%2===0?'#fff':'var(--bg)') + '">'
-        + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--gray);white-space:nowrap">' + r.timestamp + '</td>'
-        + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600">' + (r.username||'—') + '</td>'
-        + '<td style="padding:7px 10px;border-bottom:1px solid var(--border)">'
-        + '<span style="background:' + color + '22;color:' + color + ';padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">' + (r.action||'—') + '</span>'
-        + '</td>'
-        + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--gray)">' + (r.detail||'—') + '</td>'
-        + '</tr>';
-    }).join('');
-  } catch(e) {
-    body.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--red)">Lỗi: ' + e.message + '</td></tr>';
-  }
-}
-
-function closeContHistory() {
-  document.getElementById('cont-history-modal').classList.remove('show');
-}
-
-// Keyboard ESC đóng modal
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeContHistory();
-});
 
 // ===================== OFFLINE INDICATOR =====================
 function _showOfflineBanner() {
@@ -3314,9 +3254,7 @@ function filterTracking() {
   const ca = document.getElementById('trk-carrier').value;
   const showInfestation = document.getElementById('trk-infestation') && document.getElementById('trk-infestation').checked;
   const showClosed = document.getElementById('trk-show-closed') && document.getElementById('trk-show-closed').checked;
-  const dateFrom = document.getElementById('trk-date-from') ? document.getElementById('trk-date-from').value : '';
-  const dateTo   = document.getElementById('trk-date-to')   ? document.getElementById('trk-date-to').value   : '';
-  const showPO = false;
+const showPO = false;
   const CLOSED = ['Rejected', 'Repaired'];
   const filtered = state.tracking.filter(r => {
     if (!showPO && r.po_number) return false;
@@ -3326,18 +3264,7 @@ function filterTracking() {
     const matchSt = !st || r.approval_status === st;
     const matchCa = !ca || r.carrier === ca;
     if (!matchQ || !matchSt || !matchCa) return false;
-    // Filter theo Est. Date
-    if (dateFrom || dateTo) {
-      var parts = String(r.est_date||'').split('/');
-      if (parts.length === 3) {
-        var estISO = parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
-        if (dateFrom && estISO < dateFrom) return false;
-        if (dateTo   && estISO > dateTo)   return false;
-      } else {
-        if (dateFrom || dateTo) return false;
-      }
-    }
-    return true;
+return true;
   });
   renderTrackingTable(filtered);
 }
@@ -3365,7 +3292,7 @@ function renderTrackingTable(data) {
       <td style="text-align:center">${r.po_number||'—'}</td>
       <td>${formatDate(r.po_date)||'—'}</td>
       <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
-      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600;margin-right:2px">Revise</button>` : ''}<button onclick="showContHistory('${r.container_no}')" class="btn btn-sm" style="background:#EEF2FF;border-color:#818CF8;color:#4338CA" title="Xem lịch sử thao tác">📋</button></td>
+      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600">Revise</button>` : ''}</td>
     </tr>
   `).join('');
 }
@@ -6580,35 +6507,6 @@ function exportInventoryExcel() {
     <div style="display:flex;gap:8px;margin-top:16px">
       <button onclick="hideUserModal()" class="btn" style="flex:1">Huỷ</button>
       <button onclick="doSaveUser()" class="btn btn-blue" style="flex:2" id="u-save-btn">Lưu</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- CONTAINER HISTORY MODAL -->
-<div id="cont-history-modal" onclick="if(event.target===this)closeContHistory()">
-  <div id="cont-history-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div>
-        <div style="font-size:14px;font-weight:600" id="cont-history-title">Lịch sử container</div>
-        <div style="font-size:11px;color:var(--gray)" id="cont-history-sub"></div>
-      </div>
-      <button onclick="closeContHistory()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);padding:0 4px">&times;</button>
-    </div>
-    <div style="overflow-y:auto;flex:1">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="background:var(--amber-light)">
-            <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)">Thời gian</th>
-            <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)">User</th>
-            <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)">Thao tác</th>
-            <th style="padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)">Chi tiết</th>
-          </tr>
-        </thead>
-        <tbody id="cont-history-body">
-          <tr><td colspan="4" style="padding:20px;text-align:center;color:var(--gray)">Đang tải...</td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </div>
