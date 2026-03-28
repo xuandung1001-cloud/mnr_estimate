@@ -1309,7 +1309,9 @@ async function apiGet(params) {
   const res = await fetch(url);
   const text = await res.text();
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    _checkVersion(parsed);
+    return parsed;
   } catch(e) {
     console.error('apiGet error:', e.message, 'url:', url, 'response:', text.substring(0,100));
     return { success: false, error: 'Parse error: ' + e.message, data: [] };
@@ -1324,7 +1326,9 @@ async function apiPost(data) {
   });
   const text = await res.text();
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    _checkVersion(parsed);
+    return parsed;
   } catch(e) {
     console.error('apiPost error:', e.message, 'response:', text.substring(0,100));
     return { success: false, error: 'Parse error: ' + e.message };
@@ -1332,6 +1336,30 @@ async function apiPost(data) {
 }
 
 // ===================== LOGIN =====================
+
+
+// ===================== VERSION CHECK =====================
+var APP_VERSION = null; // sẽ được set sau lần API call đầu tiên
+
+function _checkVersion(res) {
+  if (!res || !res._v) return;
+  if (!APP_VERSION) {
+    // Lần đầu nhận version → lưu lại
+    APP_VERSION = res._v;
+    return;
+  }
+  if (res._v !== APP_VERSION) {
+    // Version mới từ GAS → reload
+    if (!document.getElementById('version-banner')) {
+      var b = document.createElement('div');
+      b.id = 'version-banner';
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10001;padding:10px 16px;font-size:13px;font-weight:600;text-align:center;background:#1D9E75;color:#fff;cursor:pointer;';
+      b.innerHTML = '🔄 App vừa được cập nhật! <u>Click để tải lại</u>';
+      b.onclick = function() { window.location.reload(); };
+      document.body.appendChild(b);
+    }
+  }
+}
 
 // ===================== OFFLINE INDICATOR =====================
 function _showOfflineBanner() {
