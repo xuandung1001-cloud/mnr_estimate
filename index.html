@@ -1304,6 +1304,7 @@ let state = {
 
 // ===================== API =====================
 async function apiGet(params) {
+  if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng', data: [] }; }
   const url = API + '?' + new URLSearchParams(params);
   const res = await fetch(url);
   const text = await res.text();
@@ -1316,6 +1317,7 @@ async function apiGet(params) {
 }
 
 async function apiPost(data) {
+  if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng' }; }
   const res = await fetch(API, {
     method: 'POST',
     body: JSON.stringify(data)
@@ -1330,6 +1332,31 @@ async function apiPost(data) {
 }
 
 // ===================== LOGIN =====================
+
+// ===================== OFFLINE INDICATOR =====================
+function _showOfflineBanner() {
+  var b = document.getElementById('offline-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'offline-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:8px 16px;font-size:12px;font-weight:600;text-align:center;background:#dc2626;color:#fff;';
+    b.innerHTML = '⚠ Mất kết nối mạng — Vui lòng kiểm tra internet';
+    document.body.appendChild(b);
+  }
+  b.style.display = 'block';
+}
+
+function _hideOfflineBanner() {
+  var b = document.getElementById('offline-banner');
+  if (b) b.style.display = 'none';
+}
+
+window.addEventListener('offline', _showOfflineBanner);
+window.addEventListener('online', function() {
+  _hideOfflineBanner();
+  toast('Đã kết nối lại mạng!', 2000);
+});
+
 
 function checkExpiryWarning(daysLeft, expiry) {
   if (!daysLeft) return;
