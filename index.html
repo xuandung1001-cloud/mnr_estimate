@@ -795,20 +795,20 @@ td input:focus,td select:focus{background:#FEFAF0}
               <thead>
                 <tr>
                   <th>STT</th>
-                  <th>Carrier</th>
-                  <th>Equipment No</th>
-                  <th>Size</th>
+                  <th>Hãng tàu</th>
+                  <th>Số container</th>
+                  <th>Kích cỡ</th>
                   <th>ISO</th>
-                  <th>Mfg Date</th>
+                  <th>Năm SX</th>
                   <th>Grade</th>
                   <th>Trạng thái</th>
                   <th>F/E</th>
-                  <th>Yard Location</th>
-                  <th>Ngày lưu</th>
-                  <th>Date In Yard</th>
+                  <th>Vị trí bãi</th>
+                  <th>Số ngày lưu</th>
+                  <th>Ngày vào bãi</th>
                   <th>Loại HH</th>
-                  <th>Cont Status</th>
-                  <th>Remarks</th>
+                  <th>Tình trạng</th>
+                  <th>Ghi chú</th>
                 </tr>
               </thead>
               <tbody id="stk-rows">
@@ -3534,7 +3534,7 @@ function renderStockTable(data) {
       <td style="text-align:center">${r.equipment_no||''}</td>
       <td>${r.size_type||''}</td>
       <td>${r.size_type_iso||''}</td>
-      <td>${r.manufactured_date||''}</td>
+      <td>${(function(v){if(!v)return '';var s=String(v);var m=s.match(/(\d{4})-(\d{2})/);return m?m[2]+'/'+m[1]:(s.length>7?s.substring(0,7):s);})(r.manufactured_date)}</td>
       <td>${r.grade||''}</td>
       <td>${r.trang_thai_container||'—'}</td>
       <td>${r.fe||''}</td>
