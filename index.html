@@ -4378,7 +4378,7 @@ function genDashboard() {
       },
       scales: {
         y:  { position:'left',  ticks:{font:{size:10}, callback: v => '$'+v.toLocaleString()}, grid:{color:'#f1f5f9'} },
-        y2: { position:'right', beginAtZero:true, ticks:{font:{size:10}, stepSize:1, callback: v => v+'c'}, grid:{display:false} },
+        y2: { position:'right', beginAtZero:true, ticks:{font:{size:10}, stepSize:1, callback: v => v}, grid:{display:false} },
         x:  { ticks:{font:{size:10}}, grid:{display:false} }
       }
     }
@@ -4463,7 +4463,7 @@ function genDashboard() {
       },
       scales: {
         y:  { beginAtZero:true, position:'left',  ticks:{font:{size:10}, callback:function(v){return '$'+v.toLocaleString();}}, grid:{color:'#f1f5f9'} },
-        y2: { beginAtZero:true, position:'right', ticks:{font:{size:10}, stepSize:1, callback:function(v){return v+'c';}}, grid:{display:false} },
+        y2: { beginAtZero:true, position:'right', ticks:{font:{size:10}, stepSize:1, callback:function(v){return v;}}, grid:{display:false} },
         x:  { ticks:{font:{size:10}}, grid:{display:false} }
       }
     }
