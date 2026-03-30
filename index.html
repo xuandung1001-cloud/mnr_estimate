@@ -925,15 +925,15 @@ td input:focus,td select:focus{background:#FEFAF0}
           <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table style="table-layout:fixed">
               <colgroup>
+                <col style="width:130px">
+                <col style="width:90px">
+                <col style="width:65px">
+                <col style="width:160px">
                 <col style="width:100px">
-                <col style="width:70px">
-                <col style="width:60px">
-                <col style="width:120px">
-                <col style="width:70px">
-                <col style="width:40px">
-                <col style="width:70px">
+                <col style="width:45px">
+                <col style="width:130px">
                 <col>
-                <col style="width:50px">
+                <col style="width:65px">
               </colgroup>
               <thead>
                 <tr>
@@ -2130,7 +2130,9 @@ function nav(screen, el) {
     warehouse: { title: 'Kho Vật Tư MNR', actions: [] },
     photos:    { title: 'Xem Hình Ảnh', actions: [] },
     users:     { title: 'Quản lý User', actions: [] },
-    actlog:    { title: 'Nhật ký hoạt động', actions: [] }
+    actlog:    { title: 'Nhật ký hoạt động', actions: [] },
+    'phieu-kho': { title: 'Phiếu nhập xuất', actions: [] },
+    ccdc:        { title: 'Lịch sử CCDC', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
