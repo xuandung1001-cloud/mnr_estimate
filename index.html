@@ -1557,7 +1557,10 @@ function toggleTrendTable(type) {
     card.style.display = 'none';
     btn.style.background = '';
     btn.style.color = '';
+    btn.style.borderColor = '';
   } else {
+    // Đảm bảo genDashboard đã chạy để có data
+    if (!window._trendData || !window._weekData) genDashboard();
     card.style.display = 'block';
     btn.style.background = '#FEFAF0';
     btn.style.color = '#7A5500';
