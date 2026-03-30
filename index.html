@@ -255,7 +255,7 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
       <div class="nav-item" id="nav-phieu-kho" onclick="nav('phieu-kho',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Phiếu xuất nhập
+        Phiếu nhập xuất
       </div>
       <div class="nav-item" id="nav-ccdc" onclick="nav('ccdc',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
@@ -925,22 +925,26 @@ td input:focus,td select:focus{background:#FEFAF0}
           <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:140px">
-                <col style="width:95px">
+                <col style="width:100px">
                 <col style="width:70px">
-                <col style="width:130px">
-                <col style="width:55px">
-                <col style="width:130px">
-                <col style="width:65px">
+                <col style="width:60px">
+                <col style="width:120px">
+                <col style="width:70px">
+                <col style="width:40px">
+                <col style="width:70px">
+                <col>
+                <col style="width:50px">
               </colgroup>
               <thead>
                 <tr>
                   <th>Mã phiếu</th>
                   <th>Ngày</th>
                   <th style="text-align:center">Loại</th>
-                  <th>Nguồn / Đích</th>
-                  <th style="text-align:center">Số VT</th>
-                  <th style="text-align:right">Tổng tiền (đ)</th>
+                  <th>Người thực hiện</th>
+                  <th>Bộ phận SD</th>
+                  <th style="text-align:center">SL</th>
+                  <th style="text-align:right">Tổng tiền phiếu</th>
+                  <th>Ghi chú</th>
                   <th style="text-align:center">Chi tiết</th>
                 </tr>
               </thead>
@@ -968,20 +972,20 @@ td input:focus,td select:focus{background:#FEFAF0}
           <div class="tbl-wrap">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:140px">
+                <col style="width:200px">
                 <col>
-                <col style="width:95px">
+                <col style="width:150px">
+                <col style="width:150px">
+                <col style="width:150px">
+                <col style="width:150px">
                 <col style="width:120px">
-                <col style="width:110px">
-                <col style="width:110px">
-                <col style="width:65px">
               </colgroup>
               <thead>
                 <tr>
                   <th>Mã CCDC</th>
                   <th style="text-align:left">Tên thiết bị</th>
                   <th>Ngày mua</th>
-                  <th style="text-align:right">Nguyên giá (đ)</th>
+                  <th style="text-align:right">Nguyên giá</th>
                   <th style="text-align:center">Tình trạng</th>
                   <th>Người giữ</th>
                   <th style="text-align:center">Lịch sử</th>
@@ -1770,7 +1774,7 @@ var _phieuKhoLoaded = false;
 
 async function loadPhieuKho() {
   _phieuKhoLoaded = false;
-  document.getElementById('pk-rows').innerHTML = '<tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('pk-rows').innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   closePkDetail();
   try {
     var res = await apiGet({ action: 'getPhieuKho', _t: Date.now() });
@@ -1779,10 +1783,10 @@ async function loadPhieuKho() {
       _phieuKhoLoaded = true;
       filterPhieuKho();
     } else {
-      document.getElementById('pk-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + (res&&res.error||'Unknown') + '</td></tr>';
+      document.getElementById('pk-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + (res&&res.error||'Unknown') + '</td></tr>';
     }
   } catch(e) {
-    document.getElementById('pk-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>';
+    document.getElementById('pk-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>';
   }
 }
 
@@ -1818,7 +1822,7 @@ function renderPhieuKho(data) {
       ? '<span class="badge" style="background:#dcfce7;color:#166534">NHẬP</span>'
       : '<span class="badge" style="background:#fef3c7;color:#92400e">XUẤT</span>';
     var bg = i%2===1 ? 'background:#FAFAFA' : '';
-    return '<tr style="'+bg+'">'      +'<td style="color:var(--blue);font-weight:600">'+r.ma_phieu+'</td>'      +'<td>'+r.ngay+'</td>'      +'<td>'+loaiBadge+'</td>'      +'<td>'+r.doi_tuong+'</td>'      +'<td style="text-align:center">'+r.so_vt+'</td>'      +'<td style="text-align:right">'+(r.tong_tien ? r.tong_tien.toLocaleString('vi-VN') : '—')+'</td>'      +'<td style="text-align:center"><button class="btn btn-sm" data-ma="'+r.ma_phieu+'" onclick="showPkDetail(this.dataset.ma)" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600;padding:2px 10px">Xem</button></td>'      +'</tr>';
+    return '<tr style="'+bg+'">'      +'<td style="color:var(--blue);font-weight:600">'+r.ma_phieu+'</td>'      +'<td>'+r.ngay+'</td>'      +'<td>'+loaiBadge+'</td>'      +'<td>'+r.nguoi_th+'</td>'      +'<td>'+(r.bp_su_dung||'')+'</td>'      +'<td style="text-align:center">'+r.so_vt+'</td>'      +'<td style="text-align:right">'+(r.tong_tien ? r.tong_tien.toLocaleString('vi-VN') : '—')+'</td>'      +'<td style="color:var(--gray)">'+( r.ghi_chu||'')+'</td>'      +'<td style="text-align:center"><button class="btn btn-sm" data-ma="'+r.ma_phieu+'" onclick="showPkDetail(this.dataset.ma)" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600;padding:2px 10px">Xem</button></td>'      +'</tr>';
   }).join('');
 }
 
@@ -1853,7 +1857,7 @@ var _ccdcLoaded = false;
 
 async function loadCCDC() {
   _ccdcLoaded = false;
-  document.getElementById('cc-rows').innerHTML = '<tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('cc-rows').innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   closeCcDetail();
   try {
     var res = await apiGet({ action: 'getCCDC', _t: Date.now() });
@@ -1865,7 +1869,7 @@ async function loadCCDC() {
       document.getElementById('cc-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'Unknown')+'</td></tr>';
     }
   } catch(e) {
-    document.getElementById('cc-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>';
+    document.getElementById('cc-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>';
   }
 }
 
@@ -1883,7 +1887,7 @@ function filterCCDC() {
 function renderCCDC(data) {
   var tbody = document.getElementById('cc-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
   var statusStyle = {
@@ -6097,7 +6101,7 @@ function renderActLog() {
 async function renderUsers() {
   const tbody = document.getElementById('users-rows');
   if (!state.user) return;
-  tbody.innerHTML = '<tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
     const res = await apiGet({ action: 'getUsers', username: state.user.username, key: state.user.key || localStorage.getItem('mnr_key') || '' });
     if (!res.success) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
