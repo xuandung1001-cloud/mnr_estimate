@@ -5947,8 +5947,8 @@ async function handleStockUpload(input) {
 }
 
 // ===================== PHÂN QUYỀN =====================
-const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','actlog'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos'; // tariff, warehouse ẩn mặc định
+const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog'];
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,phieu-kho,ccdc'; // tariff, warehouse ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -5966,8 +5966,10 @@ function applyPermissions(role, permissions) {
     report:    '[onclick*="report"]',
     pictures:  '[onclick*="pictures"]',
     inventory: '[onclick*="inventory"]',
-    warehouse: '[id="nav-warehouse"]',
-    actlog:    '[id="nav-actlog"]',
+    warehouse:   '[id="nav-warehouse"]',
+    'phieu-kho': '[id="nav-phieu-kho"]',
+    ccdc:        '[id="nav-ccdc"]',
+    actlog:      '[id="nav-actlog"]',
   };
   ALL_SCREENS.forEach(screen => {
     const el = document.querySelector('.nav-item' + (navMap[screen]||''));
@@ -7083,6 +7085,8 @@ function exportInventoryExcel() {
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-photos" value="photos"> Xem Hình Ảnh</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-warehouse" value="warehouse"> Kho Vật Tư</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-phieu-kho" value="phieu-kho"> Phiếu nhập xuất</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-ccdc" value="ccdc"> Lịch sử CCDC</label>
       </div>
     </div>
     <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
@@ -7099,7 +7103,7 @@ function exportInventoryExcel() {
 
 <!-- MODAL LỊCH SỬ CCDC -->
 <div id="cc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)closeCcDetail()">
-  <div style="background:#fff;border-radius:12px;width:900px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:12px;width:1200px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
       <div id="cc-detail-title" style="font-size:14px;font-weight:600;color:#1A1A1A"></div>
       <button onclick="closeCcDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;padding:0 4px">&times;</button>
@@ -7121,7 +7125,7 @@ function exportInventoryExcel() {
 
 <!-- MODAL CHI TIẾT PHIẾU KHO -->
 <div id="pk-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)closePkDetail()">
-  <div style="background:#fff;border-radius:12px;width:900px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:12px;width:1200px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
       <div>
         <div id="pk-detail-title" style="font-size:14px;font-weight:600;color:#1A1A1A"></div>
