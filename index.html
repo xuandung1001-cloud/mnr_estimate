@@ -1596,8 +1596,8 @@ function renderTrendTable(type) {
   var colPeriod = type === 'month' ? 'Monthly' : 'Weekly';
 
   var html = '<thead><tr>'
-    + '<th style="'+thStyle+';width:40px">Seq</th>'
-    + '<th style="'+thL+';width:110px">'+colPeriod+'</th>'
+    + '<th style="'+thStyle+';width:60px">Seq</th>'
+    + '<th style="'+thStyle+';width:110px">'+colPeriod+'</th>'
     + '<th style="'+thStyle+'">Repaired Qty</th>'
     + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(Incl. VAT 10%)</span></th>'
     + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(Incl. VAT 8%)</span></th>'
@@ -1630,7 +1630,7 @@ function renderTrendTable(type) {
     var bg = i % 2 === 1 ? 'background:#FAFAFA' : '';
     html += '<tr style="'+bg+'">'
       + '<td style="'+tdC+'">'+(i+1)+'</td>'
-      + '<td style="'+tdL+'">'+label+'</td>'
+      + '<td style="'+tdC+'">'+label+'</td>'
       + '<td style="'+tdC+'">'+qty.toLocaleString()+'</td>'
       + '<td style="'+tdStyle+'">'+fmtN(v10)+'</td>'
       + '<td style="'+tdStyle+'">'+fmtN(v8)+'</td>'
@@ -1640,9 +1640,10 @@ function renderTrendTable(type) {
       + '</tr>';
   });
 
-  // Total row
+  // Total row — avg cost per cont = totNoVat / totQty
+  var avgCpc = totQty > 0 ? round2(totNoVat / totQty) : 0;
   html += '<tr style="background:#FFFDE7;font-weight:700">'
-
+    + '<td style="'+tdC+';border:1px solid #E8A820"></td>'
     + '<td style="'+tdC+';border:1px solid #E8A820;color:#412402">Total:</td>'
     + '<td style="'+tdC+';border:1px solid #E8A820;color:#412402">'+totQty.toLocaleString()+'</td>'
     + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totV10)+'</td>'
