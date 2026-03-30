@@ -248,6 +248,21 @@ td input:focus,td select:focus{background:#FEFAF0}
       </div>
     </div>
     <div class="nav-section">
+      <div class="nav-label" style="border-color:#10B981">Vật tư kho</div>
+      <div class="nav-item" id="nav-warehouse" onclick="nav('warehouse',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Thống kê kho
+      </div>
+      <div class="nav-item" id="nav-phieu-kho" onclick="nav('phieu-kho',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Phiếu xuất nhập
+      </div>
+      <div class="nav-item" id="nav-ccdc" onclick="nav('ccdc',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        Lịch sử CCDC
+      </div>
+    </div>
+    <div class="nav-section">
       <div class="nav-label" style="border-color:#8B5CF6">Hệ thống</div>
       <div class="nav-item" onclick="nav('tariff',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
@@ -276,10 +291,7 @@ td input:focus,td select:focus{background:#FEFAF0}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         MSC Inventory
       </div>
-      <div class="nav-item" id="nav-warehouse" onclick="nav('warehouse',this)">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Kho Vật Tư
-      </div>
+
       <div class="nav-item" id="nav-photos" onclick="nav('photos',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
         Xem Hình Ảnh
@@ -890,6 +902,127 @@ td input:focus,td select:focus{background:#FEFAF0}
         <div class="card">
           <div class="tbl-wrap">
             <table id="tbl-trend-main" style="font-size:11px;width:100%;border-collapse:collapse"></table>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- PHIẾU XUẤT NHẬP -->
+      <div class="screen" id="screen-phieu-kho">
+        <div class="card">
+          <div class="filter-bar">
+            <select class="fi" id="pk-loai" onchange="filterPhieuKho()" style="width:110px">
+              <option value="">Tất cả loại</option>
+              <option value="NHẬP">NHẬP</option>
+              <option value="XUẤT">XUẤT</option>
+            </select>
+            <input class="fi" type="date" id="pk-from" onchange="filterPhieuKho()" style="width:130px">
+            <span style="font-size:11px;color:var(--gray)">đến</span>
+            <input class="fi" type="date" id="pk-to" onchange="filterPhieuKho()" style="width:130px">
+            <input class="fi" id="pk-search" placeholder="Tìm mã phiếu, đối tượng..." oninput="filterPhieuKho()" style="flex:1;min-width:160px">
+            <button class="btn btn-sm" onclick="loadPhieuKho()">↺ Refresh</button>
+          </div>
+          <div class="tbl-wrap" style="max-height:calc(100vh - 220px);overflow-y:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:130px">Mã phiếu</th>
+                  <th style="width:90px">Ngày</th>
+                  <th style="width:65px">Loại</th>
+                  <th>Đối tượng</th>
+                  <th style="width:110px">Người TH</th>
+                  <th style="width:55px;text-align:center">Số VT</th>
+                  <th style="width:120px;text-align:right">Tổng tiền</th>
+                  <th style="width:55px;text-align:center">Chi tiết</th>
+                </tr>
+              </thead>
+              <tbody id="pk-rows">
+                <tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Chi tiết phiếu -->
+        <div id="pk-detail-card" style="display:none">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div>
+                <span id="pk-detail-title" style="font-size:13px;font-weight:600;color:#1A1A1A"></span>
+                <span id="pk-detail-meta" style="font-size:11px;color:var(--gray);margin-left:10px"></span>
+              </div>
+              <button onclick="closePkDetail()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray)">&times;</button>
+            </div>
+            <div id="pk-detail-info" style="display:flex;gap:20px;margin-bottom:10px;font-size:11px;color:var(--gray)"></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:100px">Mã VT</th>
+                    <th>Tên vật tư</th>
+                    <th style="width:55px">ĐVT</th>
+                    <th style="width:60px;text-align:center">SL</th>
+                    <th style="width:110px;text-align:right">Đơn giá</th>
+                    <th style="width:120px;text-align:right">Thành tiền</th>
+                    <th style="width:120px">Số container</th>
+                    <th>Ghi chú</th>
+                  </tr>
+                </thead>
+                <tbody id="pk-detail-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LỊCH SỬ CCDC -->
+      <div class="screen" id="screen-ccdc">
+        <div class="card">
+          <div class="filter-bar">
+            <select class="fi" id="cc-status" onchange="filterCCDC()" style="width:140px">
+              <option value="">Tất cả trạng thái</option>
+              <option>Đang sử dụng</option>
+              <option>Hư hỏng</option>
+              <option>Bảo trì</option>
+            </select>
+            <input class="fi" id="cc-search" placeholder="Tìm mã, tên thiết bị..." oninput="filterCCDC()" style="flex:1;min-width:160px">
+            <button class="btn btn-sm" onclick="loadCCDC()">↺ Refresh</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:130px">Mã CCDC</th>
+                  <th>Tên thiết bị</th>
+                  <th style="width:90px">Ngày mua</th>
+                  <th style="width:110px;text-align:right">Nguyên giá (đ)</th>
+                  <th style="width:100px">Tình trạng</th>
+                  <th style="width:100px">Người giữ</th>
+                  <th style="width:60px;text-align:center">Lịch sử</th>
+                </tr>
+              </thead>
+              <tbody id="cc-rows">
+                <tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Timeline CCDC -->
+        <div id="cc-detail-card" style="display:none">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <span id="cc-detail-title" style="font-size:13px;font-weight:600;color:#1A1A1A"></span>
+              <button onclick="closeCcDetail()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray)">&times;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">Cấp phát / Thu hồi</div>
+                <div id="cc-timeline-caphat"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">Bảo trì / Sửa chữa</div>
+                <div id="cc-timeline-baotri"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1661,6 +1794,169 @@ function fmtN(n) {
   return (n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+
+// ===================== PHIẾU KHO =====================
+var _phieuKhoData = [];
+var _phieuKhoLoaded = false;
+
+async function loadPhieuKho() {
+  _phieuKhoLoaded = false;
+  document.getElementById('pk-rows').innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  closePkDetail();
+  try {
+    var res = await apiGet({ action: 'getPhieuKho', _t: Date.now() });
+    if (res && res.success) {
+      _phieuKhoData = res.data || [];
+      _phieuKhoLoaded = true;
+      filterPhieuKho();
+    } else {
+      document.getElementById('pk-rows').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi: ' + (res&&res.error||'Unknown') + '</td></tr>';
+    }
+  } catch(e) {
+    document.getElementById('pk-rows').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>';
+  }
+}
+
+function filterPhieuKho() {
+  var loai   = document.getElementById('pk-loai').value;
+  var from   = document.getElementById('pk-from').value;
+  var to     = document.getElementById('pk-to').value;
+  var q      = document.getElementById('pk-search').value.toLowerCase();
+  var data   = _phieuKhoData.filter(function(r) {
+    if (loai && r.loai !== loai) return false;
+    if (q && !(r.ma_phieu.toLowerCase().includes(q) || r.doi_tuong.toLowerCase().includes(q))) return false;
+    if (from || to) {
+      var parts = r.ngay.split('/');
+      if (parts.length === 3) {
+        var iso = parts[2]+'-'+parts[1]+'-'+parts[0];
+        if (from && iso < from) return false;
+        if (to   && iso > to)   return false;
+      }
+    }
+    return true;
+  });
+  renderPhieuKho(data);
+}
+
+function renderPhieuKho(data) {
+  var tbody = document.getElementById('pk-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(function(r, i) {
+    var loaiBadge = r.loai.indexOf('NHẬP') >= 0
+      ? '<span class="badge" style="background:#dcfce7;color:#166534">NHẬP</span>'
+      : '<span class="badge" style="background:#fef3c7;color:#92400e">XUẤT</span>';
+    var bg = i%2===1 ? 'background:#FAFAFA' : '';
+    return '<tr style="'+bg+'">'      +'<td style="color:var(--blue);font-weight:600">'+r.ma_phieu+'</td>'      +'<td>'+r.ngay+'</td>'      +'<td>'+loaiBadge+'</td>'      +'<td>'+r.doi_tuong+'</td>'      +'<td>'+r.nguoi_th+'</td>'      +'<td style="text-align:center">'+r.so_vt+'</td>'      +'<td style="text-align:right">'+(r.tong_tien ? r.tong_tien.toLocaleString('vi-VN') : '—')+'</td>'      +'<td style="text-align:center"><button onclick="showPkDetail(''+r.ma_phieu+'')" class="btn btn-sm" style="background:#EEF2FF;border-color:#818CF8;color:#4338CA">Xem</button></td>'      +'</tr>';
+  }).join('');
+}
+
+function showPkDetail(maPhieu) {
+  var p = _phieuKhoData.find(function(r){ return r.ma_phieu === maPhieu; });
+  if (!p) return;
+  var card = document.getElementById('pk-detail-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('pk-detail-title').textContent = 'Chi tiết phiếu: ' + p.ma_phieu;
+  document.getElementById('pk-detail-meta').textContent = p.ngay + ' · ' + p.nguoi_th;
+  var loaiBadge = p.loai.indexOf('NHẬP') >= 0
+    ? '<span class="badge" style="background:#dcfce7;color:#166534">NHẬP</span>'
+    : '<span class="badge" style="background:#fef3c7;color:#92400e">XUẤT</span>';
+  document.getElementById('pk-detail-info').innerHTML =
+    '<span>Loại: '+loaiBadge+'</span>'    +'<span>Đối tượng: <strong>'+p.doi_tuong+'</strong></span>'    +(p.bp_su_dung ? '<span>Bộ phận: '+p.bp_su_dung+'</span>' : '')
+    +'<span>Tổng tiền: <strong style="color:var(--green)">'+(p.tong_tien?p.tong_tien.toLocaleString('vi-VN')+' đ':'—')+'</strong></span>';
+  var ct = p.chi_tiet || [];
+  document.getElementById('pk-detail-rows').innerHTML = ct.length
+    ? ct.map(function(r,i){
+        return '<tr style="'+(i%2===1?'background:#FAFAFA':'')+'">'          +'<td style="font-weight:600">'+r.ma_vt+'</td>'          +'<td>'+r.ten_vt+'</td>'          +'<td style="text-align:center">'+r.don_vi+'</td>'          +'<td style="text-align:center;font-weight:600">'+r.so_luong+'</td>'          +'<td style="text-align:right">'+(r.don_gia?r.don_gia.toLocaleString('vi-VN'):'—')+'</td>'          +'<td style="text-align:right;font-weight:600;color:var(--green)">'+(r.thanh_tien?r.thanh_tien.toLocaleString('vi-VN'):'—')+'</td>'          +'<td style="color:var(--blue)">'+r.so_cont+'</td>'          +'<td style="color:var(--gray)">'+r.ghi_chu+'</td>'          +'</tr>';
+      }).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:12px">Không có chi tiết</td></tr>';
+}
+
+function closePkDetail() {
+  document.getElementById('pk-detail-card').style.display = 'none';
+}
+
+// ===================== CCDC =====================
+var _ccdcData = [];
+var _ccdcLoaded = false;
+
+async function loadCCDC() {
+  _ccdcLoaded = false;
+  document.getElementById('cc-rows').innerHTML = '<tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  closeCcDetail();
+  try {
+    var res = await apiGet({ action: 'getCCDC', _t: Date.now() });
+    if (res && res.success) {
+      _ccdcData = res.data || [];
+      _ccdcLoaded = true;
+      filterCCDC();
+    } else {
+      document.getElementById('cc-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'Unknown')+'</td></tr>';
+    }
+  } catch(e) {
+    document.getElementById('cc-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>';
+  }
+}
+
+function filterCCDC() {
+  var status = document.getElementById('cc-status').value;
+  var q      = document.getElementById('cc-search').value.toLowerCase();
+  var data   = _ccdcData.filter(function(r) {
+    if (status && r.trang_thai !== status) return false;
+    if (q && !(r.ma.toLowerCase().includes(q) || r.ten.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  renderCCDC(data);
+}
+
+function renderCCDC(data) {
+  var tbody = document.getElementById('cc-rows');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  var statusStyle = {
+    'Đang sử dụng': 'background:#dcfce7;color:#166534',
+    'Hư hỏng':      'background:#fee2e2;color:#991b1b',
+    'Bảo trì':      'background:#fef3c7;color:#92400e'
+  };
+  tbody.innerHTML = data.map(function(r,i) {
+    var st = statusStyle[r.trang_thai] || 'background:#f1f5f9;color:#64748b';
+    return '<tr style="'+(i%2===1?'background:#FAFAFA':'')+'">'      +'<td style="color:var(--blue);font-weight:600">'+r.ma+'</td>'      +'<td>'+r.ten+'</td>'      +'<td>'+r.ngay_mua+'</td>'      +'<td style="text-align:right">'+(r.nguyen_gia?r.nguyen_gia.toLocaleString('vi-VN'):'—')+'</td>'      +'<td><span class="badge" style="'+st+'">'+r.trang_thai+'</span></td>'      +'<td>'+r.nguoi_giu+'</td>'      +'<td style="text-align:center"><button onclick="showCcDetail(''+r.ma+'')" class="btn btn-sm" style="background:#EEF2FF;border-color:#818CF8;color:#4338CA">Xem</button></td>'      +'</tr>';
+  }).join('');
+}
+
+function showCcDetail(ma) {
+  var r = _ccdcData.find(function(x){ return x.ma === ma; });
+  if (!r) return;
+  var card = document.getElementById('cc-detail-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('cc-detail-title').textContent = r.ma + ' — ' + r.ten;
+
+  function renderTimeline(items, elId, emptyMsg) {
+    var el = document.getElementById(elId);
+    if (!items || !items.length) {
+      el.innerHTML = '<div style="color:var(--gray);font-size:11px;font-style:italic;padding:8px 0">'+emptyMsg+'</div>';
+      return;
+    }
+    el.innerHTML = '<div style="border-left:2px solid #e2e8f0;margin-left:8px;padding-left:12px">'      + items.map(function(item) {
+          return '<div style="position:relative;margin-bottom:10px;padding:8px 10px;background:#F8FAFC;border-radius:6px;border:1px solid #e2e8f0">'            +'<div style="position:absolute;left:-19px;top:10px;width:8px;height:8px;border-radius:50%;background:#F5C842;border:2px solid #fff;box-shadow:0 0 0 1px #E8A820"></div>'            +'<div style="font-size:10px;color:var(--gray);margin-bottom:3px">'+item.ngay+'</div>'            +'<div style="font-size:11px;font-weight:600;color:#1A1A1A">'+(item.loai||item.noi_dung||'')+'</div>'            +'<div style="font-size:10px;color:var(--gray);margin-top:2px">'+(item.nguoi_nhan||item.don_vi||'')              +(item.tinh_trang?' · '+item.tinh_trang:'')              +(item.chi_phi?' · '+item.chi_phi.toLocaleString('vi-VN')+' đ':'')              +(item.ghi_chu?' · '+item.ghi_chu:'')+'</div>'            +'</div>';
+        }).join('')
+      +'</div>';
+  }
+
+  renderTimeline(r.cap_phat, 'cc-timeline-caphat', 'Chưa có dữ liệu cấp phát');
+  renderTimeline(r.bao_tri,  'cc-timeline-baotri',  'Chưa có lịch sử bảo trì');
+}
+
+function closeCcDetail() {
+  document.getElementById('cc-detail-card').style.display = 'none';
+}
+
 // ===================== OFFLINE INDICATOR =====================
 function _showOfflineBanner() {
   var b = document.getElementById('offline-banner');
@@ -1876,6 +2172,8 @@ function nav(screen, el) {
   if (screen === 'warehouse' && !_whData) refreshWarehouse();
   if (screen === 'photos')    initPhotosScreen();
   if (screen === 'users') renderUsers();
+  if (screen === 'phieu-kho' && !_phieuKhoLoaded) { loadPhieuKho(); }
+  if (screen === 'ccdc' && !_ccdcLoaded) { loadCCDC(); }
   if (screen === 'actlog') { _actLogData = []; document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Nhấn Refresh để tải log</td></tr>'; document.getElementById('log-count').textContent = ''; }
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
