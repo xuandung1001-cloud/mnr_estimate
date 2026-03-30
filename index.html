@@ -1603,7 +1603,7 @@ function renderTrendTable(type) {
     + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(Incl. VAT 8%)</span></th>'
     + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(No VAT)</span></th>'
     + '<th style="'+thStyle+'">Cost per cont</th>'
-    + '<th style="'+thStyle+'">% vs kỳ trước</th>'
+
     + '</tr></thead><tbody>';
 
   var totQty=0, totV10=0, totV8=0, totNoVat=0;
@@ -1636,20 +1636,20 @@ function renderTrendTable(type) {
       + '<td style="'+tdStyle+'">'+fmtN(v8)+'</td>'
       + '<td style="'+tdStyle+'">'+fmtN(noVat)+'</td>'
       + '<td style="'+tdStyle+'">'+fmtN(cpc)+'</td>'
-      + '<td style="'+tdC+'">'+pctHtml+'</td>'
+
       + '</tr>';
   });
 
   // Total row
   html += '<tr style="background:#FFFDE7;font-weight:700">'
-    + '<td style="'+tdC+';border:1px solid #E8A820"></td>'
-    + '<td style="'+tdL+';border:1px solid #E8A820;color:#412402">Total:</td>'
+
+    + '<td style="'+tdC+';border:1px solid #E8A820;color:#412402">Total:</td>'
     + '<td style="'+tdC+';border:1px solid #E8A820;color:#412402">'+totQty.toLocaleString()+'</td>'
     + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totV10)+'</td>'
     + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totV8)+'</td>'
     + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totNoVat)+'</td>'
     + '<td style="'+tdStyle+';border:1px solid #E8A820"></td>'
-    + '<td style="'+tdC+';border:1px solid #E8A820"></td>'
+
     + '</tr>';
 
   html += '</tbody>';
