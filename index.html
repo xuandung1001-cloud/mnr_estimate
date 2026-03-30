@@ -869,22 +869,28 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
         </div>
 
-        <!-- Summary / Detailed result -->
-        <div id="rpt-trend-month-card" style="display:none;margin-bottom:12px">
-          <div class="card">
-            <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #F0F0F0">📊 Xu hướng tháng — 12 tháng gần nhất</div>
-            <div class="tbl-wrap"><table id="tbl-trend-month" style="font-size:11px;table-layout:fixed"></table></div>
-          </div>
-        </div>
-        <div id="rpt-trend-week-card" style="display:none;margin-bottom:12px">
-          <div class="card">
-            <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #F0F0F0">📊 Xu hướng tuần — 12 tuần gần nhất</div>
-            <div class="tbl-wrap"><table id="tbl-trend-week" style="font-size:11px;table-layout:fixed"></table></div>
-          </div>
-        </div>
         <div class="card" id="rpt-summary-card" style="display:none">
           <div class="stats-row" id="rpt-stats" style="margin-bottom:12px"></div>
           <div id="rpt-result"></div>
+        </div>
+      </div>
+
+
+      <!-- TREND TABLE SCREEN -->
+      <div class="screen" id="screen-trend-table">
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button onclick="backToDashboard()" class="btn btn-sm" style="display:flex;align-items:center;gap:4px">← Quay lại</button>
+              <span id="trend-table-title" style="font-size:13px;font-weight:600;color:#1A1A1A"></span>
+            </div>
+            <span id="trend-table-sub" style="font-size:11px;color:var(--gray)"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="tbl-wrap">
+            <table id="tbl-trend-main" style="font-size:11px;width:100%;border-collapse:collapse"></table>
+          </div>
         </div>
       </div>
 
@@ -1548,30 +1554,37 @@ function lsGet(key) {
 
 // ===================== TREND TABLE =====================
 function toggleTrendTable(type) {
-  var cardId = type === 'month' ? 'rpt-trend-month-card' : 'rpt-trend-week-card';
-  var btnId  = type === 'month' ? 'btn-trend-month' : 'btn-trend-week';
-  var card = document.getElementById(cardId);
-  var btn  = document.getElementById(btnId);
-  var isOpen = card.style.display !== 'none';
-  if (isOpen) {
-    card.style.display = 'none';
-    btn.style.background = '';
-    btn.style.color = '';
-    btn.style.borderColor = '';
-  } else {
-    // Đảm bảo genDashboard đã chạy để có data
-    if (!window._trendData || !window._weekData) genDashboard();
-    card.style.display = 'block';
-    btn.style.background = '#FEFAF0';
-    btn.style.color = '#7A5500';
-    btn.style.borderColor = '#F5C842';
-    renderTrendTable(type);
-  }
+  // Đảm bảo genDashboard đã chạy để có data
+  if (!window._trendData || !window._weekData) genDashboard();
+
+  // Chuyển sang màn hình riêng
+  var isMonth = type === 'month';
+  var title = isMonth ? '📊 Xu hướng tháng — 12 tháng gần nhất' : '📊 Xu hướng tuần — 12 tuần gần nhất';
+  var month = document.getElementById('rpt-month').value;
+  var year  = document.getElementById('rpt-year').value;
+  var carrier = document.getElementById('rpt-carrier').value;
+  var sub = (month === 'ALL' ? 'Cả năm' : month) + ' ' + year + (carrier ? ' · ' + carrier : '');
+
+  document.getElementById('trend-table-title').textContent = title;
+  document.getElementById('trend-table-sub').textContent = sub;
+
+  // Ẩn tất cả screens, hiện screen-trend-table
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-trend-table').classList.add('active');
+  document.getElementById('tb-title').textContent = isMonth ? 'Xu hướng tháng' : 'Xu hướng tuần';
+
+  renderTrendTable(type);
+}
+
+function backToDashboard() {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-report').classList.add('active');
+  document.getElementById('tb-title').textContent = 'Báo cáo tháng';
 }
 
 function renderTrendTable(type) {
   var d = type === 'month' ? window._trendData : window._weekData;
-  var tblId = type === 'month' ? 'tbl-trend-month' : 'tbl-trend-week';
+  var tblId = 'tbl-trend-main';
   if (!d || !d.labels || !d.labels.length) return;
 
   var thStyle = 'padding:7px 10px;background:#F5C842;color:#412402;font-weight:700;border:1px solid #E8A820;text-align:center;font-size:11px';
