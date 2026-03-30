@@ -1432,6 +1432,7 @@ function hideGlobalSearch() {
 }
 
 
+
 // ===================== OFFLINE INDICATOR =====================
 function _showOfflineBanner() {
   var b = document.getElementById('offline-banner');
@@ -4322,18 +4323,18 @@ function genDashboard() {
   // --- Chart 3: Trend 12 tháng ---
   const trendLabels = [];
   const trendVals   = [];
+  const trendCounts = [];
   for (let i = 11; i >= 0; i--) {
     let m = monthIdx - i; let y = year;
     while (m < 0) { m += 12; y--; }
     const label = MONTHS[m].slice(0,3) + ' ' + String(y).slice(2);
     trendLabels.push(label);
-    const val = state.tracking
-      .filter(r => {
-        const d = parseReportDate(r.po_date);
-        return d && d.getMonth() === m && d.getFullYear() === y && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
-      })
-      .reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0);
-    trendVals.push(round2(val));
+    const rows = state.tracking.filter(r => {
+      const d = parseReportDate(r.po_date);
+      return d && d.getMonth() === m && d.getFullYear() === y && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
+    });
+    trendVals.push(round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0)));
+    trendCounts.push(rows.length);
   }
 
   if (_rptCharts.trend) _rptCharts.trend.destroy();
@@ -4341,24 +4342,44 @@ function genDashboard() {
     type: 'line',
     data: {
       labels: trendLabels,
-      datasets: [{
-        label: 'Total No VAT (USD)',
-        data: trendVals,
-        borderColor: '#E8A820',
-        backgroundColor: 'rgba(245,200,66,0.1)',
-        borderWidth: 2.5,
-        pointBackgroundColor: '#E8A820',
-        pointRadius: 4,
-        tension: 0.35,
-        fill: true
-      }]
+      datasets: [
+        {
+          label: 'Total No VAT (USD)',
+          data: trendVals,
+          borderColor: '#E8A820',
+          backgroundColor: 'rgba(245,200,66,0.1)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#E8A820',
+          pointRadius: 4,
+          tension: 0.35,
+          fill: true,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Số cont',
+          data: trendCounts,
+          type: 'bar',
+          backgroundColor: 'rgba(56,142,200,0.25)',
+          borderColor: 'rgba(56,142,200,0.7)',
+          borderWidth: 1,
+          borderRadius: 4,
+          yAxisID: 'y2'
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false} },
+      plugins: {
+        legend: { display:true, position:'top', labels:{font:{size:10}, boxWidth:12} },
+        tooltip: { callbacks: { label: function(ctx) {
+          if (ctx.dataset.yAxisID === 'y') return ' $' + ctx.parsed.y.toLocaleString();
+          return ' ' + ctx.parsed.y + ' cont';
+        }}}
+      },
       scales: {
-        y: { ticks:{font:{size:10}, callback: v => '$'+v.toLocaleString()}, grid:{color:'#f1f5f9'} },
-        x: { ticks:{font:{size:10}}, grid:{display:false} }
+        y:  { position:'left',  ticks:{font:{size:10}, callback: v => '$'+v.toLocaleString()}, grid:{color:'#f1f5f9'} },
+        y2: { position:'right', beginAtZero:true, ticks:{font:{size:10}, stepSize:1, callback: v => v+'c'}, grid:{display:false} },
+        x:  { ticks:{font:{size:10}}, grid:{display:false} }
       }
     }
   });
@@ -4366,6 +4387,7 @@ function genDashboard() {
   // --- Chart 3: Weekly trend (last 12 weeks, Mon-Sun) ---
   var weekLabels = [];
   var weekVals = [];
+  var weekCounts = [];
   var today2 = new Date();
   var dow = today2.getDay();
   var monday = new Date(today2);
@@ -4387,41 +4409,62 @@ function genDashboard() {
     wSun.setDate(wMon.getDate() + 6);
     wSun.setHours(23,59,59,999);
     weekLabels.push('W' + getWeekNo(wMon));
-    var val = state.tracking
-      .filter(function(r) {
-        var d = parseReportDate(r.po_date);
-        if (!d) return false;
-        return d >= wMon && d <= wSun && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
-      })
-      .reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0);
-    weekVals.push(round2(val));
+    var wRows = state.tracking.filter(function(r) {
+      var d = parseReportDate(r.po_date);
+      if (!d) return false;
+      return d >= wMon && d <= wSun && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
+    });
+    weekVals.push(round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0)));
+    weekCounts.push(wRows.length);
   }
 
-  var isCurrentWeek = weekVals.map(function(v,i){ return i === weekVals.length-1; });
   if (_rptCharts.weekly) _rptCharts.weekly.destroy();
   _rptCharts.weekly = new Chart(document.getElementById('chartWeekly'), {
     type: 'bar',
     data: {
       labels: weekLabels,
-      datasets: [{
-        label: 'Total No VAT (USD)',
-        data: weekVals,
-        backgroundColor: weekVals.map(function(v,i){
-          return i === weekVals.length-1 ? '#F5C842' : 'rgba(245,200,66,0.4)';
-        }),
-        borderColor: weekVals.map(function(v,i){
-          return i === weekVals.length-1 ? '#E8A820' : 'rgba(232,168,32,0.7)';
-        }),
-        borderWidth: 1,
-        borderRadius: 5,
-      }]
+      datasets: [
+        {
+          label: 'Total No VAT (USD)',
+          data: weekVals,
+          backgroundColor: weekVals.map(function(v,i){
+            return i === weekVals.length-1 ? '#F5C842' : 'rgba(245,200,66,0.4)';
+          }),
+          borderColor: weekVals.map(function(v,i){
+            return i === weekVals.length-1 ? '#E8A820' : 'rgba(232,168,32,0.7)';
+          }),
+          borderWidth: 1,
+          borderRadius: 5,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Số cont',
+          data: weekCounts,
+          type: 'line',
+          borderColor: '#388EC8',
+          backgroundColor: 'rgba(56,142,200,0.15)',
+          borderWidth: 2,
+          pointBackgroundColor: '#388EC8',
+          pointRadius: 4,
+          tension: 0.3,
+          fill: false,
+          yAxisID: 'y2'
+        }
+      ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return ' $'+ctx.parsed.y.toLocaleString();}}} },
+      plugins: {
+        legend: { display:true, position:'top', labels:{font:{size:10}, boxWidth:12} },
+        tooltip: { callbacks: { label: function(ctx) {
+          if (ctx.dataset.yAxisID === 'y') return ' $' + ctx.parsed.y.toLocaleString();
+          return ' ' + ctx.parsed.y + ' cont';
+        }}}
+      },
       scales: {
-        y: { beginAtZero:true, ticks:{font:{size:10}, callback:function(v){return '$'+v.toLocaleString();}}, grid:{color:'#f1f5f9'} },
-        x: { ticks:{font:{size:10}}, grid:{display:false} }
+        y:  { beginAtZero:true, position:'left',  ticks:{font:{size:10}, callback:function(v){return '$'+v.toLocaleString();}}, grid:{color:'#f1f5f9'} },
+        y2: { beginAtZero:true, position:'right', ticks:{font:{size:10}, stepSize:1, callback:function(v){return v+'c';}}, grid:{display:false} },
+        x:  { ticks:{font:{size:10}}, grid:{display:false} }
       }
     }
   });
@@ -6516,6 +6559,8 @@ function exportInventoryExcel() {
     </div>
   </div>
 </div>
+
+
 
 </body>
 </html>
