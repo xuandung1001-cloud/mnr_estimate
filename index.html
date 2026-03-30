@@ -831,9 +831,10 @@ td input:focus,td select:focus{background:#FEFAF0}
               <option>OCTOBER</option><option>NOVEMBER</option><option>DECEMBER</option>
             </select>
             <select class="fi" id="rpt-year" onchange="genDashboard()" style="width:90px"></select>
-            <select class="fi" id="rpt-carrier" onchange="genDashboard()" style="width:120px"><option value="">Tất cả Carrier</option></select>
-            <button class="btn btn-sm" id="btn-summary-report" onclick="genSummaryReport()">Summary Report</button>
-            <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Detailed Statement</button>
+            <select class="fi" id="rpt-carrier" onchange="genDashboard()" style="width:120px"><option value="MSC">MSC</option></select>
+            <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Bảng chi tiết</button>
+            <button class="btn btn-sm" id="btn-trend-month" onclick="toggleTrendTable('month')">Xu hướng tháng</button>
+            <button class="btn btn-sm" id="btn-trend-week" onclick="toggleTrendTable('week')">Xu hướng tuần</button>
             <button class="btn btn-sm" onclick="exportReport()">Export Excel</button>
           </div>
         </div>
@@ -869,6 +870,18 @@ td input:focus,td select:focus{background:#FEFAF0}
         </div>
 
         <!-- Summary / Detailed result -->
+        <div id="rpt-trend-month-card" style="display:none;margin-bottom:12px">
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #F0F0F0">📊 Xu hướng tháng — 12 tháng gần nhất</div>
+            <div class="tbl-wrap"><table id="tbl-trend-month" style="font-size:11px;table-layout:fixed"></table></div>
+          </div>
+        </div>
+        <div id="rpt-trend-week-card" style="display:none;margin-bottom:12px">
+          <div class="card">
+            <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #F0F0F0">📊 Xu hướng tuần — 12 tuần gần nhất</div>
+            <div class="tbl-wrap"><table id="tbl-trend-week" style="font-size:11px;table-layout:fixed"></table></div>
+          </div>
+        </div>
         <div class="card" id="rpt-summary-card" style="display:none">
           <div class="stats-row" id="rpt-stats" style="margin-bottom:12px"></div>
           <div id="rpt-result"></div>
@@ -1274,7 +1287,11 @@ window.addEventListener('load', function() {
           if (new Date() <= expiry) {
             state.user = session;
             state.user.username = session.username || '';
-            state.user.key = sessionStorage.getItem('mnr_key') || '';
+            var _ssKey = sessionStorage.getItem('mnr_key');
+            var _lsKey = '';
+            try { _lsKey = decodeURIComponent(atob(localStorage.getItem('mnr_key_enc')||'')); } catch(e) {}
+            state.user.key = _ssKey || _lsKey || '';
+            if (!_ssKey && _lsKey) sessionStorage.setItem('mnr_key', _lsKey); // restore sessionStorage
             var _dLeft = Math.ceil((expiry - new Date()) / (1000*60*60*24));
             setTimeout(function(){ checkExpiryWarning(_dLeft, session.expiry); }, 500);
             document.getElementById('sb-username').textContent = session.fullname || session.username;
@@ -1311,35 +1328,75 @@ let state = {
 };
 
 // ===================== API =====================
-async function apiGet(params) {
-  if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng', data: [] }; }
-  const url = API + '?' + new URLSearchParams(params);
-  const res = await fetch(url);
-  const text = await res.text();
+async function _fetchWithTimeout(url, opts, timeout) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout || 30000);
   try {
-    const parsed = JSON.parse(text);
-    _checkVersion(parsed);
-    return parsed;
+    const res = await fetch(url, { ...opts, signal: ctrl.signal });
+    clearTimeout(timer);
+    return res;
   } catch(e) {
-    console.error('apiGet error:', e.message, 'url:', url, 'response:', text.substring(0,100));
-    return { success: false, error: 'Parse error: ' + e.message, data: [] };
+    clearTimeout(timer);
+    throw e;
   }
 }
 
-async function apiPost(data) {
-  if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng' }; }
-  const res = await fetch(API, {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-  const text = await res.text();
+async function apiGet(params, _retry) {
+  if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng', data: [] }; }
+  const url = API + '?' + new URLSearchParams(params);
   try {
-    const parsed = JSON.parse(text);
-    _checkVersion(parsed);
-    return parsed;
+    const res = await _fetchWithTimeout(url, {}, 30000);
+    // Auto retry khi GAS lỗi 429/500
+    if ((res.status === 429 || res.status >= 500) && !_retry) {
+      await new Promise(r => setTimeout(r, 2000));
+      return apiGet(params, true);
+    }
+    const text = await res.text();
+    try {
+      const parsed = JSON.parse(text);
+      _checkVersion(parsed);
+      return parsed;
+    } catch(e) {
+      console.error('apiGet parse error:', e.message);
+      return { success: false, error: 'Parse error: ' + e.message, data: [] };
+    }
   } catch(e) {
-    console.error('apiPost error:', e.message, 'response:', text.substring(0,100));
-    return { success: false, error: 'Parse error: ' + e.message };
+    if (e.name === 'AbortError') {
+      if (!_retry) { await new Promise(r => setTimeout(r, 2000)); return apiGet(params, true); }
+      toast('⏱ Kết nối quá chậm, vui lòng thử lại!', 4000);
+      return { success: false, error: 'Request timeout', data: [] };
+    }
+    console.error('apiGet error:', e.message);
+    return { success: false, error: e.message, data: [] };
+  }
+}
+
+async function apiPost(data, _retry) {
+  if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng' }; }
+  try {
+    const res = await _fetchWithTimeout(API, { method: 'POST', body: JSON.stringify(data) }, 30000);
+    // Auto retry khi GAS lỗi 429/500
+    if ((res.status === 429 || res.status >= 500) && !_retry) {
+      await new Promise(r => setTimeout(r, 2000));
+      return apiPost(data, true);
+    }
+    const text = await res.text();
+    try {
+      const parsed = JSON.parse(text);
+      _checkVersion(parsed);
+      return parsed;
+    } catch(e) {
+      console.error('apiPost parse error:', e.message);
+      return { success: false, error: 'Parse error: ' + e.message };
+    }
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      if (!_retry) { await new Promise(r => setTimeout(r, 2000)); return apiPost(data, true); }
+      toast('⏱ Kết nối quá chậm, vui lòng thử lại!', 4000);
+      return { success: false, error: 'Request timeout' };
+    }
+    console.error('apiPost error:', e.message);
+    return { success: false, error: e.message };
   }
 }
 
@@ -1433,6 +1490,160 @@ function hideGlobalSearch() {
 
 
 
+
+// ===================== API RETRY =====================
+// Retry helper: wrap fetch call với 1 auto-retry sau 2s khi GAS fail tạm thời
+async function _withRetry(fn) {
+  var res = await fn();
+  var skipRetry = ['Không có kết nối mạng', 'Request timeout'];
+  if (!res.success && res.error && !skipRetry.includes(res.error)) {
+    await new Promise(function(r){ setTimeout(r, 2000); });
+    res = await fn();
+  }
+  return res;
+}
+
+// Wrap apiGet/apiPost với retry
+async function apiGetR(params) { return _withRetry(function(){ return apiGet(params); }); }
+async function apiPostR(data)   { return _withRetry(function(){ return apiPost(data); }); }
+
+
+// ===================== CACHE TTL =====================
+var CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 giờ
+
+function _cacheSet(key, data) {
+  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data: data })); } catch(e) {}
+}
+function _cacheGet(key) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    if (!obj || !obj.ts || !obj.data) return null;
+    if (Date.now() - obj.ts > CACHE_TTL_MS) { localStorage.removeItem(key); return null; }
+    return obj.data;
+  } catch(e) { localStorage.removeItem(key); return null; }
+}
+
+
+// ===================== LOCALSTORAGE TTL HELPERS =====================
+var LS_TTL = 8 * 60 * 60 * 1000; // 8 giờ
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify({ d: val, t: Date.now() })); } catch(e) {}
+}
+function lsGet(key) {
+  try {
+    var raw = localStorage.getItem(key);
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    if (obj && obj.t && obj.d !== undefined) {
+      if (Date.now() - obj.t < LS_TTL) return obj.d;
+      localStorage.removeItem(key); // hết hạn → xóa
+      return null;
+    }
+    // Format cũ (không có timestamp) → trả về nhưng không cache lại
+    return obj;
+  } catch(e) { return null; }
+}
+
+// ===================== TREND TABLE =====================
+function toggleTrendTable(type) {
+  var cardId = type === 'month' ? 'rpt-trend-month-card' : 'rpt-trend-week-card';
+  var btnId  = type === 'month' ? 'btn-trend-month' : 'btn-trend-week';
+  var card = document.getElementById(cardId);
+  var btn  = document.getElementById(btnId);
+  var isOpen = card.style.display !== 'none';
+  if (isOpen) {
+    card.style.display = 'none';
+    btn.style.background = '';
+    btn.style.color = '';
+  } else {
+    card.style.display = 'block';
+    btn.style.background = '#FEFAF0';
+    btn.style.color = '#7A5500';
+    btn.style.borderColor = '#F5C842';
+    renderTrendTable(type);
+  }
+}
+
+function renderTrendTable(type) {
+  var d = type === 'month' ? window._trendData : window._weekData;
+  var tblId = type === 'month' ? 'tbl-trend-month' : 'tbl-trend-week';
+  if (!d || !d.labels || !d.labels.length) return;
+
+  var thStyle = 'padding:7px 10px;background:#F5C842;color:#412402;font-weight:700;border:1px solid #E8A820;text-align:center;font-size:11px';
+  var thL = thStyle + ';text-align:left';
+  var tdStyle = 'padding:6px 10px;border:1px solid #EEEEEE;text-align:right;font-size:11px';
+  var tdC = tdStyle + ';text-align:center';
+  var tdL = tdStyle + ';text-align:left';
+
+  var colPeriod = type === 'month' ? 'Monthly' : 'Weekly';
+
+  var html = '<thead><tr>'
+    + '<th style="'+thStyle+';width:40px">Seq</th>'
+    + '<th style="'+thL+';width:110px">'+colPeriod+'</th>'
+    + '<th style="'+thStyle+'">Repaired Qty</th>'
+    + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(Incl. VAT 10%)</span></th>'
+    + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(Incl. VAT 8%)</span></th>'
+    + '<th style="'+thStyle+'">Total Cost<br><span style="font-weight:400;font-size:10px">(No VAT)</span></th>'
+    + '<th style="'+thStyle+'">Cost per cont</th>'
+    + '<th style="'+thStyle+'">% vs kỳ trước</th>'
+    + '</tr></thead><tbody>';
+
+  var totQty=0, totV10=0, totV8=0, totNoVat=0;
+
+  d.labels.forEach(function(label, i) {
+    var qty   = d.counts[i] || 0;
+    var v10   = d.vat10[i]  || 0;
+    var v8    = d.vat8[i]   || 0;
+    var noVat = d.vals[i]   || 0;
+    var cpc   = qty > 0 ? round2(noVat / qty) : 0;
+    totQty += qty; totV10 += v10; totV8 += v8; totNoVat += noVat;
+
+    // % so sánh với kỳ trước
+    var pctHtml = '<span style="color:#888">—</span>';
+    if (i > 0 && d.vals[i-1] > 0) {
+      var pct = round2((noVat - d.vals[i-1]) / d.vals[i-1] * 100);
+      var color = pct >= 0 ? '#16a34a' : '#dc2626';
+      var sign  = pct >= 0 ? '+' : '';
+      pctHtml = '<span style="color:'+color+';font-weight:600">'+sign+pct+'%</span>';
+    } else if (i > 0 && d.vals[i-1] === 0 && noVat > 0) {
+      pctHtml = '<span style="color:#16a34a;font-weight:600">New</span>';
+    }
+
+    var bg = i % 2 === 1 ? 'background:#FAFAFA' : '';
+    html += '<tr style="'+bg+'">'
+      + '<td style="'+tdC+'">'+(i+1)+'</td>'
+      + '<td style="'+tdL+'">'+label+'</td>'
+      + '<td style="'+tdC+'">'+qty.toLocaleString()+'</td>'
+      + '<td style="'+tdStyle+'">'+fmtN(v10)+'</td>'
+      + '<td style="'+tdStyle+'">'+fmtN(v8)+'</td>'
+      + '<td style="'+tdStyle+'">'+fmtN(noVat)+'</td>'
+      + '<td style="'+tdStyle+'">'+fmtN(cpc)+'</td>'
+      + '<td style="'+tdC+'">'+pctHtml+'</td>'
+      + '</tr>';
+  });
+
+  // Total row
+  html += '<tr style="background:#FFFDE7;font-weight:700">'
+    + '<td style="'+tdC+';border:1px solid #E8A820"></td>'
+    + '<td style="'+tdL+';border:1px solid #E8A820;color:#412402">Total:</td>'
+    + '<td style="'+tdC+';border:1px solid #E8A820;color:#412402">'+totQty.toLocaleString()+'</td>'
+    + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totV10)+'</td>'
+    + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totV8)+'</td>'
+    + '<td style="'+tdStyle+';border:1px solid #E8A820;color:#412402">'+fmtN(totNoVat)+'</td>'
+    + '<td style="'+tdStyle+';border:1px solid #E8A820"></td>'
+    + '<td style="'+tdC+';border:1px solid #E8A820"></td>'
+    + '</tr>';
+
+  html += '</tbody>';
+  document.getElementById(tblId).innerHTML = html;
+}
+
+function fmtN(n) {
+  return (n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
 // ===================== OFFLINE INDICATOR =====================
 function _showOfflineBanner() {
   var b = document.getElementById('offline-banner');
@@ -1500,7 +1711,8 @@ async function doLogin() {
       localStorage.setItem('mnr_session', JSON.stringify({
         username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || '', title: res.title || ''
       }));
-      sessionStorage.setItem('mnr_key', key); // lưu key trong tab để dùng khi F5
+      sessionStorage.setItem('mnr_key', key);
+      localStorage.setItem('mnr_key_enc', btoa(encodeURIComponent(key))); // backup key
       document.getElementById('sb-username').textContent = res.fullname || username;
       document.getElementById('sb-expiry').textContent = res.title || ((res.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
       document.getElementById('login-screen').style.display = 'none';
@@ -1547,14 +1759,14 @@ async function loadInitialData() {
   const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
   document.getElementById('rpt-month').value = MONTH_NAMES[new Date().getMonth()];
 
-  const hasCachedTariff = !!localStorage.getItem('mnr_tariff');
-  const hasCachedStock  = !!localStorage.getItem('mnr_stock');
+  const hasCachedTariff = !!lsGet('mnr_tariff');
+  const hasCachedStock  = !!lsGet('mnr_stock');
   if (!hasCachedTariff || !hasCachedStock) toast('Đang tải dữ liệu...');
   // Auto navigate to report dashboard
 
   // Tariff & Stock: cache sessionStorage — chỉ fetch lần đầu mỗi session
   try {
-    var cachedTariff = localStorage.getItem('mnr_tariff');
+    var cachedTariff = _cacheGet('mnr_tariff');
     // Tariff + Stock fetch song song: tariff dùng cache nếu có, stock luôn fetch mới
     var fetchPromises = [apiGet({ action: 'getEmtyStock' })];
     if (!cachedTariff) fetchPromises.push(apiGet({ action: 'getTariff' }));
@@ -1565,13 +1777,14 @@ async function loadInitialData() {
 
     if (stockRes2 && stockRes2.success) {
       state.stock = stockRes2.data;
-      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+      _cacheSet('mnr_stock', state.stock);
     }
     if (cachedTariff) {
-      state.tariff = JSON.parse(cachedTariff);
+      state.tariff = cachedTariff; // đã parse trong _cacheGet
     } else if (tariffRes2 && tariffRes2.success) {
       state.tariff = tariffRes2.data;
-      localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
+      _cacheSet('mnr_tariff', state.tariff);
+      _cacheSet('mnr_tariff', state.tariff);
     }
   } catch(e) { console.error('Tariff/Stock load error:', e); }
 
@@ -2135,7 +2348,7 @@ async function saveEstimate() {
 
   toast('Đang lưu...');
   try {
-    const res = await apiPost({
+    const res = await apiPostR({
       action: 'saveEstimate',
       username: state.user && state.user.username || '',
       container_no: eqNo,
@@ -3330,7 +3543,8 @@ function renderSummary() {
   `;
 
   document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
-  document.getElementById('rpt-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+  document.getElementById('rpt-carrier').innerHTML = carriers.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (!document.getElementById('rpt-carrier').value) document.getElementById('rpt-carrier').value = 'MSC';
 
   filterSummary();
 }
@@ -3472,14 +3686,14 @@ async function renderStock() {
   // Dùng cache nếu đã có, không fetch lại
   if (!state.stock || !state.stock.length) {
     try {
-      const cached = localStorage.getItem('mnr_stock');
+      const cached = lsGet('mnr_stock');
       if (cached) {
         state.stock = JSON.parse(cached);
       } else {
         const res = await apiGet({ action: 'getEmtyStock' });
         if (res.success) {
           state.stock = res.data;
-          localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+          _cacheSet('mnr_stock', state.stock);
         }
       }
     } catch(e) {
@@ -4324,6 +4538,7 @@ function genDashboard() {
   const trendLabels = [];
   const trendVals   = [];
   const trendCounts = [];
+  var trendVat10 = [], trendVat8 = [];
   for (let i = 11; i >= 0; i--) {
     let m = monthIdx - i; let y = year;
     while (m < 0) { m += 12; y--; }
@@ -4333,10 +4548,14 @@ function genDashboard() {
       const d = parseReportDate(r.po_date);
       return d && d.getMonth() === m && d.getFullYear() === y && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
     });
-    trendVals.push(round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0)));
+    var tNoVat = round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0));
+    trendVals.push(tNoVat);
+    trendVat10.push(round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0), 0)));
+    trendVat8.push(round2(tNoVat * 1.08));
     trendCounts.push(rows.length);
   }
 
+  window._trendData = {labels:trendLabels, vals:trendVals, counts:trendCounts, vat10:trendVat10, vat8:trendVat8};
   if (_rptCharts.trend) _rptCharts.trend.destroy();
   _rptCharts.trend = new Chart(document.getElementById('chartTrend'), {
     type: 'line',
@@ -4398,6 +4617,7 @@ function genDashboard() {
   var weekLabels = [];
   var weekVals = [];
   var weekCounts = [];
+  var weekVat10 = [], weekVat8 = [];
   var today2 = new Date();
   var dow = today2.getDay();
   var monday = new Date(today2);
@@ -4424,10 +4644,14 @@ function genDashboard() {
       if (!d) return false;
       return d >= wMon && d <= wSun && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
     });
-    weekVals.push(round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0)));
+    var wNoVat = round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0));
+    weekVals.push(wNoVat);
+    weekVat10.push(round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0); }, 0)));
+    weekVat8.push(round2(wNoVat * 1.08));
     weekCounts.push(wRows.length);
   }
 
+  window._weekData = {labels:weekLabels, vals:weekVals, counts:weekCounts, vat10:weekVat10, vat8:weekVat8};
   if (_rptCharts.weekly) _rptCharts.weekly.destroy();
   _rptCharts.weekly = new Chart(document.getElementById('chartWeekly'), {
     type: 'bar',
@@ -5078,6 +5302,7 @@ async function deleteEstimate(containerNo, estDate) {
 function doLogout() {
   localStorage.removeItem('mnr_session');
   sessionStorage.removeItem('mnr_key');
+  localStorage.removeItem('mnr_key_enc');
   location.reload();
 }
 
@@ -5221,11 +5446,11 @@ async function refreshCache() {
     var stockRes  = _reloadResults[1];
     if (tariffRes && tariffRes.success) {
       state.tariff = tariffRes.data;
-      localStorage.setItem('mnr_tariff', JSON.stringify(state.tariff));
+      _cacheSet('mnr_tariff', state.tariff);
     }
     if (stockRes && stockRes.success) {
       state.stock = stockRes.data;
-      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+      _cacheSet('mnr_stock', state.stock);
     }
     filterTariff();
     toast('Đã tải lại: ' + state.tariff.length + ' tariff · ' + state.stock.length + ' containers', 3000);
@@ -5418,7 +5643,7 @@ async function handleStockUpload(input) {
         const stockRes = await apiGet({ action: 'getEmtyStock' });
         if (stockRes.success) {
           state.stock = stockRes.data;
-          localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+          _cacheSet('mnr_stock', state.stock);
           renderStock();
         }
         toast('Import thành công! ' + res.message, 3000);
@@ -6297,7 +6522,7 @@ async function refreshInventory() {
     const res = await apiGet({ action: 'getEmtyStock' });
     if (res.success) {
       state.stock = res.data;
-      localStorage.setItem('mnr_stock', JSON.stringify(state.stock));
+      _cacheSet('mnr_stock', state.stock);
       toast('Đã cập nhật dữ liệu stock!');
       renderInventoryReport();
     } else {
