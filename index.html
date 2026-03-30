@@ -1842,7 +1842,7 @@ function showPkDetail(maPhieu) {
   var ct = p.chi_tiet || [];
   document.getElementById('pk-detail-rows').innerHTML = ct.length
     ? ct.map(function(r,i){
-        return '<tr style="'+(i%2===1?'background:#FAFAFA':'')+'">'          +'<td style="font-weight:600">'+r.ma_vt+'</td>'          +'<td>'+r.ten_vt+'</td>'          +'<td style="text-align:center">'+r.don_vi+'</td>'          +'<td style="text-align:center;font-weight:600">'+r.so_luong+'</td>'          +'<td style="text-align:right">'+(r.don_gia?r.don_gia.toLocaleString('vi-VN'):'—')+'</td>'          +'<td style="text-align:right;font-weight:600;color:var(--green)">'+(r.thanh_tien?r.thanh_tien.toLocaleString('vi-VN'):'—')+'</td>'          +'<td style="color:var(--blue)">'+r.so_cont+'</td>'          +'<td style="color:var(--gray)">'+r.ghi_chu+'</td>'          +'</tr>';
+        return '<tr style="'+(i%2===1?'background:#FAFAFA':'')+'">'          +'<td style="font-weight:600">'+r.ma_vt+'</td>'          +'<td style=\"text-align:left\">'+r.ten_vt+'</td>'          +'<td style="text-align:center">'+r.don_vi+'</td>'          +'<td style="text-align:center;font-weight:600">'+r.so_luong+'</td>'          +'<td style="text-align:right">'+(r.don_gia?r.don_gia.toLocaleString('vi-VN'):'—')+'</td>'          +'<td style="text-align:right;font-weight:600;color:var(--green)">'+(r.thanh_tien?r.thanh_tien.toLocaleString('vi-VN'):'—')+'</td>'          +'<td style="color:var(--blue)">'+r.so_cont+'</td>'          +'<td style="color:var(--gray)">'+r.ghi_chu+'</td>'          +'</tr>';
       }).join('')
     : '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:12px">Không có chi tiết</td></tr>';
 }
@@ -7134,25 +7134,25 @@ function exportInventoryExcel() {
       <div class="tbl-wrap">
         <table style="table-layout:fixed">
           <colgroup>
-            <col style="width:110px">
-            <col>
+            <col style="width:150px">
+            <col style="width:250px">
             <col style="width:50px">
-            <col style="width:50px">
+            <col style="width:45px">
             <col style="width:100px">
             <col style="width:110px">
-            <col style="width:120px">
             <col style="width:130px">
+            <col>
           </colgroup>
           <thead>
             <tr>
-              <th>Mã VT</th>
-              <th>Tên vật tư</th>
+              <th style="text-align:left">Mã VT</th>
+              <th style="text-align:left">Tên vật tư</th>
               <th style="text-align:center">ĐVT</th>
               <th style="text-align:center">SL</th>
               <th style="text-align:right">Đơn giá</th>
               <th style="text-align:right">Thành tiền</th>
-              <th>Số container</th>
-              <th>Ghi chú</th>
+              <th style="text-align:left">Số container</th>
+              <th style="text-align:left">Ghi chú</th>
             </tr>
           </thead>
           <tbody id="pk-detail-rows"></tbody>
