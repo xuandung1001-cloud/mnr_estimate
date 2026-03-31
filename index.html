@@ -5948,7 +5948,7 @@ async function handleStockUpload(input) {
 
 // ===================== PHÂN QUYỀN =====================
 const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,phieu-kho,ccdc'; // tariff, warehouse ẩn mặc định
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc'; // tariff ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -7084,7 +7084,7 @@ function exportInventoryExcel() {
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-pictures" value="pictures"> Xuất hình ảnh</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-photos" value="photos"> Xem Hình Ảnh</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-warehouse" value="warehouse"> Kho Vật Tư</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-warehouse" value="warehouse"> Thống kê kho</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-phieu-kho" value="phieu-kho"> Phiếu nhập xuất</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-ccdc" value="ccdc"> Lịch sử CCDC</label>
       </div>
