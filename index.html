@@ -4997,6 +4997,12 @@ function genDashboard() {
           },
           grid:{display:false} },
         x:  { ticks:{font:{size:10}}, grid:{display:false} }
+      },
+      onClick: function(evt, elements) {
+        toggleTrendTable('week');
+      },
+      onHover: function(evt, elements) {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       }
     }
   });
