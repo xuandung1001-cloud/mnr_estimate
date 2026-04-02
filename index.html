@@ -4949,12 +4949,8 @@ function genDashboard() {
         {
           label: 'Total No VAT (USD)',
           data: weekVals,
-          backgroundColor: weekVals.map(function(v,i){
-            return i === weekVals.length-1 ? '#F5C842' : 'rgba(245,200,66,0.4)';
-          }),
-          borderColor: weekVals.map(function(v,i){
-            return i === weekVals.length-1 ? '#E8A820' : 'rgba(232,168,32,0.7)';
-          }),
+          backgroundColor: 'rgba(245,200,66,0.4)',
+          borderColor: 'rgba(232,168,32,0.7)',
           borderWidth: 1,
           borderRadius: 5,
           yAxisID: 'y'
