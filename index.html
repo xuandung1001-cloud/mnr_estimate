@@ -4967,7 +4967,9 @@ function genDashboard() {
           backgroundColor: 'rgba(56,142,200,0.15)',
           borderWidth: 2,
           pointBackgroundColor: '#388EC8',
-          pointRadius: 4,
+          pointRadius: weekCounts.map(function(v,i){ return (v > 0 || i === weekCounts.length-1) ? 4 : 0; }),
+          pointHoverRadius: 6,
+          spanGaps: true,
           tension: 0.3,
           fill: false,
           yAxisID: 'y2'
@@ -4997,12 +4999,6 @@ function genDashboard() {
           },
           grid:{display:false} },
         x:  { ticks:{font:{size:10}}, grid:{display:false} }
-      },
-      onClick: function(evt, elements) {
-        toggleTrendTable('week');
-      },
-      onHover: function(evt, elements) {
-        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       }
     }
   });
