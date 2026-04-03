@@ -261,10 +261,6 @@ td input:focus,td select:focus{background:#FEFAF0}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
         Lịch sử CCDC
       </div>
-      <div class="nav-item" id="nav-chamcong" onclick="nav('chamcong',this)">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="18"/><line x1="12" y1="14" x2="12" y2="18"/></svg>
-        Chấm công
-      </div>
     </div>
     <div class="nav-section">
       <div class="nav-label" style="border-color:#8B5CF6">Hệ thống</div>
@@ -1159,69 +1155,6 @@ td input:focus,td select:focus{background:#FEFAF0}
           <div class="card-title">Kết quả Export</div>
           <div id="pic-result-body"></div>
         </div>
-      </div>
-
-      <!-- CHẤM CÔNG -->
-      <div class="screen" id="screen-chamcong">
-        <div class="card" style="margin-bottom:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <span style="font-size:13px;font-weight:600;color:#1A1A1A">Working Roster MNR</span>
-              <select class="fi" id="cc-thang" style="width:110px" onchange="renderChamCong()">
-                <option value="1">Tháng 1</option><option value="2">Tháng 2</option>
-                <option value="3">Tháng 3</option><option value="4">Tháng 4</option>
-                <option value="5">Tháng 5</option><option value="6">Tháng 6</option>
-                <option value="7">Tháng 7</option><option value="8">Tháng 8</option>
-                <option value="9">Tháng 9</option><option value="10">Tháng 10</option>
-                <option value="11">Tháng 11</option><option value="12">Tháng 12</option>
-              </select>
-              <select class="fi" id="cc-nam" style="width:80px" onchange="renderChamCong()">
-                <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option>
-              </select>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--gray)">
-                <span style="background:#FFF3CD;color:#856404;padding:1px 6px;border-radius:3px">CN</span>
-                <span style="background:#FDE8E8;color:#9B1C1C;padding:1px 6px;border-radius:3px">Lễ</span>
-                <span style="background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:3px">PH/PC</span>
-                <span style="background:#DBEAFE;color:#1E3A8A;padding:1px 6px;border-radius:3px">NL</span>
-              </div>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm" onclick="showCCTab('grid')">📋 Chấm công</button>
-              <button class="btn btn-sm" onclick="showCCTab('luong')">💰 Bảng lương</button>
-              <button class="btn btn-sm" style="background:#F5C842;color:#412402;border-color:#E8A820" onclick="saveChamCong()">💾 Lưu</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- GRID CHẤM CÔNG -->
-        <div id="cc-grid-panel" class="card" style="padding:0;overflow:hidden">
-          <div class="tbl-wrap" style="max-height:calc(100vh - 200px);overflow:auto">
-            <table id="cc-table" style="border-collapse:collapse;font-size:11px;white-space:nowrap">
-              <thead id="cc-thead"></thead>
-              <tbody id="cc-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- BẢNG LƯƠNG -->
-        <div id="cc-luong-panel" style="display:none">
-          <div class="stats-row" id="cc-luong-stats" style="margin-bottom:12px"></div>
-          <div class="card" style="padding:0;overflow:hidden">
-            <div class="tbl-wrap" style="overflow-x:auto">
-              <table style="font-size:11px;width:100%;border-collapse:collapse">
-                <thead id="cc-luong-thead"></thead>
-                <tbody id="cc-luong-tbody"></tbody>
-                <tfoot id="cc-luong-tfoot"></tfoot>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CHẤM CÔNG DROPDOWN -->
-      <div id="cc-dd" style="display:none;position:fixed;background:#fff;border:1px solid #E8A820;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:300;min-width:220px;overflow:hidden">
-        <div style="padding:7px 12px;font-size:10px;font-weight:600;color:#412402;background:#FFF8E7;border-bottom:1px solid #F0E0B0;text-transform:uppercase;letter-spacing:0.5px">Chọn mã chấm công</div>
-        <div id="cc-dd-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:8px"></div>
       </div>
 
       <!-- QUẢN LÝ USER -->
@@ -2199,7 +2132,6 @@ function nav(screen, el) {
     users:     { title: 'Quản lý User', actions: [] },
     actlog:    { title: 'Nhật ký hoạt động', actions: [] },
     'phieu-kho': { title: 'Phiếu nhập xuất', actions: [] },
-    'chamcong':  { title: 'Chấm Công MNR', actions: [] },
     ccdc:        { title: 'Lịch sử CCDC', actions: [] }
   };
 
@@ -2215,7 +2147,6 @@ function nav(screen, el) {
   if (screen === 'users') renderUsers();
   if (screen === 'phieu-kho' && !_phieuKhoLoaded) { loadPhieuKho(); }
   if (screen === 'ccdc' && !_ccdcLoaded) { loadCCDC(); }
-  if (screen === 'chamcong') { loadChamCong(); }
   if (screen === 'actlog') { _actLogData = []; document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Nhấn Refresh để tải log</td></tr>'; document.getElementById('log-count').textContent = ''; }
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
@@ -5018,12 +4949,8 @@ function genDashboard() {
         {
           label: 'Total No VAT (USD)',
           data: weekVals,
-          backgroundColor: weekVals.map(function(v,i){
-            return i === weekVals.length-1 ? '#F5C842' : 'rgba(245,200,66,0.4)';
-          }),
-          borderColor: weekVals.map(function(v,i){
-            return i === weekVals.length-1 ? '#E8A820' : 'rgba(232,168,32,0.7)';
-          }),
+          backgroundColor: 'rgba(245,200,66,0.4)',
+          borderColor: 'rgba(232,168,32,0.7)',
           borderWidth: 1,
           borderRadius: 5,
           yAxisID: 'y'
@@ -5036,7 +4963,9 @@ function genDashboard() {
           backgroundColor: 'rgba(56,142,200,0.15)',
           borderWidth: 2,
           pointBackgroundColor: '#388EC8',
-          pointRadius: 4,
+          pointRadius: weekCounts.map(function(v,i){ return (v > 0 || i === weekCounts.length-1) ? 4 : 0; }),
+          pointHoverRadius: 6,
+          spanGaps: true,
           tension: 0.3,
           fill: false,
           yAxisID: 'y2'
@@ -6017,7 +5946,7 @@ async function handleStockUpload(input) {
 
 // ===================== PHÂN QUYỀN =====================
 const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc,chamcong'; // tariff ẩn mặc định
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc'; // tariff ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -7101,287 +7030,6 @@ function exportInventoryExcel() {
     document.head.appendChild(s);
   }
 }
-
-// ===================== CHẤM CÔNG =====================
-var _ccData = {}; // key: "yyyy-mm" → {nvIdx: {day: ma}}
-var _ccActiveDD = null;
-
-var CC_NV = [
-  { ten: 'Đặng H. Hữu Thiện', chuc_vu: 'MNR EOR',    luong_cb: 18000000, luong_hdld: 10620000 },
-  { ten: 'Phạm Bá Thành Nam', chuc_vu: 'MNR EOR',    luong_cb: 10800000, luong_hdld:  6743700 },
-  { ten: 'Đỗ Văn Nam',        chuc_vu: 'MNR Worker', luong_cb: 12000000, luong_hdld:  7062300 },
-  { ten: 'Lê Văn Trình',      chuc_vu: 'MNR Worker', luong_cb: 11400000, luong_hdld:  6849900 },
-  { ten: 'Nguyễn Thế Huân',   chuc_vu: 'MNR Worker', luong_cb: 11400000, luong_hdld:  6849900 },
-  { ten: 'Nguyễn Như Sơn',    chuc_vu: 'MNR Worker', luong_cb: 11400000, luong_hdld:  6690600 },
-  { ten: 'Vũ Lạnh Anh',       chuc_vu: 'MNR Worker', luong_cb: 10200000, luong_hdld:  6478200 },
-  { ten: 'Hoàng Văn Oanh',    chuc_vu: 'MNR Worker', luong_cb: 12000000, luong_hdld:  8655300 },
-  { ten: 'Thạch Tuấn',        chuc_vu: 'MNR Worker', luong_cb: 10200000, luong_hdld:  6478200 },
-  { ten: 'Nguyễn Văn Trứ',    chuc_vu: 'MNR Worker', luong_cb: 10200000, luong_hdld:  6372000 },
-  { ten: 'Võ Văn Khang',      chuc_vu: 'MNR Worker', luong_cb:  9600000, luong_hdld:  5734800 },
-];
-
-var CC_NGAY_LE = {
-  2025: ['2025-01-01','2025-04-30','2025-05-01','2025-09-02'],
-  2026: ['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-04-30','2026-05-01']
-};
-
-var CC_MA_GIO_TONG = {
-  '0':8,'0.1':9,'0.2':10,'0.3':11,
-  '1':12,'1.1':13,'1.2':14,'1.3':15,'1.4':16,'1.5':17,
-  '2':16,'3':24,'PH':8,'PC':4,'NL':8,
-  'T1':9,'T2':10,'T3':11,'T4':12,'T5':13,'T6':14,'T7':15
-};
-
-var CC_MA_LIST = ['0','0.1','0.2','0.3','1','1.1','1.2','1.3','1.4','1.5','2','3','T1','T2','T3','T4','T5','T6','T7','PH','PC','NL'];
-var CC_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-function ccGetThangNam() {
-  var t = parseInt(document.getElementById('cc-thang').value);
-  var n = parseInt(document.getElementById('cc-nam').value);
-  return {t:t, n:n, key: n+'-'+String(t).padStart(2,'0')};
-}
-function ccDays(t,n) { return new Date(n, t, 0).getDate(); }
-function ccDow(n,t,d) { return new Date(n, t-1, d).getDay(); }
-function ccIsHoliday(n,t,d) {
-  var ds = n+'-'+String(t).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  return ((CC_NGAY_LE[n]||[])).indexOf(ds) >= 0;
-}
-function ccGetVal(key, ni, d) {
-  if (!_ccData[key]) return '';
-  if (!_ccData[key][ni]) return '';
-  return _ccData[key][ni][d] || '';
-}
-function ccSetVal(key, ni, d, val) {
-  if (!_ccData[key]) _ccData[key] = {};
-  if (!_ccData[key][ni]) _ccData[key][ni] = {};
-  _ccData[key][ni][d] = val;
-}
-
-function ccTinhLuong(ni) {
-  var tn = ccGetThangNam();
-  var nv = CC_NV[ni];
-  var days = ccDays(tn.t, tn.n);
-  var gioTong=0, gioCN=0, gioLe=0, ngayLam=0, ngayNghi=0;
-  for (var d=1; d<=days; d++) {
-    var ma = ccGetVal(tn.key, ni, d);
-    if (!ma) continue;
-    var dow = ccDow(tn.n, tn.t, d);
-    var isHol = ccIsHoliday(tn.n, tn.t, d);
-    var isSun = dow === 0;
-    var gioNgay = CC_MA_GIO_TONG[ma] || 8;
-    gioTong += gioNgay;
-    ngayLam++;
-    if (ma==='PH'||ma==='PC') { ngayNghi++; continue; }
-    if (ma==='NL') continue;
-    if (isHol) gioLe += gioNgay;
-    else if (isSun) gioCN += gioNgay;
-  }
-  var gioChuanThucTe = ngayLam * 8;
-  var gioThuong = Math.max(0, gioTong - gioCN - gioLe - gioChuanThucTe);
-  var gioQuyDoi = Math.round((gioCN*2 + gioLe*3 + gioThuong*1.5)*10)/10;
-  var luong1Gio = Math.round(nv.luong_cb/26/8/1000)*1000;
-  var tienNS = Math.round(luong1Gio*(gioCN*2+gioThuong*1.5));
-  return {ngayLam:ngayLam, gioTong:gioTong, gioCN:Math.round(gioCN),
-    gioLe:Math.round(gioLe), gioThuong:Math.round(gioThuong),
-    gioQuyDoi:gioQuyDoi, ngayNghi:ngayNghi, luong1Gio:luong1Gio,
-    tienNS:tienNS, luongHDLD:nv.luong_hdld};
-}
-
-function renderChamCong() {
-  var tn = ccGetThangNam();
-  var days = ccDays(tn.t, tn.n);
-
-  // Header
-  var h = '<tr style="background:#FFF8E7">';
-  h += '<th style="position:sticky;left:0;z-index:5;background:#FFF8E7;min-width:130px;padding:8px 10px;text-align:left;font-size:11px;border-bottom:2px solid #E8A820;border-right:2px solid #E8A820">Nhân viên</th>';
-  for (var d=1; d<=days; d++) {
-    var dow = ccDow(tn.n, tn.t, d);
-    var isHol = ccIsHoliday(tn.n, tn.t, d);
-    var isSun = dow===0, isSat = dow===6;
-    var bg = isHol?'#FDE8E8':isSun?'#FFF3CD':isSat?'#F3F0FF':'#FFF8E7';
-    var clr = isHol?'#9B1C1C':isSun?'#856404':isSat?'#5B21B6':'#412402';
-    h += '<th style="min-width:38px;padding:4px 2px;text-align:center;border-bottom:2px solid #E8A820;background:'+bg+';color:'+clr+';font-size:10px">';
-    h += '<div style="font-weight:700">'+d+'</div><div style="font-weight:400;font-size:9px">'+CC_DOW[dow]+'</div></th>';
-  }
-  h += '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #E8A820;border-left:2px solid #E8A820;min-width:45px;font-size:10px;background:#FFF8E7">Ngày</th>';
-  h += '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #E8A820;min-width:50px;font-size:10px;background:#FFF8E7">Giờ TT</th>';
-  h += '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #E8A820;min-width:40px;font-size:10px;background:#FFF3CD;color:#856404">CN</th>';
-  h += '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #E8A820;min-width:40px;font-size:10px;background:#FDE8E8;color:#9B1C1C">Lễ</th>';
-  h += '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #E8A820;min-width:55px;font-size:10px;background:#FFF8E7">Thường</th>';
-  h += '<th style="padding:6px 8px;text-align:center;border-bottom:2px solid #E8A820;min-width:55px;font-size:10px;background:#FFF8E7">Quy đổi</th>';
-  h += '<th style="padding:6px 8px;text-align:right;border-bottom:2px solid #E8A820;min-width:90px;font-size:10px;background:#FFF8E7">Tiền NS</th>';
-  h += '</tr>';
-  document.getElementById('cc-thead').innerHTML = h;
-
-  // Body
-  var body = '';
-  CC_NV.forEach(function(nv, ni) {
-    var r = ccTinhLuong(ni);
-    body += '<tr style="border-bottom:1px solid #F0E0B0">';
-    body += '<td style="position:sticky;left:0;z-index:4;background:#fff;border-right:2px solid #E8A820;padding:6px 10px">';
-    body += '<div style="font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px" title="'+nv.ten+'">'+nv.ten+'</div>';
-    body += '<div style="font-size:9px;color:var(--gray)">'+nv.chuc_vu+'</div></td>';
-
-    for (var d=1; d<=days; d++) {
-      var ma = ccGetVal(tn.key, ni, d);
-      var dow = ccDow(tn.n, tn.t, d);
-      var isHol = ccIsHoliday(tn.n, tn.t, d);
-      var isSun = dow===0, isSat=dow===6;
-      var cellBg = isHol?'#FEF2F2':isSun?'#FFFBEB':isSat?'#FAF5FF':'#fff';
-      var inputStyle = 'width:34px;height:24px;border:1px solid #eee;border-radius:4px;text-align:center;font-size:10px;cursor:pointer;font-family:monospace;font-weight:600;outline:none;padding:0;background:';
-      var textColor = '#1A1A1A';
-      if (ma==='PH'||ma==='PC') { inputStyle += '#D1FAE5'; textColor='#065F46'; }
-      else if (ma==='NL') { inputStyle += '#DBEAFE'; textColor='#1E3A8A'; }
-      else { inputStyle += cellBg; if(isHol) textColor='#9B1C1C'; else if(isSun) textColor='#856404'; }
-      body += '<td style="text-align:center;padding:3px 2px;background:'+cellBg+'">';
-      body += '<input id="ccin-'+ni+'-'+d+'" class="cc-input-cell" value="'+ma+'" readonly';
-      body += ' style="'+inputStyle+';color:'+textColor+'"';
-      body += ' data-ni="'+ni+'" data-d="'+d+'"';
-      body += ' onclick="ccOpenDD(this,'+ni+','+d+')"';
-      body += ' placeholder="—"></td>';
-    }
-
-    body += '<td style="text-align:center;padding:6px 8px;border-left:2px solid #E8A820;font-weight:700;color:#412402;font-family:monospace">'+r.ngayLam+'</td>';
-    body += '<td style="text-align:center;padding:6px 8px;font-family:monospace;color:var(--gray)">'+r.gioTong+'</td>';
-    body += '<td style="text-align:center;padding:6px 8px;font-family:monospace;color:#856404;font-weight:600">'+r.gioCN+'</td>';
-    body += '<td style="text-align:center;padding:6px 8px;font-family:monospace;color:#9B1C1C;font-weight:600">'+r.gioLe+'</td>';
-    body += '<td style="text-align:center;padding:6px 8px;font-family:monospace">'+r.gioThuong+'</td>';
-    body += '<td style="text-align:center;padding:6px 8px;font-family:monospace;color:var(--blue)">'+r.gioQuyDoi+'</td>';
-    body += '<td style="text-align:right;padding:6px 8px;font-family:monospace;color:var(--green);font-weight:600">'+(r.tienNS>0?r.tienNS.toLocaleString('vi-VN'):'—')+'</td>';
-    body += '</tr>';
-  });
-  document.getElementById('cc-tbody').innerHTML = body;
-}
-
-function renderCCLuong() {
-  var tn = ccGetThangNam();
-  var totNS=0, totHDLD=0;
-  var thStyle = 'padding:8px 10px;background:#FFF8E7;color:#412402;font-weight:700;font-size:10px;text-align:right;border-bottom:2px solid #E8A820;white-space:nowrap;letter-spacing:0.4px;text-transform:uppercase';
-  var rows = '';
-  CC_NV.forEach(function(nv,ni) {
-    var r = ccTinhLuong(ni);
-    totNS += r.tienNS; totHDLD += r.luongHDLD;
-    var tyLe = r.luongHDLD>0?(r.tienNS/r.luongHDLD*100).toFixed(1)+'%':'—';
-    var tyColor = (r.tienNS/r.luongHDLD>1)?'color:#DC2626':'color:#059669';
-    var bg = ni%2===1?'background:#FAFAFA':'';
-    rows += '<tr style="border-bottom:1px solid #F0F0F0;'+bg+'">';
-    rows += '<td style="padding:8px 10px;font-size:11px;font-weight:600">'+nv.ten+'<br><span style="font-size:9px;color:var(--gray);font-weight:400">'+nv.chuc_vu+'</span></td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px">'+r.ngayLam+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px">'+r.gioTong+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px;color:#856404;font-weight:600">'+r.gioCN+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px;color:#9B1C1C;font-weight:600">'+r.gioLe+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px">'+r.gioThuong+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px;color:var(--blue)">'+r.gioQuyDoi+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:center;font-family:monospace;font-size:11px">'+r.ngayNghi+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px">'+nv.luong_cb.toLocaleString('vi-VN')+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px">'+r.luong1Gio.toLocaleString('vi-VN')+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px;color:var(--green);font-weight:700">'+(r.tienNS>0?r.tienNS.toLocaleString('vi-VN'):'—')+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px;font-weight:600">'+r.luongHDLD.toLocaleString('vi-VN')+'</td>';
-    rows += '<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px;'+tyColor+'">'+tyLe+'</td>';
-    rows += '</tr>';
-  });
-  document.getElementById('cc-luong-thead').innerHTML = '<tr>'
-    +'<th style="'+thStyle+';text-align:left;min-width:140px">Nhân viên</th>'
-    +'<th style="'+thStyle+'">Ngày</th><th style="'+thStyle+'">Giờ TT</th>'
-    +'<th style="'+thStyle+';color:#856404">CN</th><th style="'+thStyle+';color:#9B1C1C">Lễ</th>'
-    +'<th style="'+thStyle+'">Thường</th><th style="'+thStyle+'">Quy đổi</th>'
-    +'<th style="'+thStyle+'">N.Nghỉ</th>'
-    +'<th style="'+thStyle+'">Lương CB</th><th style="'+thStyle+'">Lương/Giờ</th>'
-    +'<th style="'+thStyle+'">Tiền NS</th><th style="'+thStyle+'">Lương HĐLĐ</th>'
-    +'<th style="'+thStyle+'">Tỷ lệ</th></tr>';
-  document.getElementById('cc-luong-tbody').innerHTML = rows;
-  document.getElementById('cc-luong-tfoot').innerHTML =
-    '<tr style="background:#FFF8E7;border-top:2px solid #E8A820;font-weight:700;color:#412402">'
-    +'<td style="padding:8px 10px;font-size:11px">TỔNG CỘNG</td>'
-    +'<td colspan="9"></td>'
-    +'<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px;color:var(--green)">'+totNS.toLocaleString('vi-VN')+'</td>'
-    +'<td style="padding:8px 10px;text-align:right;font-family:monospace;font-size:11px">'+totHDLD.toLocaleString('vi-VN')+'</td>'
-    +'<td></td></tr>';
-
-  document.getElementById('cc-luong-stats').innerHTML =
-    '<div class="stat-card"><div class="stat-label">Tổng tiền năng suất</div>'
-    +'<div class="stat-value" style="color:var(--green)">'+Math.round(totNS/1e6).toLocaleString('vi-VN')+' triệu</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Tổng lương HĐLĐ</div>'
-    +'<div class="stat-value" style="color:var(--blue)">'+Math.round(totHDLD/1e6).toLocaleString('vi-VN')+' triệu</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Nhân viên MNR</div>'
-    +'<div class="stat-value">'+CC_NV.length+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Tháng / Năm</div>'
-    +'<div class="stat-value" style="color:#412402">T'+ccGetThangNam().t+'/'+ccGetThangNam().n+'</div></div>';
-}
-
-function showCCTab(tab) {
-  var isLuong = tab === 'luong';
-  document.getElementById('cc-grid-panel').style.display = isLuong ? 'none' : 'block';
-  document.getElementById('cc-luong-panel').style.display = isLuong ? 'block' : 'none';
-  if (isLuong) renderCCLuong();
-}
-
-function ccOpenDD(el, ni, d) {
-  ccCloseDD();
-  _ccActiveDD = {el:el, ni:ni, d:d};
-  var tn = ccGetThangNam();
-  var dow = ccDow(tn.n, tn.t, d);
-  var isHol = ccIsHoliday(tn.n, tn.t, d);
-
-  var grid = document.getElementById('cc-dd-grid');
-  grid.innerHTML = CC_MA_LIST.map(function(ma) {
-    var bg='#f9fafb', clr='#374151';
-    if (ma==='PH'||ma==='PC') { bg='#D1FAE5'; clr='#065F46'; }
-    else if (ma==='NL') { bg='#DBEAFE'; clr='#1E3A8A'; }
-    return '<div onclick="ccSelectMA(''+ma+'')" style="padding:5px 4px;text-align:center;border-radius:4px;cursor:pointer;font-size:10px;font-family:monospace;font-weight:600;background:'+bg+';color:'+clr+';border:1px solid #e5e7eb">'+ma+'</div>';
-  }).join('')
-  + '<div onclick="ccSelectMA('')" style="padding:5px 4px;text-align:center;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;grid-column:span 2">✕ Xóa</div>';
-
-  var dd = document.getElementById('cc-dd');
-  dd.style.display = 'block';
-  var rect = el.getBoundingClientRect();
-  var top = rect.bottom + 4, left = rect.left;
-  if (left+220 > window.innerWidth) left = window.innerWidth - 225;
-  if (top+180 > window.innerHeight) top = rect.top - 180;
-  dd.style.top = top+'px';
-  dd.style.left = left+'px';
-}
-
-function ccSelectMA(ma) {
-  if (!_ccActiveDD) return;
-  var ni=_ccActiveDD.ni, d=_ccActiveDD.d;
-  var tn = ccGetThangNam();
-  ccSetVal(tn.key, ni, d, ma);
-  renderChamCong(); // re-render để update kết quả
-  ccCloseDD();
-}
-
-function ccCloseDD() {
-  document.getElementById('cc-dd').style.display = 'none';
-  _ccActiveDD = null;
-}
-
-function saveChamCong() {
-  try {
-    localStorage.setItem('mnr_cc_v1', JSON.stringify(_ccData));
-    toast('✓ Đã lưu chấm công', 2000);
-  } catch(e) { toast('Lỗi lưu: '+e.message, 3000); }
-}
-
-function loadChamCong() {
-  try {
-    var s = localStorage.getItem('mnr_cc_v1');
-    if (s) _ccData = JSON.parse(s);
-  } catch(e) {}
-  // Set tháng hiện tại
-  var now = new Date();
-  document.getElementById('cc-thang').value = String(now.getMonth()+1);
-  document.getElementById('cc-nam').value = String(now.getFullYear());
-  renderChamCong();
-}
-
-// Đóng dropdown khi click ngoài
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('#cc-dd') && !e.target.classList.contains('cc-input-cell')) {
-    ccCloseDD();
-  }
-});
-
 </script>
 
 <datalist id="dl-unit"><option value="QTY"><option value="CMT"></datalist>
@@ -7437,7 +7085,6 @@ document.addEventListener('click', function(e) {
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-warehouse" value="warehouse"> Thống kê kho</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-phieu-kho" value="phieu-kho"> Phiếu nhập xuất</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-ccdc" value="ccdc"> Lịch sử CCDC</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-chamcong" value="chamcong"> Chấm công</label>
       </div>
     </div>
     <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
