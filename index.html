@@ -1173,12 +1173,9 @@ td input:focus,td select:focus{background:#FEFAF0}
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <span style="font-size:13px;font-weight:600;color:#1A1A1A">Working Roster MNR</span>
               <select class="fi" id="cc-thang" style="width:110px" onchange="renderChamCong()">
-                <option value="1">Tháng 1</option><option value="2">Tháng 2</option>
-                <option value="3">Tháng 3</option><option value="4">Tháng 4</option>
-                <option value="5">Tháng 5</option><option value="6">Tháng 6</option>
-                <option value="7">Tháng 7</option><option value="8">Tháng 8</option>
-                <option value="9">Tháng 9</option><option value="10">Tháng 10</option>
-                <option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+                <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option><option value="4">Tháng 4</option>
+                <option value="5">Tháng 5</option><option value="6">Tháng 6</option><option value="7">Tháng 7</option><option value="8">Tháng 8</option>
+                <option value="9">Tháng 9</option><option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
               </select>
               <select class="fi" id="cc-nam" style="width:80px" onchange="renderChamCong()">
                 <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option>
@@ -1218,13 +1215,10 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
         </div>
       </div>
-
-      <!-- DROPDOWN CHẤM CÔNG -->
       <div id="cc-dd" style="display:none;position:fixed;background:#fff;border:1px solid #E8A820;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:300;min-width:210px;overflow:hidden">
         <div style="padding:6px 12px;font-size:10px;font-weight:600;color:#412402;background:#FFF8E7;border-bottom:1px solid #F0E0B0;text-transform:uppercase;letter-spacing:0.5px">Chọn mã chấm công</div>
         <div id="cc-dd-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;padding:8px"></div>
       </div>
-
       <!-- NHÂN VIÊN MNR -->
       <div class="screen" id="screen-nv-mnr">
         <div class="card" style="margin-bottom:12px">
@@ -1240,30 +1234,25 @@ td input:focus,td select:focus{background:#FEFAF0}
         <div class="card" style="padding:0;overflow:hidden">
           <div class="tbl-wrap" style="overflow-x:auto">
             <table style="width:100%;border-collapse:collapse;font-size:12px">
-              <thead>
-                <tr style="background:#FFF8E7">
-                  <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402;min-width:180px">Tên nhân viên</th>
-                  <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Chức vụ</th>
-                  <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">SĐT</th>
-                  <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Ngày vào</th>
-                  <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Ngày nghỉ</th>
-                  <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Bậc</th>
-                  <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Lương CB</th>
-                  <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Trách nhiệm</th>
-                  <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Thực lãnh</th>
-                  <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Lương HĐLĐ</th>
-                  <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Trạng thái</th>
-                  <th style="padding:9px 12px;border-bottom:2px solid #E8A820"></th>
-                </tr>
-              </thead>
-              <tbody id="nv-mnr-rows">
-                <tr><td colspan="12" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
-              </tbody>
+              <thead><tr style="background:#FFF8E7">
+                <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402;min-width:180px">Tên nhân viên</th>
+                <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Chức vụ</th>
+                <th style="padding:9px 12px;text-align:left;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">SĐT</th>
+                <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Ngày vào</th>
+                <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Ngày nghỉ</th>
+                <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Bậc</th>
+                <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Lương CB</th>
+                <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Trách nhiệm</th>
+                <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Thực lãnh</th>
+                <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Lương HĐLĐ</th>
+                <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Trạng thái</th>
+                <th style="padding:9px 12px;border-bottom:2px solid #E8A820"></th>
+              </tr></thead>
+              <tbody id="nv-mnr-rows"><tr><td colspan="12" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
             </table>
           </div>
         </div>
-
-        <!-- MODAL NV: Bậc, CB, Trách nhiệm, Thực lãnh, HĐLĐ -->
+        <!-- MODAL NV -->
         <div id="nv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center">
           <div style="background:#fff;border-radius:12px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
@@ -1286,7 +1275,6 @@ td input:focus,td select:focus{background:#FEFAF0}
                 <div><div class="fl" style="margin-bottom:4px">Ngày vào làm</div><input class="fi" type="date" id="nv-ngay-vao" style="width:100%"></div>
                 <div><div class="fl" style="margin-bottom:4px">Ngày nghỉ việc</div><input class="fi" type="date" id="nv-ngay-nghi" style="width:100%"></div>
               </div>
-              <!-- Bậc + CB + Trách nhiệm + Thực lãnh: 2x2 grid -->
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div><div class="fl" style="margin-bottom:4px">Bậc lương *</div><input class="fi" id="nv-bac" type="number" step="0.01" style="width:100%"></div>
                 <div><div class="fl" style="margin-bottom:4px">Lương CB *</div><input class="fi" id="nv-luong-cb" type="number" step="1000" style="width:100%"></div>
@@ -1304,7 +1292,6 @@ td input:focus,td select:focus{background:#FEFAF0}
             </div>
           </div>
         </div>
-
         <!-- MODAL NGÀY LỄ -->
         <div id="ngle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center">
           <div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
@@ -1314,19 +1301,14 @@ td input:focus,td select:focus{background:#FEFAF0}
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #F0F0F0">
               <span style="font-size:12px;color:#6B7280">Năm:</span>
-              <select class="fi" id="ngle-nam" style="width:90px" onchange="onNgleNamChange()">
-                <option>2025</option><option selected>2026</option><option>2027</option>
-              </select>
+              <select class="fi" id="ngle-nam" style="width:90px" onchange="onNgleNamChange()"><option>2025</option><option selected>2026</option><option>2027</option></select>
               <button class="btn btn-sm" onclick="addNgayLe()" style="margin-left:4px">+ Thêm ngày</button>
               <button class="btn btn-sm btn-blue" id="ngle-save-btn" onclick="saveNgayLe()" style="margin-left:auto">💾 Lưu tất cả</button>
             </div>
-            <div id="ngle-list" style="display:grid;gap:7px">
-              <div style="text-align:center;padding:20px;color:var(--gray)">Đang tải...</div>
-            </div>
+            <div id="ngle-list" style="display:grid;gap:7px"><div style="text-align:center;padding:20px;color:var(--gray)">Đang tải...</div></div>
           </div>
         </div>
       </div>
-
       <!-- QUẢN LÝ USER -->
       <!-- NHẬT KÝ HOẠT ĐỘNG -->
       <div class="screen" id="screen-actlog">
