@@ -265,7 +265,7 @@ td input:focus,td select:focus{background:#FEFAF0}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="18"/><line x1="12" y1="14" x2="12" y2="18"/></svg>
         Chấm công
       </div>
-      <div class="nav-item" id="nav-nv-mnr" style="display:none" onclick="nav('nv-mnr',this)">
+      <div class="nav-item" id="nav-nv-mnr" onclick="nav('nv-mnr',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         Nhân viên MNR
       </div>
@@ -6127,7 +6127,7 @@ async function handleStockUpload(input) {
 
 // ===================== PHÂN QUYỀN =====================
 const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc,chamcong'; // tariff ẩn mặc định
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc,chamcong,nv-mnr'; // tariff ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -7232,7 +7232,6 @@ var CC_NV = [
   { ten: 'Nguyễn Văn Trứ',    chuc_vu: 'MNR Worker', luong_cb: 10200000, luong_hdld:  6372000 },
   { ten: 'Võ Văn Khang',      chuc_vu: 'MNR Worker', luong_cb:  9600000, luong_hdld:  5734800 },
 ];
-
 var CC_MA_GIO = {
   '0':8,'0.1':9,'0.2':10,'0.3':11,'1':12,'1.1':13,'1.2':14,'1.3':15,'1.4':16,'1.5':17,
   '2':16,'3':24,'PH':8,'PC':4,'NL':8,
@@ -7241,16 +7240,16 @@ var CC_MA_GIO = {
 var CC_MA_LIST = ['0','0.1','0.2','0.3','1','1.1','1.2','1.3','1.4','1.5','2','3','T1','T2','T3','T4','T5','T6','T7','PH','PC','NL'];
 var CC_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-function ccTN() {
+function ccTN(){
   var t=parseInt(document.getElementById('cc-thang').value);
   var n=parseInt(document.getElementById('cc-nam').value);
-  return {t:t, n:n, key:n+'-'+String(t).padStart(2,'0')};
+  return{t:t,n:n,key:n+'-'+String(t).padStart(2,'0')};
 }
 function ccDays(t,n){return new Date(n,t,0).getDate();}
 function ccDow(n,t,d){return new Date(n,t-1,d).getDay();}
 function ccIsHol(n,t,d){
   var ds=n+'-'+String(t).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  return ((_ccNgayLe[String(n)])||[]).indexOf(ds)>=0;
+  return((_ccNgayLe[String(n)])||[]).indexOf(ds)>=0;
 }
 function ccGet(key,ni,d){return(_ccData[key]&&_ccData[key][ni]&&_ccData[key][ni][d])||'';}
 function ccSet(key,ni,d,val){
@@ -7258,43 +7257,39 @@ function ccSet(key,ni,d,val){
   if(!_ccData[key][ni])_ccData[key][ni]={};
   _ccData[key][ni][d]=val;
 }
-
-function ccTinhLuong(ni) {
-  var tn=ccTN(), nv=CC_NV[ni], days=ccDays(tn.t,tn.n);
+function ccTinhLuong(ni){
+  var tn=ccTN(),nv=CC_NV[ni],days=ccDays(tn.t,tn.n);
   var gioTong=0,gioCN=0,gioLe=0,ngayLam=0,ngayNghi=0;
   for(var d=1;d<=days;d++){
     var ma=ccGet(tn.key,ni,d);
-    if(!ma) continue;
-    var dow=ccDow(tn.n,tn.t,d), isHol=ccIsHol(tn.n,tn.t,d);
+    if(!ma)continue;
+    var dow=ccDow(tn.n,tn.t,d),isHol=ccIsHol(tn.n,tn.t,d);
     var gio=CC_MA_GIO[ma]||8;
-    gioTong+=gio; ngayLam++;
+    gioTong+=gio;ngayLam++;
     if(ma==='PH'||ma==='PC'){ngayNghi++;continue;}
-    if(ma==='NL') continue;
-    if(isHol) gioLe+=gio;
-    else if(dow===0) gioCN+=gio;
+    if(ma==='NL')continue;
+    if(isHol)gioLe+=gio;
+    else if(dow===0)gioCN+=gio;
   }
-  // (1) Ngày làm việc thực tế/tháng = ngày có chấm - ngày nghỉ PH/PC
-  var ngayLamTT = ngayLam - ngayNghi;
-  // (2) Giờ làm việc thực tế/tháng = ngayLamTT × 8
-  var gioLamTT = ngayLamTT * 8;
+  var ngayLamTT=ngayLam-ngayNghi;
+  var gioLamTT=ngayLamTT*8;
   var gioChuanTT=ngayLam*8;
   var gioThuong=Math.max(0,gioTong-gioCN-gioLe-gioChuanTT);
   var quyDoi=Math.round((gioCN*2+gioLe*3+gioThuong*1.5)*10)/10;
   var l1g=Math.round(nv.luong_cb/26/8/1000)*1000;
   var tienNS=Math.round(l1g*(gioCN*2+gioThuong*1.5));
-  return {
-    ngayLam:ngayLam, ngayLamTT:ngayLamTT, gioLamTT:gioLamTT,
-    gioTong:gioTong, gioCN:Math.round(gioCN), gioLe:Math.round(gioLe),
-    gioThuong:Math.round(gioThuong), quyDoi:quyDoi,
-    ngayNghi:ngayNghi, l1g:l1g, tienNS:tienNS, hdld:nv.luong_hdld
-  };
+  return{ngayLam:ngayLam,ngayLamTT:ngayLamTT,gioLamTT:gioLamTT,
+    gioTong:gioTong,gioCN:Math.round(gioCN),gioLe:Math.round(gioLe),
+    gioThuong:Math.round(gioThuong),quyDoi:quyDoi,
+    ngayNghi:ngayNghi,l1g:l1g,tienNS:tienNS,hdld:nv.luong_hdld};
 }
 
-function renderChamCong() {
-  var tn=ccTN(), days=ccDays(tn.t,tn.n);
-  var TH='padding:7px 8px;background:#FFF8E7;color:#412402;font-weight:700;font-size:10px;border-bottom:2px solid #E8A820;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap';
+function renderChamCong(){
+  var tn=ccTN(),days=ccDays(tn.t,tn.n);
+  var TH='padding:7px 6px;background:#FFF8E7;color:#412402;font-weight:700;font-size:10px;border-bottom:2px solid #E8A820;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap';
   var h='<tr>';
-  h+='<th style="position:sticky;left:0;z-index:5;'+TH+';min-width:180px;text-align:left;border-right:2px solid #E8A820">Nhân viên</th>';
+  // Cột tên NV: 220px - đủ hiện full tên
+  h+='<th style="position:sticky;left:0;z-index:5;'+TH+';min-width:220px;width:220px;text-align:left;border-right:2px solid #E8A820">Nhân viên</th>';
   for(var d=1;d<=days;d++){
     var dow=ccDow(tn.n,tn.t,d),isHol=ccIsHol(tn.n,tn.t,d);
     var bg=isHol?'#FDE8E8':dow===0?'#FFF3CD':dow===6?'#F3F0FF':'#FFF8E7';
@@ -7305,11 +7300,11 @@ function renderChamCong() {
   var RH=TH+';text-align:center;border-left:1px solid #E8A820';
   h+='<th style="'+RH+';min-width:42px;border-left:2px solid #E8A820">Ngày</th>';
   h+='<th style="'+RH+';min-width:48px">Giờ TT</th>';
-  h+='<th style="'+RH+';min-width:38px;color:#856404">CN</th>';
-  h+='<th style="'+RH+';min-width:38px;color:#9B1C1C">Lễ</th>';
+  h+='<th style="'+RH+';min-width:36px;color:#856404">CN</th>';
+  h+='<th style="'+RH+';min-width:36px;color:#9B1C1C">Lễ</th>';
   h+='<th style="'+RH+';min-width:50px">Thường</th>';
   h+='<th style="'+RH+';min-width:50px">Q.đổi</th>';
-  h+='<th style="'+RH+';min-width:88px;text-align:right">Tiền NS</th>';
+  h+='<th style="'+RH+';min-width:90px;text-align:right">Tiền NS</th>';
   h+='</tr>';
   document.getElementById('cc-thead').innerHTML=h;
 
@@ -7317,8 +7312,9 @@ function renderChamCong() {
   CC_NV.forEach(function(nv,ni){
     var r=ccTinhLuong(ni);
     body+='<tr style="border-bottom:1px solid #F0E0B0">';
-    body+='<td style="position:sticky;left:0;z-index:4;background:#fff;border-right:2px solid #E8A820;padding:7px 10px;min-width:180px">';
-    body+='<div style="font-weight:600;font-size:12px">'+nv.ten+'</div>';
+    // Cột tên sticky 220px
+    body+='<td style="position:sticky;left:0;z-index:4;background:#fff;border-right:2px solid #E8A820;padding:7px 10px;min-width:220px;width:220px">';
+    body+='<div style="font-weight:600;font-size:12px;white-space:nowrap">'+nv.ten+'</div>';
     body+='<div style="font-size:9px;color:var(--gray)">'+nv.chuc_vu+'</div></td>';
     for(var d=1;d<=days;d++){
       var ma=ccGet(tn.key,ni,d),dow=ccDow(tn.n,tn.t,d),isHol=ccIsHol(tn.n,tn.t,d);
@@ -7347,18 +7343,17 @@ function renderChamCong() {
   });
 }
 
-function renderCCLuong() {
+function renderCCLuong(){
   var TH='padding:8px 9px;background:#FFF8E7;color:#412402;font-weight:700;font-size:10px;text-align:center;border-bottom:2px solid #E8A820;white-space:nowrap;text-transform:uppercase;letter-spacing:0.3px';
   var totNgayTT=0,totGioTT=0,totNS=0,totHDLD=0,rows='';
   CC_NV.forEach(function(nv,ni){
     var r=ccTinhLuong(ni);
-    totNgayTT+=r.ngayLamTT; totGioTT+=r.gioLamTT;
-    totNS+=r.tienNS; totHDLD+=r.hdld;
+    totNgayTT+=r.ngayLamTT;totGioTT+=r.gioLamTT;totNS+=r.tienNS;totHDLD+=r.hdld;
     var ty=r.hdld>0?(r.tienNS/r.hdld*100).toFixed(1)+'%':'—';
     var tyClr=r.hdld>0&&r.tienNS/r.hdld>1?'#DC2626':'#059669';
     var bg=ni%2===1?'background:#FAFAFA':'';
     rows+='<tr style="border-bottom:1px solid #F0F0F0;'+bg+'">';
-    rows+='<td style="padding:9px 12px;font-weight:600;font-size:12px;text-align:left;min-width:160px">'+nv.ten+'<br><span style="font-size:9px;color:var(--gray);font-weight:400">'+nv.chuc_vu+'</span></td>';
+    rows+='<td style="padding:9px 12px;font-weight:600;font-size:12px;text-align:left;min-width:180px">'+nv.ten+'<br><span style="font-size:9px;color:var(--gray);font-weight:400">'+nv.chuc_vu+'</span></td>';
     rows+='<td style="padding:9px 9px;text-align:center;font-family:monospace;font-size:12px;font-weight:700;color:#412402;background:#FFFDE7">'+r.ngayLamTT+'</td>';
     rows+='<td style="padding:9px 9px;text-align:center;font-family:monospace;font-size:12px;font-weight:700;color:#412402;background:#FFFDE7">'+r.gioLamTT+'</td>';
     rows+='<td style="padding:9px 9px;text-align:center;font-family:monospace;font-size:11px">'+r.gioTong+'</td>';
@@ -7375,9 +7370,9 @@ function renderCCLuong() {
     rows+='</tr>';
   });
   document.getElementById('cc-luong-thead').innerHTML='<tr>'
-    +'<th style="'+TH+';text-align:left;min-width:160px">Nhân viên</th>'
-    +'<th style="'+TH+';background:#FFF8CD;border-bottom:2px solid #E8A820" title="Ngày làm việc thực tế/tháng">Ngày làm<br>TT (1)</th>'
-    +'<th style="'+TH+';background:#FFF8CD;border-bottom:2px solid #E8A820" title="Giờ làm việc thực tế/tháng">Giờ làm<br>TT (2)</th>'
+    +'<th style="'+TH+';text-align:left;min-width:180px">Nhân viên</th>'
+    +'<th style="'+TH+';background:#FFF8CD" title="(1) Ngày làm việc thực tế/tháng">Ngày làm<br>TT (1)</th>'
+    +'<th style="'+TH+';background:#FFF8CD" title="(2) Giờ làm việc thực tế/tháng">Giờ làm<br>TT (2)</th>'
     +'<th style="'+TH+'">Giờ TT</th>'
     +'<th style="'+TH+';color:#856404">CN</th><th style="'+TH+';color:#9B1C1C">Lễ</th>'
     +'<th style="'+TH+'">Thường</th><th style="'+TH+'">Q.đổi</th>'
@@ -7400,15 +7395,14 @@ function renderCCLuong() {
     +'<div class="stat-card"><div class="stat-label">Nhân viên</div><div class="stat-value">'+CC_NV.length+'</div></div>'
     +'<div class="stat-card"><div class="stat-label">Tháng/Năm</div><div class="stat-value" style="color:#412402">T'+ccTN().t+'/'+ccTN().n+'</div></div>';
 }
-
 function showCCTab(tab){
   var isL=tab==='luong';
   document.getElementById('cc-grid-panel').style.display=isL?'none':'block';
   document.getElementById('cc-luong-panel').style.display=isL?'block':'none';
-  if(isL) renderCCLuong();
+  if(isL)renderCCLuong();
 }
 function ccOpenDD(el,ni,d){
-  ccCloseDD(); _ccActiveDD={el:el,ni:ni,d:d};
+  ccCloseDD();_ccActiveDD={el:el,ni:ni,d:d};
   var tn=ccTN(),dow=ccDow(tn.n,tn.t,d),isHol=ccIsHol(tn.n,tn.t,d);
   var grid=document.getElementById('cc-dd-grid');
   grid.innerHTML='';
@@ -7419,7 +7413,7 @@ function ccOpenDD(el,ni,d){
     else if(isHol)clr='#9B1C1C';
     else if(dow===0)clr='#856404';
     var e2=document.createElement('div');
-    e2.textContent=ma; e2.setAttribute('data-ma',ma);
+    e2.textContent=ma;e2.setAttribute('data-ma',ma);
     e2.style.cssText='padding:5px 2px;text-align:center;border-radius:4px;cursor:pointer;font-size:10px;font-family:monospace;font-weight:600;background:'+bg+';color:'+clr+';border:1px solid #e5e7eb';
     e2.addEventListener('click',function(){ccSelectMA(this.getAttribute('data-ma'));});
     grid.appendChild(e2);
@@ -7434,12 +7428,12 @@ function ccOpenDD(el,ni,d){
   var rect=el.getBoundingClientRect(),top=rect.bottom+4,left=rect.left;
   if(left+215>window.innerWidth)left=window.innerWidth-220;
   if(top+200>window.innerHeight)top=rect.top-200;
-  dd.style.top=top+'px'; dd.style.left=left+'px';
+  dd.style.top=top+'px';dd.style.left=left+'px';
 }
 function ccSelectMA(ma){
-  if(!_ccActiveDD) return;
+  if(!_ccActiveDD)return;
   ccSet(ccTN().key,_ccActiveDD.ni,_ccActiveDD.d,ma);
-  renderChamCong(); ccCloseDD();
+  renderChamCong();ccCloseDD();
 }
 function ccCloseDD(){document.getElementById('cc-dd').style.display='none';_ccActiveDD=null;}
 function saveChamCong(){
@@ -7454,13 +7448,13 @@ function loadChamCong(){
   var n=now.getFullYear();
   if(!_ccNgayLe[String(n)]){
     apiGet({action:'getNgayLeMNR',nam:n}).then(function(res){
-      if(res&&res.success) _ccNgayLe[String(n)]=(res.data||[]).map(function(r){return r.ngay;});
+      if(res&&res.success)_ccNgayLe[String(n)]=(res.data||[]).map(function(r){return r.ngay;});
       renderChamCong();
     });
   } else renderChamCong();
 }
 document.addEventListener('click',function(e){
-  if(!e.target.closest('#cc-dd')&&!e.target.classList.contains('cc-input-cell')) ccCloseDD();
+  if(!e.target.closest('#cc-dd')&&!e.target.classList.contains('cc-input-cell'))ccCloseDD();
 });
 
 // ===================== NHÂN VIÊN MNR =====================
@@ -7483,7 +7477,7 @@ async function loadNVMNR(){
   var active=_nvData.filter(function(nv){return !nv.ngay_nghi;});
   if(active.length>0){
     CC_NV=active.map(function(nv){
-      return {ten:nv.ten,chuc_vu:nv.chuc_vu,
+      return{ten:nv.ten,chuc_vu:nv.chuc_vu,
         luong_cb:parseFloat(nv.luong_cb)||0,luong_hdld:parseFloat(nv.luong_hdld)||0};
     });
   }
@@ -7509,7 +7503,7 @@ function renderNVMNR(){
     rows+='<button class="btn btn-sm nv-del-btn" data-idx="'+idx+'" style="padding:3px 8px;font-size:11px;background:#FEF2F2;color:#991B1B;border-color:#FECACA">Xóa</button>';
     rows+='</td></tr>';
   });
-  if(!rows) rows='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray)">Chưa có nhân viên nào</td></tr>';
+  if(!rows)rows='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray)">Chưa có nhân viên nào</td></tr>';
   document.getElementById('nv-mnr-rows').innerHTML=rows;
   document.querySelectorAll('.nv-edit-btn').forEach(function(btn){
     btn.addEventListener('click',function(){openNVForm(_nvData[parseInt(this.dataset.idx)]);});
@@ -7517,7 +7511,7 @@ function renderNVMNR(){
   document.querySelectorAll('.nv-del-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
       var nv=_nvData[parseInt(this.dataset.idx)];
-      if(confirm('Xóa "'+nv.ten+'"?')) deleteNVRow(nv.id,nv.ten);
+      if(confirm('Xóa "'+nv.ten+'"?'))deleteNVRow(nv.id,nv.ten);
     });
   });
 }
@@ -7535,7 +7529,7 @@ function openNVForm(nv){
   document.getElementById('nv-luong-hdld').value=nv?(nv.luong_hdld||''):'';
   document.getElementById('nv-ghi-chu').value=nv?(nv.ghi_chu||''):'';
   document.getElementById('nv-cb-hint').textContent='';
-  if(nv&&nv.bac_luong) calcLuongCB();
+  if(nv&&nv.bac_luong)calcLuongCB();
   document.getElementById('nv-modal').style.display='flex';
 }
 function closeNVForm(){document.getElementById('nv-modal').style.display='none';}
@@ -7572,7 +7566,7 @@ async function openNgayLeModal(){
   document.getElementById('ngle-modal').style.display='flex';
   await _loadNgle();
 }
-async function onNgleNamChange(){ await _loadNgle(); }
+async function onNgleNamChange(){await _loadNgle();}
 async function _loadNgle(){
   var nam=document.getElementById('ngle-nam').value;
   document.getElementById('ngle-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--gray)">Đang tải...</div>';
@@ -7582,22 +7576,21 @@ async function _loadNgle(){
 }
 function renderNgayLeList(){
   if(!_ngleData.length){
-    document.getElementById('ngle-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--gray)">Chưa có ngày lễ nào. Nhấn "+ Thêm ngày".</div>';
+    document.getElementById('ngle-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--gray)">Chưa có ngày lễ. Nhấn "+ Thêm ngày".</div>';
     return;
   }
-  var html='';
+  var h='';
   _ngleData.forEach(function(r,i){
-    html+='<div style="display:grid;grid-template-columns:145px 1fr 32px;gap:6px;align-items:center">';
-    html+='<input class="fi ngle-ngay" data-i="'+i+'" value="'+r.ngay+'" placeholder="yyyy-MM-dd" style="font-family:monospace;font-size:12px">';
-    html+='<input class="fi ngle-ten" data-i="'+i+'" value="'+r.ten_le+'" placeholder="Tên ngày lễ" style="font-size:12px">';
-    html+='<button class="ngle-del-btn" data-i="'+i+'" style="background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;border-radius:4px;cursor:pointer;font-size:14px;height:32px;width:32px">×</button>';
-    html+='</div>';
+    h+='<div style="display:grid;grid-template-columns:145px 1fr 32px;gap:6px;align-items:center">';
+    h+='<input class="fi ngle-ngay" data-i="'+i+'" value="'+r.ngay+'" placeholder="yyyy-MM-dd" style="font-family:monospace;font-size:12px">';
+    h+='<input class="fi ngle-ten" data-i="'+i+'" value="'+r.ten_le+'" placeholder="Tên ngày lễ" style="font-size:12px">';
+    h+='<button class="ngle-del-btn" data-i="'+i+'" style="background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;border-radius:4px;cursor:pointer;font-size:14px;height:32px;width:32px">×</button>';
+    h+='</div>';
   });
-  document.getElementById('ngle-list').innerHTML=html;
+  document.getElementById('ngle-list').innerHTML=h;
   document.querySelectorAll('.ngle-del-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
-      _ngleData.splice(parseInt(this.dataset.i),1);
-      renderNgayLeList();
+      _ngleData.splice(parseInt(this.dataset.i),1);renderNgayLeList();
     });
   });
 }
@@ -7608,10 +7601,9 @@ function addNgayLe(){
 }
 async function saveNgayLe(){
   var ngays=[];
-  var ngayEls=document.querySelectorAll('.ngle-ngay');
-  var tenEls=document.querySelectorAll('.ngle-ten');
-  ngayEls.forEach(function(el,i){
-    ngays.push({ngay:el.value.trim(),ten_le:tenEls[i]?tenEls[i].value.trim():''});
+  document.querySelectorAll('.ngle-ngay').forEach(function(el,i){
+    var tenEl=document.querySelectorAll('.ngle-ten')[i];
+    ngays.push({ngay:el.value.trim(),ten_le:tenEl?tenEl.value.trim():''});
   });
   var nam=document.getElementById('ngle-nam').value;
   var btn=document.getElementById('ngle-save-btn');
@@ -7622,7 +7614,7 @@ async function saveNgayLe(){
     _ccNgayLe[String(nam)]=ngays.map(function(r){return r.ngay;});
     toast('✓ Đã lưu ngày lễ năm '+nam);
     closeNgayLeModal();
-  } else toast('Lỗi: '+(res&&res.error||''));
+  }else toast('Lỗi: '+(res&&res.error||''));
 }
 function closeNgayLeModal(){document.getElementById('ngle-modal').style.display='none';}
 
