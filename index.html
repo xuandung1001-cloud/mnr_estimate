@@ -1249,28 +1249,32 @@ td input:focus,td select:focus{background:#FEFAF0}
                   <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Ngày nghỉ</th>
                   <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Bậc</th>
                   <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Lương CB</th>
+                  <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Thực lãnh</th>
                   <th style="padding:9px 12px;text-align:right;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Lương HĐLĐ</th>
                   <th style="padding:9px 12px;text-align:center;border-bottom:2px solid #E8A820;font-size:10px;text-transform:uppercase;color:#412402">Trạng thái</th>
                   <th style="padding:9px 12px;border-bottom:2px solid #E8A820"></th>
                 </tr>
               </thead>
               <tbody id="nv-mnr-rows">
-                <tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="11" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- MODAL NV -->
+        <!-- MODAL NV - ĐÃ FIX: bậc nhập tay, CB tự tính, thêm ô thực lãnh, HĐLĐ nhập tay -->
         <div id="nv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center">
-          <div style="background:#fff;border-radius:12px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+          <div style="background:#fff;border-radius:12px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
               <span id="nv-modal-title" style="font-size:14px;font-weight:700;color:#1A1A1A">Thêm nhân viên</span>
               <button onclick="closeNVForm()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6B7280">×</button>
             </div>
             <div style="display:grid;gap:12px">
               <input type="hidden" id="nv-id">
-              <div><div class="fl" style="margin-bottom:4px">Họ tên *</div><input class="fi" id="nv-ten" placeholder="Nguyễn Văn A" style="width:100%"></div>
+
+              <div><div class="fl" style="margin-bottom:4px">Họ tên *</div>
+                <input class="fi" id="nv-ten" placeholder="Nguyễn Văn A" style="width:100%"></div>
+
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div><div class="fl" style="margin-bottom:4px">Chức vụ *</div>
                   <select class="fi" id="nv-chuc-vu" style="width:100%">
@@ -1278,30 +1282,45 @@ td input:focus,td select:focus{background:#FEFAF0}
                     <option value="MNR Worker">MNR Worker</option>
                     <option value="MNR Surveyor">MNR Surveyor</option>
                   </select></div>
-                <div><div class="fl" style="margin-bottom:4px">Số điện thoại</div><input class="fi" id="nv-sdt" placeholder="0912345678" style="width:100%"></div>
+                <div><div class="fl" style="margin-bottom:4px">Số điện thoại</div>
+                  <input class="fi" id="nv-sdt" placeholder="0912345678" style="width:100%"></div>
               </div>
+
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div><div class="fl" style="margin-bottom:4px">Ngày vào làm</div><input class="fi" type="date" id="nv-ngay-vao" style="width:100%"></div>
-                <div><div class="fl" style="margin-bottom:4px">Ngày nghỉ việc</div><input class="fi" type="date" id="nv-ngay-nghi" style="width:100%"></div>
+                <div><div class="fl" style="margin-bottom:4px">Ngày vào làm</div>
+                  <input class="fi" type="date" id="nv-ngay-vao" style="width:100%"></div>
+                <div><div class="fl" style="margin-bottom:4px">Ngày nghỉ việc</div>
+                  <input class="fi" type="date" id="nv-ngay-nghi" style="width:100%"></div>
               </div>
-              <div><div class="fl" style="margin-bottom:4px">Bậc lương *</div>
-                <select class="fi" id="nv-bac" style="width:100%" onchange="calcLuongCB()">
-                  <option value="">-- Chọn bậc --</option>
-                  <option value="0.8">0.8 → 4.800.000</option><option value="0.9">0.9 → 5.400.000</option>
-                  <option value="1">1.0 → 6.000.000</option><option value="1.1">1.1 → 6.600.000</option>
-                  <option value="1.2">1.2 → 7.200.000</option><option value="1.22">1.22 → 7.320.000</option>
-                  <option value="1.26">1.26 → 7.560.000</option><option value="1.27">1.27 → 7.620.000</option>
-                  <option value="1.29">1.29 → 7.740.000</option><option value="1.33">1.33 → 7.980.000</option>
-                  <option value="1.4">1.4 → 8.400.000</option><option value="1.5">1.5 → 9.000.000</option>
-                  <option value="1.63">1.63 → 9.780.000</option><option value="1.7">1.7 → 10.200.000</option>
-                  <option value="1.8">1.8 → 10.800.000</option><option value="2">2.0 → 12.000.000</option>
-                </select>
-                <div id="nv-cb-hint" style="font-size:11px;color:var(--gray);margin-top:3px"></div></div>
+
+              <!-- Bậc lương: nhập số tay -->
+              <div><div class="fl" style="margin-bottom:4px">Bậc lương * <span style="color:var(--gray);font-weight:400">(vd: 1.29, 1.33, 2...)</span></div>
+                <input class="fi" id="nv-bac" type="number" step="0.01" min="0.8" max="3" placeholder="Nhập bậc lương (vd: 1.29)" style="width:100%" oninput="calcLuongCB()">
+                <div id="nv-cb-hint" style="font-size:11px;color:var(--gray);margin-top:3px"></div>
+              </div>
+
+              <!-- Lương CB + Thực lãnh: tự tính -->
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div><div class="fl" style="margin-bottom:4px">Lương CB (đóng BHXH)</div><input class="fi" id="nv-luong-cb" type="number" style="width:100%;background:#F9FAFB" readonly></div>
-                <div><div class="fl" style="margin-bottom:4px">Lương HĐLĐ *</div><input class="fi" id="nv-luong-hdld" type="number" placeholder="Nhập tay" style="width:100%"></div>
+                <div>
+                  <div class="fl" style="margin-bottom:4px">Lương CB (đóng BHXH) *</div>
+                  <input class="fi" id="nv-luong-cb" type="number" step="1000" placeholder="Nhập hoặc tự tính theo bậc" style="width:100%" oninput="calcThucLanh()">
+                  <div style="font-size:10px;color:var(--gray);margin-top:2px">= Bậc × 6.000.000</div>
+                </div>
+                <div>
+                  <div class="fl" style="margin-bottom:4px">Lương thực lãnh</div>
+                  <input class="fi" id="nv-thuc-lanh" type="number" step="1000" placeholder="Tự tính = CB × 1.2" style="width:100%;background:#FFFDE7">
+                  <div style="font-size:10px;color:var(--gray);margin-top:2px">= CB × 1.2 (gợi ý)</div>
+                </div>
               </div>
-              <div><div class="fl" style="margin-bottom:4px">Ghi chú</div><input class="fi" id="nv-ghi-chu" style="width:100%"></div>
+
+              <!-- Lương HĐLĐ: nhập tay riêng -->
+              <div>
+                <div class="fl" style="margin-bottom:4px">Lương HĐLĐ * <span style="color:var(--gray);font-weight:400">(lương thực trả theo HĐ)</span></div>
+                <input class="fi" id="nv-luong-hdld" type="number" step="1000" placeholder="Nhập lương HĐLĐ thực tế" style="width:100%">
+              </div>
+
+              <div><div class="fl" style="margin-bottom:4px">Ghi chú</div>
+                <input class="fi" id="nv-ghi-chu" style="width:100%"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
               <button class="btn btn-sm" onclick="closeNVForm()">Hủy</button>
@@ -1325,6 +1344,7 @@ td input:focus,td select:focus{background:#FEFAF0}
               <button class="btn btn-sm" onclick="addNgayLe()" style="margin-left:4px">+ Thêm ngày</button>
               <button class="btn btn-sm btn-blue" id="ngle-save-btn" onclick="saveNgayLe()" style="margin-left:auto">💾 Lưu tất cả</button>
             </div>
+            <div style="font-size:11px;color:var(--gray);margin-bottom:10px">Format ngày: <b>yyyy-MM-dd</b> &nbsp;(vd: 2026-04-30)</div>
             <div id="ngle-list" style="display:grid;gap:7px">
               <div style="text-align:center;padding:20px;color:var(--gray)">Đang tải...</div>
             </div>
@@ -7248,6 +7268,7 @@ function ccTN(){
 function ccDays(t,n){return new Date(n,t,0).getDate();}
 function ccDow(n,t,d){return new Date(n,t-1,d).getDay();}
 function ccIsHol(n,t,d){
+  // Format chuẩn yyyy-MM-dd để so sánh
   var ds=n+'-'+String(t).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   return((_ccNgayLe[String(n)])||[]).indexOf(ds)>=0;
 }
@@ -7271,8 +7292,7 @@ function ccTinhLuong(ni){
     if(isHol)gioLe+=gio;
     else if(dow===0)gioCN+=gio;
   }
-  var ngayLamTT=ngayLam-ngayNghi;
-  var gioLamTT=ngayLamTT*8;
+  var ngayLamTT=ngayLam-ngayNghi,gioLamTT=ngayLamTT*8;
   var gioChuanTT=ngayLam*8;
   var gioThuong=Math.max(0,gioTong-gioCN-gioLe-gioChuanTT);
   var quyDoi=Math.round((gioCN*2+gioLe*3+gioThuong*1.5)*10)/10;
@@ -7288,7 +7308,6 @@ function renderChamCong(){
   var tn=ccTN(),days=ccDays(tn.t,tn.n);
   var TH='padding:7px 6px;background:#FFF8E7;color:#412402;font-weight:700;font-size:10px;border-bottom:2px solid #E8A820;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap';
   var h='<tr>';
-  // Cột tên NV: 220px - đủ hiện full tên
   h+='<th style="position:sticky;left:0;z-index:5;'+TH+';min-width:220px;width:220px;text-align:left;border-right:2px solid #E8A820">Nhân viên</th>';
   for(var d=1;d<=days;d++){
     var dow=ccDow(tn.n,tn.t,d),isHol=ccIsHol(tn.n,tn.t,d);
@@ -7307,12 +7326,10 @@ function renderChamCong(){
   h+='<th style="'+RH+';min-width:90px;text-align:right">Tiền NS</th>';
   h+='</tr>';
   document.getElementById('cc-thead').innerHTML=h;
-
   var body='';
   CC_NV.forEach(function(nv,ni){
     var r=ccTinhLuong(ni);
     body+='<tr style="border-bottom:1px solid #F0E0B0">';
-    // Cột tên sticky 220px
     body+='<td style="position:sticky;left:0;z-index:4;background:#fff;border-right:2px solid #E8A820;padding:7px 10px;min-width:220px;width:220px">';
     body+='<div style="font-weight:600;font-size:12px;white-space:nowrap">'+nv.ten+'</div>';
     body+='<div style="font-size:9px;color:var(--gray)">'+nv.chuc_vu+'</div></td>';
@@ -7395,6 +7412,7 @@ function renderCCLuong(){
     +'<div class="stat-card"><div class="stat-label">Nhân viên</div><div class="stat-value">'+CC_NV.length+'</div></div>'
     +'<div class="stat-card"><div class="stat-label">Tháng/Năm</div><div class="stat-value" style="color:#412402">T'+ccTN().t+'/'+ccTN().n+'</div></div>';
 }
+
 function showCCTab(tab){
   var isL=tab==='luong';
   document.getElementById('cc-grid-panel').style.display=isL?'none':'block';
@@ -7448,10 +7466,28 @@ function loadChamCong(){
   var n=now.getFullYear();
   if(!_ccNgayLe[String(n)]){
     apiGet({action:'getNgayLeMNR',nam:n}).then(function(res){
-      if(res&&res.success)_ccNgayLe[String(n)]=(res.data||[]).map(function(r){return r.ngay;});
+      if(res&&res.success){
+        // FIX: đảm bảo format yyyy-MM-dd trước khi cache
+        _ccNgayLe[String(n)]=(res.data||[]).map(function(r){
+          return _normNgayLe(r.ngay);
+        }).filter(Boolean);
+      }
       renderChamCong();
     });
   } else renderChamCong();
+}
+// Chuẩn hóa ngày lễ về yyyy-MM-dd
+function _normNgayLe(s){
+  if(!s)return '';
+  s=String(s).trim();
+  // Đã đúng format yyyy-MM-dd
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // Thử parse Date (nếu là "Sun Apr 26 2026 00:..." hay bất kỳ format nào)
+  var d=new Date(s);
+  if(!isNaN(d.getTime())){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  return '';
 }
 document.addEventListener('click',function(e){
   if(!e.target.closest('#cc-dd')&&!e.target.classList.contains('cc-input-cell'))ccCloseDD();
@@ -7459,18 +7495,30 @@ document.addEventListener('click',function(e){
 
 // ===================== NHÂN VIÊN MNR =====================
 var _nvData=[];
+
+// Fix: Bậc lương nhập tay → tự tính CB, gợi ý thực lãnh
 function calcLuongCB(){
   var bac=parseFloat(document.getElementById('nv-bac').value)||0;
   var cb=bac>0?Math.round(6000000*bac):0;
-  document.getElementById('nv-luong-cb').value=cb||'';
+  // Tự điền Lương CB
+  if(cb>0) document.getElementById('nv-luong-cb').value=cb;
+  // Tự tính thực lãnh = CB × 1.2
+  calcThucLanh();
   document.getElementById('nv-cb-hint').textContent=bac>0
-    ?'CB: '+cb.toLocaleString('vi-VN')+' | Gợi ý HĐLĐ: '+Math.round(cb*1.2).toLocaleString('vi-VN'):'';
+    ?'CB: '+cb.toLocaleString('vi-VN')+' | Thực lãnh gợi ý: '+Math.round(cb*1.2).toLocaleString('vi-VN'):'';
 }
+
+function calcThucLanh(){
+  var cb=parseFloat(document.getElementById('nv-luong-cb').value)||0;
+  var tl=document.getElementById('nv-thuc-lanh');
+  if(cb>0 && !tl.dataset.manual) tl.value=Math.round(cb*1.2);
+}
+
 async function loadNVMNR(){
-  document.getElementById('nv-mnr-rows').innerHTML='<tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('nv-mnr-rows').innerHTML='<tr><td colspan="11" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   var res=await apiGet({action:'getNVMNR'});
   if(!res||!res.success){
-    document.getElementById('nv-mnr-rows').innerHTML='<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--red)">Lỗi: '+(res&&res.error||'Không tải được')+'</td></tr>';
+    document.getElementById('nv-mnr-rows').innerHTML='<tr><td colspan="11" style="padding:20px;text-align:center;color:var(--red)">Lỗi: '+(res&&res.error||'Không tải được')+'</td></tr>';
     return;
   }
   _nvData=res.data||[];
@@ -7483,10 +7531,12 @@ async function loadNVMNR(){
   }
   renderNVMNR();
 }
+
 function renderNVMNR(){
   var rows='';
   _nvData.forEach(function(nv,idx){
     var isN=!!nv.ngay_nghi,cb=parseFloat(nv.luong_cb)||0,hdld=parseFloat(nv.luong_hdld)||0;
+    var tl=parseFloat(nv.thuc_lanh)||Math.round(cb*1.2);
     var bg=isN?'background:#FAFAFA;':'';
     rows+='<tr style="border-bottom:1px solid #F0F0F0;'+bg+'">';
     rows+='<td style="padding:10px 12px;font-weight:600;font-size:12px">'+nv.ten+'</td>';
@@ -7496,6 +7546,7 @@ function renderNVMNR(){
     rows+='<td style="padding:10px 12px;text-align:center;font-size:11px;font-family:monospace;color:var(--red)">'+(nv.ngay_nghi||'—')+'</td>';
     rows+='<td style="padding:10px 12px;text-align:center;font-size:12px;font-weight:600">'+(nv.bac_luong||'—')+'</td>';
     rows+='<td style="padding:10px 12px;text-align:right;font-size:11px;font-family:monospace">'+(cb>0?cb.toLocaleString('vi-VN'):'—')+'</td>';
+    rows+='<td style="padding:10px 12px;text-align:right;font-size:11px;font-family:monospace">'+(tl>0?tl.toLocaleString('vi-VN'):'—')+'</td>';
     rows+='<td style="padding:10px 12px;text-align:right;font-size:11px;font-family:monospace;font-weight:600;color:var(--blue)">'+(hdld>0?hdld.toLocaleString('vi-VN'):'—')+'</td>';
     rows+='<td style="padding:10px 12px;text-align:center"><span style="background:'+(isN?'#FEF2F2':'#F0FDF4')+';color:'+(isN?'#991B1B':'#166534')+';padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600">'+(isN?'Đã nghỉ':'Đang làm')+'</span></td>';
     rows+='<td style="padding:10px 12px;text-align:right;white-space:nowrap">';
@@ -7503,7 +7554,7 @@ function renderNVMNR(){
     rows+='<button class="btn btn-sm nv-del-btn" data-idx="'+idx+'" style="padding:3px 8px;font-size:11px;background:#FEF2F2;color:#991B1B;border-color:#FECACA">Xóa</button>';
     rows+='</td></tr>';
   });
-  if(!rows)rows='<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--gray)">Chưa có nhân viên nào</td></tr>';
+  if(!rows)rows='<tr><td colspan="11" style="padding:30px;text-align:center;color:var(--gray)">Chưa có nhân viên nào</td></tr>';
   document.getElementById('nv-mnr-rows').innerHTML=rows;
   document.querySelectorAll('.nv-edit-btn').forEach(function(btn){
     btn.addEventListener('click',function(){openNVForm(_nvData[parseInt(this.dataset.idx)]);});
@@ -7515,6 +7566,7 @@ function renderNVMNR(){
     });
   });
 }
+
 function openNVForm(nv){
   document.getElementById('nv-modal-title').textContent=nv?'Sửa nhân viên':'Thêm nhân viên';
   document.getElementById('nv-id').value=nv?(nv.id||''):'';
@@ -7526,30 +7578,40 @@ function openNVForm(nv){
   document.getElementById('nv-ngay-nghi').value=nv?toISO(nv.ngay_nghi):'';
   document.getElementById('nv-bac').value=nv?(nv.bac_luong||''):'';
   document.getElementById('nv-luong-cb').value=nv?(nv.luong_cb||''):'';
+  // Thực lãnh
+  var tlEl=document.getElementById('nv-thuc-lanh');
+  tlEl.dataset.manual='';
+  var tlVal=nv&&nv.thuc_lanh?nv.thuc_lanh:(nv&&nv.luong_cb?Math.round(parseFloat(nv.luong_cb)*1.2):'');
+  tlEl.value=tlVal||'';
   document.getElementById('nv-luong-hdld').value=nv?(nv.luong_hdld||''):'';
   document.getElementById('nv-ghi-chu').value=nv?(nv.ghi_chu||''):'';
   document.getElementById('nv-cb-hint').textContent='';
-  if(nv&&nv.bac_luong)calcLuongCB();
   document.getElementById('nv-modal').style.display='flex';
 }
 function closeNVForm(){document.getElementById('nv-modal').style.display='none';}
+
 async function saveNVForm(){
   var ten=document.getElementById('nv-ten').value.trim();
-  var bac=document.getElementById('nv-bac').value;
   var hdld=document.getElementById('nv-luong-hdld').value;
   if(!ten){toast('Nhập họ tên!');return;}
-  if(!bac){toast('Chọn bậc lương!');return;}
   if(!hdld){toast('Nhập lương HĐLĐ!');return;}
   function toDMY(s){if(!s)return'';var p=s.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s;}
   var btn=document.getElementById('nv-save-btn');
   btn.textContent='Đang lưu...';btn.disabled=true;
-  var res=await apiPost({action:'saveNVMNR',id:document.getElementById('nv-id').value,
-    ten:ten,chuc_vu:document.getElementById('nv-chuc-vu').value,
+  var res=await apiPost({
+    action:'saveNVMNR',
+    id:document.getElementById('nv-id').value,
+    ten:ten,
+    chuc_vu:document.getElementById('nv-chuc-vu').value,
     sdt:document.getElementById('nv-sdt').value,
     ngay_vao:toDMY(document.getElementById('nv-ngay-vao').value),
     ngay_nghi:toDMY(document.getElementById('nv-ngay-nghi').value),
-    bac_luong:bac,luong_cb:document.getElementById('nv-luong-cb').value,
-    luong_hdld:hdld,ghi_chu:document.getElementById('nv-ghi-chu').value});
+    bac_luong:document.getElementById('nv-bac').value,
+    luong_cb:document.getElementById('nv-luong-cb').value,
+    thuc_lanh:document.getElementById('nv-thuc-lanh').value,
+    luong_hdld:hdld,
+    ghi_chu:document.getElementById('nv-ghi-chu').value
+  });
   btn.textContent='💾 Lưu';btn.disabled=false;
   if(res&&res.success){toast('✓ Đã lưu');closeNVForm();loadNVMNR();}
   else toast('Lỗi: '+(res&&res.error||''));
@@ -7572,6 +7634,10 @@ async function _loadNgle(){
   document.getElementById('ngle-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--gray)">Đang tải...</div>';
   var res=await apiGet({action:'getNgayLeMNR',nam:nam});
   _ngleData=(res&&res.success)?res.data:[];
+  // FIX: chuẩn hóa format ngày khi load
+  _ngleData=_ngleData.map(function(r){
+    return{nam:r.nam,ngay:_normNgayLe(r.ngay),ten_le:r.ten_le};
+  });
   renderNgayLeList();
 }
 function renderNgayLeList(){
@@ -7581,8 +7647,11 @@ function renderNgayLeList(){
   }
   var h='';
   _ngleData.forEach(function(r,i){
+    // Validate format khi hiển thị
+    var ngayVal=r.ngay||'';
+    var isValid=/^\d{4}-\d{2}-\d{2}$/.test(ngayVal);
     h+='<div style="display:grid;grid-template-columns:145px 1fr 32px;gap:6px;align-items:center">';
-    h+='<input class="fi ngle-ngay" data-i="'+i+'" value="'+r.ngay+'" placeholder="yyyy-MM-dd" style="font-family:monospace;font-size:12px">';
+    h+='<input class="fi ngle-ngay" data-i="'+i+'" value="'+ngayVal+'" placeholder="yyyy-MM-dd" style="font-family:monospace;font-size:12px;'+(isValid?'':'border-color:#EF4444;')+'">'; 
     h+='<input class="fi ngle-ten" data-i="'+i+'" value="'+r.ten_le+'" placeholder="Tên ngày lễ" style="font-size:12px">';
     h+='<button class="ngle-del-btn" data-i="'+i+'" style="background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;border-radius:4px;cursor:pointer;font-size:14px;height:32px;width:32px">×</button>';
     h+='</div>';
@@ -7603,7 +7672,10 @@ async function saveNgayLe(){
   var ngays=[];
   document.querySelectorAll('.ngle-ngay').forEach(function(el,i){
     var tenEl=document.querySelectorAll('.ngle-ten')[i];
-    ngays.push({ngay:el.value.trim(),ten_le:tenEl?tenEl.value.trim():''});
+    var ngay=el.value.trim();
+    // FIX: Validate và normalize format trước khi save
+    ngay=_normNgayLe(ngay);
+    if(ngay) ngays.push({ngay:ngay,ten_le:tenEl?tenEl.value.trim():''});
   });
   var nam=document.getElementById('ngle-nam').value;
   var btn=document.getElementById('ngle-save-btn');
@@ -7612,8 +7684,9 @@ async function saveNgayLe(){
   btn.textContent='💾 Lưu tất cả';btn.disabled=false;
   if(res&&res.success){
     _ccNgayLe[String(nam)]=ngays.map(function(r){return r.ngay;});
-    toast('✓ Đã lưu ngày lễ năm '+nam);
+    toast('✓ Đã lưu '+ngays.length+' ngày lễ năm '+nam);
     closeNgayLeModal();
+    renderChamCong(); // refresh để áp dụng ngay
   }else toast('Lỗi: '+(res&&res.error||''));
 }
 function closeNgayLeModal(){document.getElementById('ngle-modal').style.display='none';}
