@@ -2068,7 +2068,6 @@ async function loadInitialData() {
     } else if (tariffRes2 && tariffRes2.success) {
       state.tariff = tariffRes2.data;
       _cacheSet('mnr_tariff', state.tariff);
-      _cacheSet('mnr_tariff', state.tariff);
     }
   } catch(e) { console.error('Tariff/Stock load error:', e); }
 
@@ -3376,17 +3375,23 @@ function renderTracking() {
 }
 
 function calcTrackingStats(data) {
-  return {
-    total:    data.filter(r => r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected').length,
-    approved: data.filter(r => r.approval_status === 'Approved').length,
-    partial:  data.filter(r => r.approval_status === 'Partially Approved').length,
-    revised:  data.filter(r => r.approval_status === 'Partially Approved - Revised').length,
-    sent:     data.filter(r => r.approval_status === 'Sent for Approval').length,
-    repair:   data.filter(r => r.approval_status === 'Repair Pending').length,
-    repaired: data.filter(r => r.approval_status === 'Repaired').length,
-    rejected: data.filter(r => r.approval_status === 'Rejected').length,
-    pending:  data.filter(r => !r.approval_status || r.approval_status === 'Pending').length
-  };
+  // Tối ưu: 1 vòng loop thay vì 9 lần filter
+  var s = { total: 0, approved: 0, partial: 0, revised: 0, sent: 0, repair: 0, repaired: 0, rejected: 0, pending: 0 };
+  for (var i = 0; i < data.length; i++) {
+    var st = data[i].approval_status || '';
+    switch (st) {
+      case 'Approved':                     s.approved++; s.total++; break;
+      case 'Partially Approved':           s.partial++;  s.total++; break;
+      case 'Partially Approved - Revised': s.revised++;  s.total++; break;
+      case 'Sent for Approval':            s.sent++;     s.total++; break;
+      case 'Repair Pending':               s.repair++;   s.total++; break;
+      case 'Repaired':                     s.repaired++; break;
+      case 'Rejected':                     s.rejected++; break;
+      case 'Pending':                      s.pending++;  s.total++; break;
+      default:                             s.pending++;  s.total++; break; // empty status = Pending
+    }
+  }
+  return s;
 }
 
 function renderTrackingStats(s) {
