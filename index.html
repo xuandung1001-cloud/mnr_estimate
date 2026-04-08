@@ -3111,6 +3111,8 @@ async function saveRevise() {
   try {
     const res = await apiPost({
       action: 'saveRevise', username: state.user && state.user.username || '', container_no: eqNo,
+      carrier: document.getElementById('rev-carrier').value,
+      size_type: document.getElementById('rev-size').value,
       approval_status: contStatus,
       approved_date: document.getElementById('rev-app-date').value,
       remarks: document.getElementById('rev-remarks').value, lines
