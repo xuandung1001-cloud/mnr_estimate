@@ -5209,6 +5209,20 @@ function parseContList() {
   return [...new Set(raw.toUpperCase().split(/[\n,;\s]+/).map(s => s.trim()).filter(s => s.length >= 4))];
 }
 
+// Tìm dòng tracking ACTIVE (không phải Repaired/Rejected) cho 1 container
+// Nếu không có active → fallback dòng gần nhất (cuối cùng trong array)
+function _findActiveTracking(contNo) {
+  var CLOSED = ['Repaired', 'Rejected'];
+  var fallback = null;
+  for (var i = 0; i < state.tracking.length; i++) {
+    var r = state.tracking[i];
+    if ((r.container_no || '').toUpperCase() !== contNo) continue;
+    fallback = r;
+    if (!CLOSED.includes(r.approval_status)) return r; // active → trả ngay
+  }
+  return fallback; // không có active → trả dòng cuối cùng tìm thấy
+}
+
 function previewRefNos() {
   var conts   = parseContList();
   var preview = document.getElementById('pic-ref-preview');
@@ -5216,7 +5230,7 @@ function previewRefNos() {
   if (!conts.length) { preview.style.display = 'none'; return; }
 
   tbody.innerHTML = conts.map(function(contNo, i) {
-    var trk     = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
+    var trk     = _findActiveTracking(contNo);
     var ref     = (trk && trk.ref_number) ? trk.ref_number : '—';
     var refPart = (trk && trk.ref_number) ? trk.ref_number + '_' : '';
     var sample  = _picMode + '_' + contNo + '_' + refPart + '001.jpg';
@@ -5275,10 +5289,10 @@ async function doExportPictures() {
   if (!carrier)         { toast('Chọn Carrier!'); return; }
   if (!contList.length) { toast('Nhập danh sách container!'); return; }
 
-  // Build ref map từ tracking
+  // Build ref map từ tracking — lấy job ACTIVE, không phải job cũ đã đóng
   var refMap = {};
   contList.forEach(function(contNo) {
-    var trk = state.tracking.find(r => (r.container_no||'').toUpperCase() === contNo);
+    var trk = _findActiveTracking(contNo);
     refMap[contNo] = (trk && trk.ref_number) ? trk.ref_number : '';
   });
 
