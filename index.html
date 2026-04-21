@@ -1089,7 +1089,14 @@ td input:focus,td select:focus{background:#FEFAF0}
       <!-- PICTURES -->
       <div class="screen" id="screen-pictures">
         <div class="card">
-          <div class="card-title">Xuất hình ảnh → Google Drive</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div class="card-title" style="margin-bottom:0">Xuất hình ảnh → Google Drive</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span id="pic-index-status" style="font-size:11px;color:var(--cyan)"></span>
+              <button class="btn btn-sm" onclick="doSyncPhotoIndex(false)" id="btn-sync-delta" style="padding:4px 10px;font-size:11px">🔄 Đồng bộ nhanh</button>
+              <button class="btn btn-sm" onclick="doSyncPhotoIndex(true)"  id="btn-sync-full"  style="padding:4px 10px;font-size:11px;background:var(--orange,#f59e0b);color:#fff">⚙️ Đồng bộ đầy đủ</button>
+            </div>
+          </div>
 
           <div class="mode-tabs" style="margin-bottom:14px">
             <div class="mode-tab active" id="pic-tab-b" onclick="setPicMode('B',this)">Trước Sửa Chữa</div>
@@ -1138,19 +1145,6 @@ td input:focus,td select:focus{background:#FEFAF0}
 
           <div style="display:flex;gap:8px;align-items:center">
             <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">📂 Export lên Drive</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:10px">
-          <div class="card-title" style="margin-bottom:8px">Đồng bộ Index ảnh</div>
-          <div style="font-size:11px;color:var(--gray);margin-bottom:10px">
-            Index ảnh giúp đếm số hình nhanh. Trigger tự chạy lúc 6:00 sáng (delta 7 ngày gần nhất).<br>
-            Bấm <b>Đồng bộ đầy đủ</b> một lần duy nhất để build toàn bộ lịch sử (sẽ tự retry nếu cần).
-          </div>
-          <div id="pic-index-status" style="font-size:11px;color:var(--cyan);margin-bottom:8px;min-height:16px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-sm" onclick="doSyncPhotoIndex(false)" id="btn-sync-delta">🔄 Đồng bộ nhanh (7 ngày)</button>
-            <button class="btn btn-sm" onclick="doSyncPhotoIndex(true)"  id="btn-sync-full" style="background:var(--orange,#f59e0b);color:#fff">⚙️ Đồng bộ đầy đủ</button>
           </div>
         </div>
 
