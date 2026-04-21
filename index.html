@@ -1141,6 +1141,19 @@ td input:focus,td select:focus{background:#FEFAF0}
           </div>
         </div>
 
+        <div class="card" style="margin-top:10px">
+          <div class="card-title" style="margin-bottom:8px">Đồng bộ Index ảnh</div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:10px">
+            Index ảnh giúp đếm số hình nhanh. Trigger tự chạy lúc 6:00 sáng (delta 7 ngày gần nhất).<br>
+            Bấm <b>Đồng bộ đầy đủ</b> một lần duy nhất để build toàn bộ lịch sử (sẽ tự retry nếu cần).
+          </div>
+          <div id="pic-index-status" style="font-size:11px;color:var(--cyan);margin-bottom:8px;min-height:16px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="doSyncPhotoIndex(false)" id="btn-sync-delta">🔄 Đồng bộ nhanh (7 ngày)</button>
+            <button class="btn btn-sm" onclick="doSyncPhotoIndex(true)"  id="btn-sync-full" style="background:var(--orange,#f59e0b);color:#fff">⚙️ Đồng bộ đầy đủ</button>
+          </div>
+        </div>
+
         <div id="pic-progress" style="display:none" class="card">
           <div style="display:flex;align-items:center;gap:10px">
             <div class="spinner"></div>
@@ -5282,6 +5295,45 @@ function fillContFromBulk() {
   var carrierSet = [...new Set(state.tracking.filter(r => conts.includes(r.container_no)).map(r => r.carrier).filter(Boolean))];
   if (carrierSet.length === 1) document.getElementById('pic-carrier').value = carrierSet[0];
   previewRefNos();
+}
+
+async function doSyncPhotoIndex(fullSync) {
+  var statusEl  = document.getElementById('pic-index-status');
+  var btnDelta  = document.getElementById('btn-sync-delta');
+  var btnFull   = document.getElementById('btn-sync-full');
+  btnDelta.disabled = btnFull.disabled = true;
+
+  var action = fullSync ? 'syncPhotoIndexFull' : 'syncPhotoIndex';
+  var attempt = 0;
+
+  async function runOnce() {
+    attempt++;
+    statusEl.textContent = fullSync
+      ? ('⏳ Đang đồng bộ đầy đủ... lần ' + attempt + ' (mỗi lần tối đa 4.5 phút)')
+      : '⏳ Đang đồng bộ nhanh (7 ngày gần nhất)...';
+    try {
+      var res = await apiGet({ action: action });
+      if (!res || !res.success) {
+        statusEl.textContent = '❌ Lỗi: ' + (res && res.error ? res.error : 'Không có phản hồi');
+        return;
+      }
+      if (fullSync && res.done === false) {
+        // Chưa xong, cần chạy lại
+        statusEl.textContent = '🔄 Đang xử lý: ' + (res.checkpoint || '...') + ' — tự chạy lại sau 5 giây...';
+        setTimeout(runOnce, 5000);
+        return;
+      }
+      statusEl.textContent = '✅ Đồng bộ xong lúc ' + (res.synced_at || '') + ' — cập nhật ' + (res.updated || 0) + ' cont, tổng ' + (res.total || 0) + ' entries.';
+      toast('Đồng bộ index ảnh thành công!', 2500);
+    } catch(e) {
+      statusEl.textContent = '❌ Lỗi kết nối: ' + e.message;
+    } finally {
+      if (!statusEl.textContent.includes('tự chạy lại')) {
+        btnDelta.disabled = btnFull.disabled = false;
+      }
+    }
+  }
+  runOnce();
 }
 
 async function doExportPictures() {
