@@ -5364,51 +5364,37 @@ async function doExportPictures() {
       'Đang export ' + contList.length + ' containers... (' + _exportSec + 's)';
   }, 1000);
 
-  // Tạo folder trước, rồi export từng cont một
   var allResults = [], allNotFound = [], totalCopied = 0;
   var folderName = '', folderUrl = '', folderId = '';
 
   try {
-    // Bước 1: Tạo folder export trên Drive
-    document.getElementById('pic-progress-text').textContent = 'Đang tạo folder Export... (' + _exportSec + 's)';
-    var initRes = await apiPost({
-      action: 'createExportFolder',
-      carrier: carrier
-    });
-    if (!initRes.success) { throw new Error('Không tạo được folder: ' + initRes.error); }
-    folderName = initRes.folder_name;
-    folderUrl  = initRes.folder_url;
-    folderId   = initRes.folder_id;
+    // 1 API call duy nhất cho tất cả containers — backend tự scan + copy batch
+    // Timeout 5 phút (300s) vì export nhiều cont có thể mất vài phút
+    document.getElementById('pic-progress-text').textContent =
+      'Đang export ' + contList.length + ' containers... (' + _exportSec + 's)';
 
-    // Bước 2: Export từng cont vào folder đã tạo
-    for (var ci = 0; ci < contList.length; ci++) {
-      var contNo = contList[ci];
-      document.getElementById('pic-progress-text').textContent =
-        'Đang export cont ' + (ci+1) + '/' + contList.length + ': ' + contNo + '... (' + _exportSec + 's)';
-
-      var singleRef = {};
-      singleRef[contNo] = refMap[contNo] || '';
-
-      var res = await apiPost({
+    var res = await _fetchWithTimeout(API, {
+      method: 'POST',
+      body: JSON.stringify({
         action:    'exportPictures',
         mode:      _picMode,
-        cont_list: [contNo],
-        ref_map:   singleRef,
+        cont_list: contList,
+        ref_map:   refMap,
         carrier:   carrier,
         loai_anh:  loaiAnh,
-        folder_id: folderId
-      });
+        folder_id: ''
+      })
+    }, 300000).then(function(r) { return r.json(); });
 
-      if (!res.success) {
-        allNotFound.push(contNo);
-        continue;
-      }
+    if (!res || !res.success) throw new Error(res && res.error ? res.error : 'Export thất bại');
 
-      totalCopied += res.total_copied || 0;
-      if (res.results && res.results.length) allResults = allResults.concat(res.results);
-      if (res.not_found && res.not_found.length) allNotFound = allNotFound.concat(res.not_found);
-      if (res.actual_count !== undefined) window._lastActualCount = res.actual_count; // tổng file trong folder sau mỗi call
-    }
+    totalCopied = res.total_copied || 0;
+    allResults  = res.results      || [];
+    allNotFound = res.not_found    || [];
+    folderName  = res.folder_name  || '';
+    folderUrl   = res.folder_url   || '';
+    folderId    = res.folder_id    || '';
+    window._lastActualCount = res.actual_count || totalCopied;
 
     clearInterval(_exportTimer);
     document.getElementById('pic-progress').style.display = 'none';
