@@ -2046,44 +2046,36 @@ async function loadInitialData() {
   const hasCachedTariff = !!lsGet('mnr_tariff');
   const hasCachedStock  = !!lsGet('mnr_stock');
   if (!hasCachedTariff || !hasCachedStock) toast('Đang tải dữ liệu...');
-  // Auto navigate to report dashboard
 
-  // Tariff & Stock: cache sessionStorage — chỉ fetch lần đầu mỗi session
+  // Tariff & Stock: cả hai đều dùng localStorage cache 4h, chỉ fetch khi hết hạn
   try {
     var cachedTariff = _cacheGet('mnr_tariff');
-    // Tariff + Stock fetch song song: tariff dùng cache nếu có, stock luôn fetch mới
-    var fetchPromises = [apiGet({ action: 'getEmtyStock' })];
+    var cachedStock  = _cacheGet('mnr_stock');
+    var fetchPromises = [];
     if (!cachedTariff) fetchPromises.push(apiGet({ action: 'getTariff' }));
+    if (!cachedStock)  fetchPromises.push(apiGet({ action: 'getEmtyStock' }));
 
-    var fetchResults = await Promise.all(fetchPromises);
-    var stockRes2  = fetchResults[0];
-    var tariffRes2 = fetchResults[1];
-
-    if (stockRes2 && stockRes2.success) {
-      state.stock = stockRes2.data;
-      _cacheSet('mnr_stock', state.stock);
+    if (fetchPromises.length > 0) {
+      var fetchResults = await Promise.all(fetchPromises);
+      var _fi = 0;
+      if (!cachedTariff) { var _tr = fetchResults[_fi++]; if (_tr && _tr.success) { state.tariff = _tr.data; _cacheSet('mnr_tariff', state.tariff); } }
+      if (!cachedStock)  { var _sr = fetchResults[_fi++]; if (_sr && _sr.success) { state.stock  = _sr.data; _cacheSet('mnr_stock',  state.stock);  } }
     }
-    if (cachedTariff) {
-      state.tariff = cachedTariff; // đã parse trong _cacheGet
-    } else if (tariffRes2 && tariffRes2.success) {
-      state.tariff = tariffRes2.data;
-      _cacheSet('mnr_tariff', state.tariff);
-    }
+    if (cachedTariff) state.tariff = cachedTariff;
+    if (cachedStock)  state.stock  = cachedStock;
   } catch(e) { console.error('Tariff/Stock load error:', e); }
 
-  // Tracking + Summary + Estimates: fetch song song
+  // Tracking + Summary: chỉ 2 calls — estimates lazy load khi cần
   var _expEl = document.getElementById('sb-expiry');
   var _expOrig = _expEl ? _expEl.textContent : '';
   if (_expEl) _expEl.textContent = '⏳ Đang tải dữ liệu...';
   try {
     var results = await Promise.all([
       apiGet({ action: 'getTracking' }),
-      apiGet({ action: 'getSummary' }),
-      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' })
+      apiGet({ action: 'getSummary' })
     ]);
-    if (results[0] && results[0].success) state.tracking  = results[0].data;
-    if (results[1] && results[1].success) state.summary   = results[1].data;
-    if (results[2] && results[2].data)    state.estimates  = results[2].data;
+    if (results[0] && results[0].success) state.tracking = results[0].data;
+    if (results[1] && results[1].success) state.summary  = results[1].data;
     if (_expEl) _expEl.textContent = _expOrig;
     genDashboard();
   } catch(e) {
@@ -2651,7 +2643,7 @@ async function saveEstimate() {
       toast('Đã lưu thành công! ' + res.lines_saved + ' hạng mục', 3000);
       resetEstimate();
       apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
-      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' }).then(function(r){ if(r&&r.data) state.estimates=r.data; });
+      state.estimates = []; // invalidate estimates cache — lazy reload khi cần
       _sumSynced = false; // cần sync lại khi vào Tổng hợp
     } else {
       toast('Lỗi: ' + res.error, 4000);
@@ -3122,7 +3114,7 @@ async function saveRevise() {
       resetRevise();
       _sumSynced = false;
       apiGet({ action: 'getTracking' }).then(function(r){ if(r&&r.success) state.tracking=r.data; });
-      apiGet({ action: 'getAllEstimates', container_nos: '__ALL__' }).then(function(r){ if(r&&r.data) state.estimates=r.data; });
+      state.estimates = []; // invalidate estimates cache — lazy reload khi cần
       _sumSynced = false; // cần sync lại khi vào Tổng hợp
     } else { toast('Lỗi: ' + res.error, 4000); }
   } catch(e) { toast('Lỗi kết nối: ' + e.message, 4000); }
@@ -4413,12 +4405,21 @@ function exportSumList() {
   exportContList(type);
 }
 
-function exportContList(type) {
+async function exportContList(type) {
   if (!bulkFilteredConts || !bulkFilteredConts.length) { toast('Tải danh sách trước!', 3000); return; }
   var contSet = new Set(bulkFilteredConts.map(function(c){ return (c||'').toUpperCase().trim(); }));
   var data = (state.estimates||[]).filter(function(r){
     return contSet.has((r.equipment_number||'').toUpperCase().trim());
   });
+  if (!data.length) {
+    toast('Đang tải dữ liệu hạng mục...', 2000);
+    try {
+      var estRes = await apiGet({ action: 'getAllEstimates', container_nos: Array.from(contSet).join(',') });
+      if (!estRes || !estRes.data || !estRes.data.length) { toast('Không có dữ liệu hạng mục!', 4000); return; }
+      data = estRes.data;
+      state.estimates = data; // cache lại để export lần 2 trong cùng session không fetch lại
+    } catch(e) { toast('Lỗi tải dữ liệu: ' + e.message, 4000); return; }
+  }
   if (!data.length) { toast('Không có dữ liệu! Bấm Tải danh sách lại.', 4000); return; }
 
   function fmtD(v) {
