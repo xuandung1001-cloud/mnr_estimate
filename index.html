@@ -3901,7 +3901,7 @@ function renderSummaryTable(data) {
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
-      <td style="text-align:center">${r.updated_at ? (r.updated_at.split(' ')[0]) : '—'}</td>
+      <td style="text-align:center;font-size:10.5px;color:var(--gray)" title="${r.updated_at||''}">${fmtUpdatedAt(r.updated_at)}</td>
       <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${(r.remarks2||r.remarks1||'').replace(/"/g,'&quot;')}">${r.remarks2||r.remarks1||'—'}</td>
     </tr>
   `).join('');
@@ -5660,6 +5660,21 @@ function formatDate(d) {
   const dt = new Date(d);
   if (isNaN(dt)) return d || '';
   return dt.toLocaleDateString('vi-VN');
+}
+
+// Format updated_at: hỗ trợ ISO "2026-04-20T10:11:33.000Z" + dd/MM/yyyy HH:mm:ss
+// Trả về dd/MM/yyyy HH:mm (không giây, timezone Asia/Ho_Chi_Minh)
+function fmtUpdatedAt(v) {
+  if (!v) return '—';
+  var s = String(v).trim();
+  // dd/MM/yyyy HH:mm:ss hoặc dd/MM/yyyy HH:mm → cắt giây
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{1,2})/);
+  if (m) return m[1].padStart(2,'0') + '/' + m[2].padStart(2,'0') + '/' + m[3] + ' ' + m[4].padStart(2,'0') + ':' + m[5].padStart(2,'0');
+  // ISO
+  var d = new Date(s);
+  if (isNaN(d)) return s;
+  var p = n => String(n).padStart(2,'0');
+  return p(d.getDate()) + '/' + p(d.getMonth()+1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
 // Parse dd/MM/yyyy hoặc các format khác → Date object
