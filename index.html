@@ -7754,15 +7754,9 @@ function _foKyDashboard(rows, prevRows, range){
   html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">💳 Tiền mặt vs Trả sau</div><canvas id="foky-chart-ht" style="max-height:250px"></canvas></div>';
   html+='</div>';
 
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🥧 Cơ cấu phương án</div><canvas id="foky-chart-pa" style="max-height:230px"></canvas></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🚢 Hãng khai thác</div><canvas id="foky-chart-hang" style="max-height:230px"></canvas></div>';
-  html+='</div>';
-
-  // Top KH + NV
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🏆 Top 10 khách hàng</div><div id="foky-top-kh"></div></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Hiệu suất NV</div><div id="foky-nv"></div></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px">';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🥧 Cơ cấu phương án</div><canvas id="foky-chart-pa" style="max-height:280px"></canvas></div>';
+  html+='<div class="card" style="padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:12px;font-weight:700">💳 Công nợ khách hàng (Trả sau) — Top 15</div><div id="foky-cn-total" style="font-size:11px;color:#8B5CF6;font-weight:700"></div></div><div id="foky-cn" style="max-height:320px;overflow-y:auto"></div></div>';
   html+='</div>';
 
   body.innerHTML=html;
@@ -7786,26 +7780,42 @@ function _foKyDashboard(rows, prevRows, range){
   });
 
   foDrawChart('foky-chart-pa', _foPie(active, '_pa_group', 'thanh_tien'));
-  foDrawChart('foky-chart-hang', _foPie(active, 'hang_tau', 'thanh_tien'));
 
-  // Top KH
-  var khMap={};
-  active.forEach(function(r){ var k=r.doi_tuong_tt||'—'; khMap[k]=(khMap[k]||0)+(Number(r.thanh_tien)||0); });
-  var khArr=Object.entries(khMap).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
-  var khHtml='<ol style="margin:0;padding-left:20px;font-size:11px">';
-  khArr.forEach(function(kv){ khHtml+='<li style="margin-bottom:3px"><b>'+esc(foKhName(kv[0]))+'</b> — '+foFmt(kv[1])+' đ</li>'; });
-  khHtml+='</ol>';
-  document.getElementById('foky-top-kh').innerHTML=khHtml;
+  // Công nợ khách hàng (chỉ lệnh Trả sau)
+  var cnMap={};
+  active.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).forEach(function(r){
+    var k=r.doi_tuong_tt||'—';
+    if(!cnMap[k]) cnMap[k]={lenh:0, no:0};
+    cnMap[k].lenh++;
+    cnMap[k].no += (Number(r.thanh_tien)||0);
+  });
+  var cnArr=Object.entries(cnMap).sort(function(a,b){return b[1].no-a[1].no;}).slice(0,15);
+  var totalCn=Object.values(cnMap).reduce(function(s,v){return s+v.no;},0);
+  var maxCn=cnArr.length?cnArr[0][1].no:1;
+  var tot=document.getElementById('foky-cn-total');
+  if(tot) tot.textContent='Tổng: '+foFmt(totalCn)+' đ';
 
-  // NV
-  var nvMap={};
-  active.forEach(function(r){ var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].lenh++; nvMap[n].dt+=(Number(r.thanh_tien)||0); });
-  canceled.forEach(function(r){ var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].huy++; });
-  var nvArr=Object.keys(nvMap).map(function(k){return Object.assign({nv:k}, nvMap[k]);}).sort(function(a,b){return b.dt-a.dt;});
-  var nvHtml='<table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:4px">NV</th><th style="text-align:right">Lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th></tr></thead><tbody>';
-  nvArr.forEach(function(n){ nvHtml+='<tr><td style="padding:4px">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right;color:'+(n.huy?'var(--red)':'inherit')+'">'+n.huy+'</td></tr>'; });
-  nvHtml+='</tbody></table>';
-  document.getElementById('foky-nv').innerHTML=nvHtml;
+  var cnEl=document.getElementById('foky-cn');
+  if(cnArr.length===0){
+    cnEl.innerHTML='<div style="padding:30px;text-align:center;color:var(--gray);font-size:11px">📭 Không có công nợ phát sinh trong kỳ</div>';
+  } else {
+    var cnHtml='<table style="font-size:11px;width:100%;border-collapse:collapse">';
+    cnHtml+='<thead><tr style="background:#FAFAFA"><th style="text-align:left;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE">Khách hàng</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:50px">Lệnh</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:110px">Công nợ</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:140px">%</th></tr></thead><tbody>';
+    cnArr.forEach(function(e, i){
+      var kh=foKhName(e[0]);
+      var no=e[1].no;
+      var pct=totalCn?(no/totalCn*100):0;
+      var barPct=Math.round(no/maxCn*100);
+      cnHtml+='<tr style="border-bottom:1px solid #F5F5F5">';
+      cnHtml+='<td style="padding:6px 8px"><b style="color:#5B21B6">'+(i+1)+'.</b> '+esc(kh)+'</td>';
+      cnHtml+='<td style="text-align:right;padding:6px 8px">'+e[1].lenh+'</td>';
+      cnHtml+='<td style="text-align:right;padding:6px 8px;color:#8B5CF6;font-weight:700">'+foFmt(no)+'</td>';
+      cnHtml+='<td style="padding:6px 8px"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#F3F4F6;height:8px;border-radius:4px;overflow:hidden"><div style="background:linear-gradient(90deg,#8B5CF6,#A78BFA);height:100%;width:'+barPct+'%"></div></div><span style="font-size:10px;color:var(--gray);min-width:36px;text-align:right">'+pct.toFixed(1)+'%</span></div></td>';
+      cnHtml+='</tr>';
+    });
+    cnHtml+='</tbody></table>';
+    cnEl.innerHTML=cnHtml;
+  }
 }
 
 function _foKpi(lbl, val, sub, color){
