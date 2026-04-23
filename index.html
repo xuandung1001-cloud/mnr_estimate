@@ -7755,7 +7755,7 @@ function _foKyDashboard(rows, prevRows, range){
   html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📈 Xu hướng doanh thu — 12 tháng gần nhất</div><canvas id="foky-chart-12m" style="max-height:220px"></canvas></div>';
   html+='</div>';
 
-  html+='<div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
   html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🥧 Cơ cấu phương án</div><canvas id="foky-chart-pa" style="max-height:280px"></canvas></div>';
   html+='<div class="card" style="padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:12px;font-weight:700">💳 Công nợ khách hàng (Trả sau) — Top 15</div><div id="foky-cn-total" style="font-size:11px;color:#8B5CF6;font-weight:700"></div></div><div id="foky-cn" style="max-height:320px;overflow-y:auto"></div></div>';
   html+='</div>';
@@ -7877,6 +7877,13 @@ async function foKyLoadTrends(){
   return rows;
 }
 
+function _foIsoWeek(d){
+  var date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  date.setUTCDate(date.getUTCDate()+4-(date.getUTCDay()||7));
+  var yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date-yearStart)/86400000)+1)/7);
+}
+
 function _foCompute12Weeks(rows){
   var today=new Date(); today.setHours(23,59,59,999);
   var mon0=foWeekStart(today);
@@ -7886,7 +7893,7 @@ function _foCompute12Weeks(rows){
     var mon=new Date(mon0); mon.setDate(mon.getDate()-i*7); mon.setHours(0,0,0,0);
     var sun=new Date(mon); sun.setDate(sun.getDate()+6); sun.setHours(23,59,59,999);
     var sum=rows.reduce(function(s,r){ return (r._dt>=mon && r._dt<=sun) ? s+(Number(r.thanh_tien)||0) : s; }, 0);
-    weeks.push({label: pad(mon.getDate())+'/'+pad(mon.getMonth()+1), value:sum});
+    weeks.push({label: 'W'+pad(_foIsoWeek(mon)), value:sum});
   }
   return weeks;
 }
