@@ -7295,8 +7295,34 @@ function foImportModalClose(){ document.getElementById('fo-import-modal').style.
 
 function foLoadXLSX(cb){
   if(window.XLSX){ cb(); return; }
-  var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-  s.onload=cb; s.onerror=function(){ toast('Không load được SheetJS'); }; document.head.appendChild(s);
+  // Tạo script tag nếu chưa có
+  if(!document.querySelector('script[data-fo-xlsx]')){
+    var s=document.createElement('script');
+    s.setAttribute('data-fo-xlsx','1');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onerror=function(){
+      // Fallback: cdnjs
+      if(!document.querySelector('script[data-fo-xlsx="2"]')){
+        var s2=document.createElement('script');
+        s2.setAttribute('data-fo-xlsx','2');
+        s2.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        document.head.appendChild(s2);
+      }
+    };
+    document.head.appendChild(s);
+  }
+  // Poll window.XLSX mỗi 200ms, timeout 15s
+  var log=document.getElementById('fo-import-log');
+  var tries=0, maxTries=75;
+  var iv=setInterval(function(){
+    if(window.XLSX){ clearInterval(iv); cb(); return; }
+    tries++;
+    if(tries%10===0 && log) log.innerHTML='<span class="spinner" style="display:inline-block"></span> Đang load SheetJS... ('+(tries/5).toFixed(0)+'s)';
+    if(tries>=maxTries){
+      clearInterval(iv);
+      if(log) log.innerHTML='<span style="color:var(--red)">❌ Không load được SheetJS sau 15s.<br>Có thể do mạng chậm hoặc CDN bị chặn. Kiểm tra:<br>• Kết nối internet<br>• Firewall công ty có chặn <code>cdn.jsdelivr.net</code> / <code>cdnjs.cloudflare.com</code> không<br>• Thử refresh app và import lại</span>';
+    }
+  }, 200);
 }
 
 function foPickFile(){
