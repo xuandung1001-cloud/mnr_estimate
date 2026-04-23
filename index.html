@@ -299,9 +299,17 @@ td input:focus,td select:focus{background:#FEFAF0}
     </div>
     <div class="nav-section">
       <div class="nav-label" style="border-color:#EC4899">Thương vụ</div>
-      <div class="nav-item" id="nav-fo" onclick="nav('fo',this)">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Báo cáo FO
+      <div class="nav-item" id="nav-fo-ca" onclick="nav('fo-ca',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Báo cáo Ca
+      </div>
+      <div class="nav-item" id="nav-fo-ky" onclick="nav('fo-ky',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Báo cáo Kỳ
+      </div>
+      <div class="nav-item" id="nav-fo-detail" onclick="nav('fo-detail',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        Dữ liệu chi tiết
       </div>
     </div>
     <div class="sb-footer">
@@ -1375,95 +1383,74 @@ td input:focus,td select:focus{background:#FEFAF0}
         </div>
       </div>
 
-      <!-- ═══════════════ BÁO CÁO THƯƠNG VỤ (FO) ═══════════════ -->
-      <div class="screen" id="screen-fo">
-        <!-- Tab nav -->
-        <div class="card" style="margin-bottom:12px;padding:8px 10px">
-          <div id="fo-tabs" style="display:flex;gap:0;border-bottom:2px solid var(--border);margin:-8px -10px 0">
-            <div class="fo-tab" data-tab="import" onclick="foSwitchTab('import')"
-              style="padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--cyan);margin-bottom:-2px;color:var(--cyan)">📥 Import TOS</div>
-            <div class="fo-tab" data-tab="ca" onclick="foSwitchTab('ca')"
-              style="padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px">📊 Báo cáo Ca</div>
-            <div class="fo-tab" data-tab="tuan" onclick="foSwitchTab('tuan')"
-              style="padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px">📈 Báo cáo Tuần</div>
-            <div class="fo-tab" data-tab="thang" onclick="foSwitchTab('thang')"
-              style="padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px">📉 Báo cáo Tháng</div>
+      <!-- ═══════════════ BÁO CÁO CA — FO ═══════════════ -->
+      <div class="screen" id="screen-fo-ca">
+        <div class="card" style="padding:10px 14px;margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div><div class="fl" style="margin-bottom:3px">Ngày</div>
+              <input class="fi" type="date" id="foca-date" onchange="foCaRender()" style="width:150px"></div>
+            <div><div class="fl" style="margin-bottom:3px">Ca</div>
+              <select class="fi" id="foca-shift" onchange="foCaRender()" style="width:150px">
+                <option value="sang">☀ Ca sáng (08–20)</option>
+                <option value="toi">🌙 Ca tối (20–08)</option>
+              </select></div>
+            <div id="foca-status" style="font-size:11px;color:var(--gray);padding-top:18px"></div>
             <div style="flex:1"></div>
-            <div id="fo-meta" style="padding:8px 10px;font-size:10.5px;color:var(--gray)"></div>
+            <button class="btn btn-sm" onclick="foCaPrev()">‹ Ca trước</button>
+            <button class="btn btn-sm" onclick="foCaNext()">Ca sau ›</button>
+            <button class="btn btn-sm btn-blue" onclick="foCaExport()">📥 Export Excel</button>
           </div>
         </div>
+        <div id="foca-body"></div>
+      </div>
 
-        <!-- TAB: IMPORT -->
-        <div class="fo-pane" id="fo-pane-import">
-          <div class="card" style="padding:16px">
-            <div style="font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:12px">📥 Import file Excel TOS</div>
-            <div style="font-size:11.5px;color:var(--gray);margin-bottom:14px">Chọn file <code>.xls</code> xuất trực tiếp từ TOS (cột B = Số container, C = Số lệnh, E = Ngày lệnh, ...). Hệ thống tự dedup theo Số lệnh — upload lại cùng file sẽ bỏ qua các lệnh đã có.</div>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <input type="file" id="fo-file" accept=".xls,.xlsx" onchange="foPickFile()" style="font-size:12px">
-              <button class="btn btn-sm btn-blue" onclick="foImport()" id="fo-btn-import" disabled>📤 Import vào hệ thống</button>
-              <button class="btn btn-sm" onclick="foReloadMeta()">🔄 Refresh thống kê</button>
-            </div>
-            <div id="fo-preview" style="margin-top:14px;display:none">
-              <div style="font-size:12px;font-weight:600;margin-bottom:6px">👀 Xem trước (top 10 dòng)</div>
-              <div class="tbl-wrap"><table id="fo-preview-tbl" style="font-size:10.5px;width:100%;border-collapse:collapse"></table></div>
-              <div id="fo-preview-info" style="font-size:11px;color:var(--gray);margin-top:8px"></div>
-            </div>
-            <div id="fo-import-log" style="margin-top:14px;font-size:11.5px"></div>
-          </div>
-          <div class="card" style="padding:14px;margin-top:12px">
-            <div style="font-size:12px;font-weight:700;margin-bottom:8px">📚 Tình trạng dữ liệu</div>
-            <div id="fo-stats-box" style="font-size:11.5px;color:var(--gray)">—</div>
+      <!-- ═══════════════ BÁO CÁO KỲ — FO ═══════════════ -->
+      <div class="screen" id="screen-fo-ky">
+        <div class="card" style="padding:10px 14px;margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div><div class="fl" style="margin-bottom:3px">Loại kỳ</div>
+              <select class="fi" id="foky-type" onchange="foKyTypeChange()" style="width:110px">
+                <option value="tuan">📅 Tuần</option>
+                <option value="thang" selected>📆 Tháng</option>
+                <option value="quy">📊 Quý</option>
+                <option value="nam">📈 Năm</option>
+              </select></div>
+            <div id="foky-picker" style="display:flex;gap:8px;align-items:flex-end"></div>
+            <div id="foky-range" style="font-size:11px;color:var(--gray);padding-top:18px"></div>
+            <div style="flex:1"></div>
+            <button class="btn btn-sm" onclick="foKyShift(-1)">‹ Kỳ trước</button>
+            <button class="btn btn-sm" onclick="foKyShift(1)">Kỳ sau ›</button>
+            <button class="btn btn-sm btn-blue" onclick="foKyExport()">📥 Export Excel</button>
           </div>
         </div>
+        <div id="foky-body"></div>
+      </div>
 
-        <!-- TAB: CA -->
-        <div class="fo-pane" id="fo-pane-ca" style="display:none">
-          <div class="card" style="padding:10px 14px;margin-bottom:12px">
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <div><div class="fl" style="margin-bottom:3px">Ngày</div>
-                <input class="fi" type="date" id="fo-ca-date" onchange="foRenderCa()" style="width:150px"></div>
-              <div><div class="fl" style="margin-bottom:3px">Ca</div>
-                <select class="fi" id="fo-ca-shift" onchange="foRenderCa()" style="width:130px">
-                  <option value="sang">Ca sáng (08–20)</option>
-                  <option value="toi">Ca tối (20–08)</option>
-                </select></div>
-              <div style="flex:1"></div>
-              <button class="btn btn-sm" onclick="foExportCa()">📥 Export Excel</button>
-            </div>
+      <!-- ═══════════════ DỮ LIỆU CHI TIẾT — FO ═══════════════ -->
+      <div class="screen" id="screen-fo-detail">
+        <div class="card" style="padding:10px 14px;margin-bottom:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div><div class="fl" style="margin-bottom:3px">Từ ngày</div>
+              <input class="fi" type="date" id="fod-from" onchange="foDetailRender()" style="width:140px"></div>
+            <div><div class="fl" style="margin-bottom:3px">Đến ngày</div>
+              <input class="fi" type="date" id="fod-to" onchange="foDetailRender()" style="width:140px"></div>
+            <div><div class="fl" style="margin-bottom:3px">Hãng</div>
+              <select class="fi" id="fod-carrier" onchange="foDetailRender()" style="width:100px"><option value="">— Tất cả —</option></select></div>
+            <div><div class="fl" style="margin-bottom:3px">Phương án</div>
+              <select class="fi" id="fod-pa" onchange="foDetailRender()" style="width:130px"><option value="">— Tất cả —</option></select></div>
+            <div><div class="fl" style="margin-bottom:3px">Hình thức TT</div>
+              <select class="fi" id="fod-httt" onchange="foDetailRender()" style="width:130px">
+                <option value="">— Tất cả —</option>
+                <option value="Tiền mặt">Tiền mặt</option>
+                <option value="Trả sau">Trả sau</option>
+              </select></div>
+            <div style="flex:1"></div>
+            <button class="btn btn-sm btn-blue" onclick="foImportModalOpen()">📤 Import TOS</button>
+            <button class="btn btn-sm" onclick="foDetailExport()">📥 Export Excel</button>
           </div>
-          <div id="fo-ca-body"></div>
+          <div id="fod-meta" style="margin-top:8px;font-size:10.5px;color:var(--gray)"></div>
         </div>
-
-        <!-- TAB: TUẦN -->
-        <div class="fo-pane" id="fo-pane-tuan" style="display:none">
-          <div class="card" style="padding:10px 14px;margin-bottom:12px">
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <div><div class="fl" style="margin-bottom:3px">Thứ 2 (đầu tuần)</div>
-                <input class="fi" type="date" id="fo-tuan-start" onchange="foRenderTuan()" style="width:150px"></div>
-              <div id="fo-tuan-range" style="font-size:11px;color:var(--gray);padding-top:18px"></div>
-              <div style="flex:1"></div>
-              <button class="btn btn-sm" onclick="foTuanShift(-1)">‹ Tuần trước</button>
-              <button class="btn btn-sm" onclick="foTuanShift(1)">Tuần sau ›</button>
-              <button class="btn btn-sm" onclick="foExportTuan()">📥 Export Excel</button>
-            </div>
-          </div>
-          <div id="fo-tuan-body"></div>
-        </div>
-
-        <!-- TAB: THÁNG -->
-        <div class="fo-pane" id="fo-pane-thang" style="display:none">
-          <div class="card" style="padding:10px 14px;margin-bottom:12px">
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <div><div class="fl" style="margin-bottom:3px">Tháng</div>
-                <select class="fi" id="fo-thang-m" onchange="foRenderThang()" style="width:90px"></select></div>
-              <div><div class="fl" style="margin-bottom:3px">Năm</div>
-                <select class="fi" id="fo-thang-y" onchange="foRenderThang()" style="width:90px"></select></div>
-              <div style="flex:1"></div>
-              <button class="btn btn-sm" onclick="foExportThang()">📥 Export Excel</button>
-            </div>
-          </div>
-          <div id="fo-thang-body"></div>
-        </div>
+        <div id="fod-body"></div>
       </div>
 
     </div>
@@ -1482,6 +1469,29 @@ td input:focus,td select:focus{background:#FEFAF0}
   <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.5);padding:5px 16px;border-radius:20px;pointer-events:none">
     <span id="lightbox-name" style="color:rgba(255,255,255,0.85);font-size:11px"></span>
     <span id="lightbox-counter" style="color:rgba(255,255,255,0.5);font-size:11px"></span>
+  </div>
+</div>
+
+<!-- ═══════════════ FO IMPORT MODAL ═══════════════ -->
+<div id="fo-import-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:center;justify-content:center">
+  <div style="background:#FFF;border-radius:10px;width:600px;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:14px;font-weight:700">📥 Import file Excel TOS</div>
+      <div style="cursor:pointer;color:var(--gray);font-size:18px" onclick="foImportModalClose()">✕</div>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1">
+      <div style="font-size:11.5px;color:var(--gray);margin-bottom:12px">Chọn file <code>.xls</code> xuất từ TOS. Hệ thống <b>upsert theo Số lệnh</b>: lệnh mới → thêm; lệnh revise → cập nhật; lệnh y hệt → bỏ qua. Upload file ca/tuần/tháng chồng lên nhau đều an toàn.</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <input type="file" id="fo-file" accept=".xls,.xlsx" onchange="foPickFile()" style="font-size:12px">
+        <button class="btn btn-sm btn-blue" onclick="foImportRun()" id="fo-btn-import" disabled>📤 Import</button>
+      </div>
+      <div id="fo-preview" style="display:none">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">👀 Xem trước (top 10 dòng)</div>
+        <div class="tbl-wrap" style="max-height:220px;overflow:auto"><table id="fo-preview-tbl" style="font-size:10.5px;width:100%;border-collapse:collapse"></table></div>
+        <div id="fo-preview-info" style="font-size:11px;color:var(--gray);margin-top:8px"></div>
+      </div>
+      <div id="fo-import-log" style="margin-top:12px;font-size:11.5px"></div>
+    </div>
   </div>
 </div>
 
@@ -2192,7 +2202,9 @@ function nav(screen, el) {
     actlog:    { title: 'Nhật ký hoạt động', actions: [] },
     'phieu-kho': { title: 'Phiếu nhập xuất', actions: [] },
     ccdc:        { title: 'Lịch sử CCDC', actions: [] },
-    fo:          { title: 'Báo cáo Thương vụ (FO)', actions: [] }
+    'fo-ca':     { title: 'Báo cáo Ca — FO', actions: [] },
+    'fo-ky':     { title: 'Báo cáo Kỳ — FO', actions: [] },
+    'fo-detail': { title: 'Dữ liệu chi tiết — FO', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
@@ -2211,7 +2223,9 @@ function nav(screen, el) {
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
   if (screen === 'pictures') initPicturesScreen();
-  if (screen === 'fo') foInitScreen();
+  if (screen === 'fo-ca') foCaInit();
+  if (screen === 'fo-ky') foKyInit();
+  if (screen === 'fo-detail') foDetailInit();
 }
 
 function setTopbar(title, actions) {
@@ -7191,21 +7205,32 @@ function exportInventoryExcel() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// FO — BÁO CÁO THƯƠNG VỤ
-// Nguồn: file .xls TOS (45 cột). Parse bằng SheetJS → gửi lên GAS → sheet fo_orders.
-// Timezone: Asia/Ho_Chi_Minh. Ca sáng 08–20, Ca tối 20–08. Tuần T2–CN.
+// FO — BÁO CÁO THƯƠNG VỤ (3 màn: Ca / Kỳ / Chi tiết) — S2a
 // ══════════════════════════════════════════════════════════════════════
 
-var fo = { parsed:null, cache:null, meta:null, charts:{}, initialized:false, currentTab:'import' };
+// ───── STATE ─────
+var fo = {
+  cache: null,          // {from, to, rows} — last loaded range
+  parsed: null,         // parsed rows from upload file (before push)
+  charts: {},           // Chart.js instances
+  meta: null,           // server stats
+  _fileName: '',
+  foCa: { inited: false },
+  foKy: { inited: false, type: 'thang' },
+  foDetail: { inited: false, expanded: {} }
+};
 
-// ---- Helpers: format ----
+// TOS phương án → nhóm email (Cấp rỗng / Trả rỗng / Lấy nguyên / Hạ hàng / Khác)
+const FO_PA_ORDER = ['Cấp rỗng', 'Trả rỗng', 'Lấy nguyên', 'Hạ hàng', 'Khác'];
+const FO_PA_MAP = { 'Cấp rỗng':'Cấp rỗng', 'Trả rỗng':'Trả rỗng', 'Lấy nguyên':'Lấy nguyên', 'Hạ bãi':'Hạ hàng' };
+function foPaGroup(paTos){ return FO_PA_MAP[String(paTos||'').trim()] || 'Khác'; }
+
+// ───── HELPERS ─────
 function foFmt(n){ if(n==null||isNaN(n)) return '0'; return Math.round(n).toLocaleString('vi-VN'); }
 function foFmtD(d){ if(!d) return ''; var p=function(x){return String(x).padStart(2,'0');}; return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
 function foToDateKey(d){ if(!d) return ''; var p=function(x){return String(x).padStart(2,'0');}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
 function foToIsoStr(d){ if(!d) return ''; var p=function(x){return String(x).padStart(2,'0');}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); }
 function foFmtDisplayStr(s){ if(!s) return '—'; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/); if(!m) return s; return m[3]+'/'+m[2]+'/'+m[1]+(m[4]?(' '+m[4]+':'+m[5]):''); }
-
-// Parse Excel serial number OR "dd/MM/yyyy HH:mm[:ss]" OR ISO "yyyy-MM-dd..." → Date @ VN local
 function foParseDate(v){
   if(v==null||v==='') return null;
   if(v instanceof Date) return isNaN(v)?null:v;
@@ -7217,84 +7242,63 @@ function foParseDate(v){
   if(m) return new Date(+m[1], +m[2]-1, +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0));
   return null;
 }
-
 function foNum(v){ if(v==null||v==='') return 0; if(typeof v==='number') return v; var n=parseFloat(String(v).replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; }
+function foKhName(s){ var i=String(s||'').indexOf(':'); return i>0?String(s).substring(i+1).trim():String(s||''); }
 
-// Ca sáng 8-20, Ca tối 20-8 (nếu <8h thuộc ca tối ngày hôm trước)
+// Ca sáng 8h-20h | Ca tối 20h-8h sáng hôm sau
 function foShiftOf(d){
   var hh=d.getHours();
   if(hh>=8 && hh<20) return {shiftDate:foToDateKey(d), shiftKey:'sang'};
   if(hh<8){ var p=new Date(d.getTime()-86400000); return {shiftDate:foToDateKey(p), shiftKey:'toi'}; }
   return {shiftDate:foToDateKey(d), shiftKey:'toi'};
 }
-
-// Monday of the week containing d (T2=1, CN=0)
 function foWeekStart(d){
   var c=new Date(d.getFullYear(), d.getMonth(), d.getDate());
   var dow=c.getDay(); var diff=dow===0?-6:1-dow;
   c.setDate(c.getDate()+diff); return c;
 }
 
-function _khName(s){ var i=String(s||'').indexOf(':'); return i>0?String(s).substring(i+1).trim():String(s||''); }
-
-// ---- INIT ----
-function foInitScreen(){
-  if(!fo.initialized){
-    fo.initialized=true;
-    var today=new Date();
-    var d1=document.getElementById('fo-ca-date'); if(d1) d1.value=foToDateKey(today);
-    var mon=foWeekStart(today);
-    var d2=document.getElementById('fo-tuan-start'); if(d2) d2.value=foToDateKey(mon);
-    var sm=document.getElementById('fo-thang-m');
-    var sy=document.getElementById('fo-thang-y');
-    if(sm && sm.options.length===0){ for(var i=1;i<=12;i++) sm.innerHTML+='<option value="'+i+'">'+String(i).padStart(2,'0')+'</option>'; sm.value=today.getMonth()+1; }
-    if(sy && sy.options.length===0){ for(var y=today.getFullYear()-3;y<=today.getFullYear()+1;y++) sy.innerHTML+='<option value="'+y+'">'+y+'</option>'; sy.value=today.getFullYear(); }
-  }
-  foReloadMeta();
+// ───── DATA LOADER ─────
+async function foLoadRange(from, to, force){
+  if(!force && fo.cache && fo.cache.from===from && fo.cache.to===to) return fo.cache.rows;
+  var res=await apiGet({action:'getFoOrders', from:from, to:to});
+  if(!res.success){ toast('Lỗi tải dữ liệu: '+(res.error||'')); return []; }
+  var rows=(res.data||[]).map(function(r){
+    r._dt=foParseDate(r.ngay_lenh);
+    r._dtHuy=foParseDate(r.ngay_huy);
+    r._pa_group=foPaGroup(r.phuong_an);
+    return r;
+  });
+  fo.cache={from:from, to:to, rows:rows};
+  return rows;
 }
 
-// ---- TAB SWITCH ----
-function foSwitchTab(tab){
-  fo.currentTab=tab;
-  document.querySelectorAll('.fo-tab').forEach(function(el){
-    var act=el.dataset.tab===tab;
-    el.style.color=act?'var(--cyan)':'var(--gray)';
-    el.style.borderBottomColor=act?'var(--cyan)':'transparent';
-  });
-  ['import','ca','tuan','thang'].forEach(function(k){
-    var p=document.getElementById('fo-pane-'+k); if(p) p.style.display=(k===tab)?'':'none';
-  });
-  if(tab==='ca') foRenderCa();
-  if(tab==='tuan') foRenderTuan();
-  if(tab==='thang') foRenderThang();
-}
-
-// ---- META ----
 async function foReloadMeta(){
-  var box=document.getElementById('fo-stats-box');
-  if(box) box.innerHTML='<span class="spinner" style="display:inline-block;vertical-align:middle"></span> Đang tải...';
   var res=await apiGet({action:'getFoStats'});
-  if(!res.success){ if(box) box.textContent='Lỗi: '+(res.error||'Không tải được'); return; }
-  fo.meta=res;
-  var meta=document.getElementById('fo-meta');
-  if(meta){
-    meta.textContent = res.count>0
-      ? res.count.toLocaleString('vi-VN')+' lệnh | '+foFmtDisplayStr(res.min_date)+' → '+foFmtDisplayStr(res.max_date)
-      : 'Chưa có dữ liệu';
-  }
-  if(box){
-    box.innerHTML = res.count===0
-      ? '<i>Chưa có dữ liệu nào. Import file Excel TOS ở trên để bắt đầu.</i>'
-      : '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">'
-        +'<div><b>'+res.count.toLocaleString('vi-VN')+'</b><div style="font-size:10.5px;color:var(--gray)">lệnh trong hệ thống</div></div>'
-        +'<div><b>'+foFmtDisplayStr(res.min_date)+'</b><div style="font-size:10.5px;color:var(--gray)">lệnh cũ nhất</div></div>'
-        +'<div><b>'+foFmtDisplayStr(res.max_date)+'</b><div style="font-size:10.5px;color:var(--gray)">lệnh mới nhất</div></div>'
-        +'<div><b>'+foFmtDisplayStr(res.last_import)+'</b><div style="font-size:10.5px;color:var(--gray)">lần import cuối</div></div>'
-        +'</div>';
-  }
+  if(res.success) fo.meta=res;
+  return res;
 }
 
-// ---- IMPORT ----
+// ───── CHART COMMON ─────
+function foDrawChart(canvasId, cfg){
+  var c=document.getElementById(canvasId); if(!c) return;
+  if(fo.charts[canvasId]){ try{ fo.charts[canvasId].destroy(); }catch(e){} }
+  fo.charts[canvasId]=new Chart(c, cfg);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// IMPORT MODAL
+// ══════════════════════════════════════════════════════════════════════
+function foImportModalOpen(){
+  fo.parsed=null;
+  document.getElementById('fo-import-modal').style.display='flex';
+  document.getElementById('fo-file').value='';
+  document.getElementById('fo-preview').style.display='none';
+  document.getElementById('fo-import-log').innerHTML='';
+  document.getElementById('fo-btn-import').disabled=true;
+}
+function foImportModalClose(){ document.getElementById('fo-import-modal').style.display='none'; }
+
 function foLoadXLSX(cb){
   if(window.XLSX){ cb(); return; }
   var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
@@ -7302,7 +7306,9 @@ function foLoadXLSX(cb){
 }
 
 function foPickFile(){
-  var f=document.getElementById('fo-file').files[0]; if(!f) return;
+  var input=document.getElementById('fo-file');
+  var f=input.files[0]; if(!f) return;
+  fo._fileName=f.name;
   var btn=document.getElementById('fo-btn-import'); btn.disabled=true;
   document.getElementById('fo-preview').style.display='none';
   document.getElementById('fo-import-log').innerHTML='<span class="spinner" style="display:inline-block"></span> Đang đọc file...';
@@ -7314,33 +7320,40 @@ function foPickFile(){
         var ws=wb.Sheets[wb.SheetNames[0]];
         var rows=XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
         var parsed=[];
-        // Cột TOS (0-indexed): 1=so_cont, 2=so_lenh, 4=ngay_lenh, 6=trang_thai, 7=hang_tau, 8=size_type,
-        // 10=loai_hang, 11=fe, 15=phuong_an, 16=phuong_thuc, 27=loai_dt_tt, 28=doi_tuong_tt,
-        // 29=hinh_thuc_tt, 31=nv_lap, 32=so_phieu_cuoc, 33=so_hoa_don, 35=ngay_huy, 36=nguoi_huy,
-        // 37=ly_do_huy, 42=tien_hang, 43=tien_vat, 44=thanh_tien
+        // Cột TOS (0-indexed): 1=so_cont, 2=so_lenh, 4=ngay_lenh, 6=trang_thai, 7=hang_tau,
+        // 8=kich_co, 10=loai_hang, 11=fe, 15=phuong_an, 27=loai_dt_tt, 28=doi_tuong_tt,
+        // 29=hinh_thuc_tt, 31=nv_lap, 32=so_phieu_cuoc, 33=so_hoa_don, 35=ngay_huy,
+        // 36=nguoi_huy, 37=ly_do_huy, 42=tien_hang, 43=tien_vat, 44=thanh_tien
         for(var i=1;i<rows.length;i++){
           var r=rows[i]; if(!r||r.length===0) continue;
           var soLenh=String(r[2]||'').trim(); if(!soLenh) continue;
           var ngayLenh=foParseDate(r[4]); var ngayHuy=foParseDate(r[35]);
           parsed.push({
-            so_lenh:soLenh, so_cont:String(r[1]||'').trim().toUpperCase(),
+            so_lenh:soLenh,
+            so_cont:String(r[1]||'').trim().toUpperCase(),
             ngay_lenh:ngayLenh?foToIsoStr(ngayLenh):'',
-            trang_thai:String(r[6]||'').trim(), hang_tau:String(r[7]||'').trim(),
-            size_type:String(r[8]||'').trim(), fe:String(r[11]||'').trim(),
-            loai_hang:String(r[10]||'').trim(), phuong_an:String(r[15]||'').trim(),
-            phuong_thuc:String(r[16]||'').trim(), nv_lap:String(r[31]||'').trim(),
-            loai_dt_tt:String(r[27]||'').trim(), doi_tuong_tt:String(r[28]||'').trim(),
+            trang_thai:String(r[6]||'').trim(),
+            hang_tau:String(r[7]||'').trim(),
+            kich_co:String(r[8]||'').trim(),
+            fe:String(r[11]||'').trim(),
+            loai_hang:String(r[10]||'').trim(),
+            phuong_an:String(r[15]||'').trim(),
+            nv_lap:String(r[31]||'').trim(),
+            loai_dt_tt:String(r[27]||'').trim(),
+            doi_tuong_tt:String(r[28]||'').trim(),
             hinh_thuc_tt:String(r[29]||'').trim(),
             ngay_huy:ngayHuy?foToIsoStr(ngayHuy):'',
-            nguoi_huy:String(r[36]||'').trim(), ly_do_huy:String(r[37]||'').trim(),
+            nguoi_huy:String(r[36]||'').trim(),
+            ly_do_huy:String(r[37]||'').trim(),
             tien_hang:foNum(r[42]), tien_vat:foNum(r[43]), thanh_tien:foNum(r[44]),
-            so_hoa_don:String(r[33]||'').trim(), so_phieu_cuoc:String(r[32]||'').trim()
+            so_hoa_don:String(r[33]||'').trim(),
+            so_phieu_cuoc:String(r[32]||'').trim()
           });
         }
         fo.parsed=parsed;
         foRenderPreview(parsed);
         document.getElementById('fo-import-log').innerHTML='';
-        btn.disabled = parsed.length===0;
+        btn.disabled=parsed.length===0;
         if(parsed.length===0) toast('File không có dữ liệu hợp lệ', 3000);
       }catch(err){
         console.error(err);
@@ -7357,7 +7370,7 @@ function foRenderPreview(rows){
   var info=document.getElementById('fo-preview-info');
   if(rows.length===0){ box.style.display='none'; return; }
   box.style.display='';
-  var cols=[['Số lệnh','so_lenh'],['Cont','so_cont'],['Ngày lệnh','ngay_lenh'],['TT','trang_thai'],['Hãng','hang_tau'],['Size','size_type'],['P.án','phuong_an'],['NV','nv_lap'],['Thành tiền','thanh_tien']];
+  var cols=[['Số lệnh','so_lenh'],['Cont','so_cont'],['Ngày','ngay_lenh'],['TT','trang_thai'],['Size','kich_co'],['P.án','phuong_an'],['HT.TT','hinh_thuc_tt'],['Thành tiền','thanh_tien']];
   var html='<thead><tr>'+cols.map(function(c){return '<th style="padding:4px 6px;border:1px solid #E5E5E5;background:#F8F8F8;font-size:10.5px">'+c[0]+'</th>';}).join('')+'</tr></thead><tbody>';
   rows.slice(0,10).forEach(function(r){
     html+='<tr>'+cols.map(function(c){
@@ -7370,358 +7383,576 @@ function foRenderPreview(rows){
   html+='</tbody>';
   tbl.innerHTML=html;
   var sum=rows.reduce(function(s,r){return s+r.thanh_tien;},0);
-  info.textContent='📊 '+rows.length.toLocaleString('vi-VN')+' lệnh parse được | Tổng: '+foFmt(sum)+' đ';
+  info.textContent='📊 '+rows.length.toLocaleString('vi-VN')+' lệnh · Tổng: '+foFmt(sum)+' đ';
 }
 
-async function foImport(){
+async function foImportRun(){
   if(!fo.parsed||fo.parsed.length===0){ toast('Chưa có dữ liệu'); return; }
   var btn=document.getElementById('fo-btn-import');
   var log=document.getElementById('fo-import-log');
   btn.disabled=true;
-  var chunk=500, added=0, skipped=0, total=fo.parsed.length;
+  var chunk=500, added=0, updated=0, unchanged=0, total=fo.parsed.length;
   log.innerHTML='<span class="spinner" style="display:inline-block"></span> Đang gửi '+total+' lệnh...';
   for(var i=0;i<total;i+=chunk){
     var part=fo.parsed.slice(i, i+chunk);
-    var res=await apiPost({action:'importFoOrders', rows:part, mode:'append'});
+    var res=await apiPost({action:'importFoOrders', rows:part, source_file: fo._fileName||''});
     if(!res.success){ log.innerHTML='<span style="color:var(--red)">❌ Lỗi: '+esc(res.error||'unknown')+'</span>'; btn.disabled=false; return; }
-    added+=res.added; skipped+=res.skipped;
+    added+=(res.added||0); updated+=(res.updated||0); unchanged+=(res.unchanged||0);
     log.innerHTML='<span class="spinner" style="display:inline-block"></span> Tiến độ: '+Math.min(i+chunk,total)+'/'+total+'...';
   }
-  log.innerHTML='<span style="color:var(--green)">✅ Hoàn tất. Thêm mới: <b>'+added+'</b> | Đã tồn tại: <b>'+skipped+'</b>.</span>';
-  toast('Import xong '+added+' lệnh', 3000);
+  log.innerHTML='<span style="color:var(--green)">✅ Hoàn tất.</span> Thêm mới: <b style="color:var(--green)">'+added+'</b> · Cập nhật: <b style="color:var(--amber)">'+updated+'</b> · Không đổi: <b style="color:var(--gray)">'+unchanged+'</b>';
+  toast('Import: +'+added+' / ~'+updated+' / ='+unchanged, 3500);
   fo.parsed=null; fo.cache=null;
   document.getElementById('fo-file').value='';
   document.getElementById('fo-preview').style.display='none';
   foReloadMeta();
+  if(document.getElementById('screen-fo-detail').classList.contains('active')) foDetailRender();
+  if(document.getElementById('screen-fo-ca').classList.contains('active')) foCaRender();
+  if(document.getElementById('screen-fo-ky').classList.contains('active')) foKyRender();
 }
 
-// ---- DATA LOADER ----
-async function foLoadRange(from, to){
-  if(fo.cache && fo.cache.from===from && fo.cache.to===to) return fo.cache.rows;
-  var res=await apiGet({action:'getFoOrders', from:from, to:to});
-  if(!res.success){ toast('Lỗi tải dữ liệu: '+(res.error||'')); return []; }
-  var rows=(res.data||[]).map(function(r){ r._dt=foParseDate(r.ngay_lenh); r._dtHuy=foParseDate(r.ngay_huy); return r; });
-  fo.cache={from:from, to:to, rows:rows};
-  return rows;
+// ══════════════════════════════════════════════════════════════════════
+// MÀN 1 — BÁO CÁO CA
+// ══════════════════════════════════════════════════════════════════════
+function foCaInit(){
+  if(!fo.foCa.inited){
+    fo.foCa.inited=true;
+    var today=new Date();
+    var d1=document.getElementById('foca-date'); if(d1) d1.value=foToDateKey(today);
+    // Mặc định ca hiện tại
+    var hh=today.getHours();
+    var shift=(hh>=8 && hh<20)?'sang':'toi';
+    // Nếu đang giờ ca tối và trước 8h sáng → date phải lùi 1 ngày
+    if(hh<8){ var p=new Date(today.getTime()-86400000); d1.value=foToDateKey(p); }
+    document.getElementById('foca-shift').value=shift;
+  }
+  foCaRender();
 }
 
-// ---- CHART HELPERS ----
-function foKpi(lbl, val, sub, color){
-  return '<div class="card" style="padding:10px 12px;border-top:3px solid '+color+'">'
-    +'<div style="font-size:10.5px;color:var(--gray);margin-bottom:3px">'+lbl+'</div>'
-    +'<div style="font-size:18px;font-weight:800;color:'+color+';line-height:1.15">'+val+'</div>'
-    +'<div style="font-size:10px;color:var(--gray);margin-top:2px">'+sub+'</div></div>';
+function foCaPrev(){
+  var d=document.getElementById('foca-date').value;
+  var s=document.getElementById('foca-shift').value;
+  if(s==='toi'){
+    document.getElementById('foca-shift').value='sang';
+  } else {
+    var dd=new Date(d); dd.setDate(dd.getDate()-1);
+    document.getElementById('foca-date').value=foToDateKey(dd);
+    document.getElementById('foca-shift').value='toi';
+  }
+  foCaRender();
+}
+function foCaNext(){
+  var d=document.getElementById('foca-date').value;
+  var s=document.getElementById('foca-shift').value;
+  if(s==='sang'){
+    document.getElementById('foca-shift').value='toi';
+  } else {
+    var dd=new Date(d); dd.setDate(dd.getDate()+1);
+    document.getElementById('foca-date').value=foToDateKey(dd);
+    document.getElementById('foca-shift').value='sang';
+  }
+  foCaRender();
 }
 
-function foDrawChart(canvasId, cfg){
-  var c=document.getElementById(canvasId); if(!c) return;
-  if(fo.charts[canvasId]){ try{ fo.charts[canvasId].destroy(); }catch(e){} }
-  fo.charts[canvasId]=new Chart(c, cfg);
-}
-
-function _chartOpts(scale){
-  return {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return foFmt(ctx.raw)+' đ';}}} },
-    scales:{ y:Object.assign({beginAtZero:true, ticks:{font:{size:10}}}, (scale&&scale.y)||{}), x:{ticks:{font:{size:10}}} }
-  };
-}
-
-function _grpPie(rows, field, valueField){
-  var map={};
-  rows.forEach(function(r){ var k=r[field]||'—'; map[k]=(map[k]||0)+(valueField?r[valueField]:1); });
-  var ent=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
-  var C=['#22D3EE','#34D399','#F59E0B','#EC4899','#8B5CF6','#60A5FA','#F87171','#FBBF24','#A78BFA','#10B981'];
-  return {
-    type:'doughnut',
-    data:{ labels:ent.map(function(e){return e[0];}), datasets:[{data:ent.map(function(e){return e[1];}), backgroundColor:ent.map(function(_,i){return C[i%C.length];})}] },
-    options:{ plugins:{legend:{position:'right',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+foFmt(ctx.raw)+' đ';}}}}, responsive:true, maintainAspectRatio:false }
-  };
-}
-
-// ---- DASHBOARD CA ----
-async function foRenderCa(){
-  var dateStr=document.getElementById('fo-ca-date').value;
-  var shift=document.getElementById('fo-ca-shift').value;
-  var body=document.getElementById('fo-ca-body');
-  if(!dateStr){ body.innerHTML='<div class="card" style="padding:20px;text-align:center;color:var(--gray)">Chọn ngày</div>'; return; }
+async function foCaRender(){
+  var dateStr=document.getElementById('foca-date').value;
+  var shift=document.getElementById('foca-shift').value;
+  var body=document.getElementById('foca-body');
+  if(!dateStr){ body.innerHTML='<div class="card" style="padding:20px;text-align:center;color:var(--gray)">Chọn ngày để xem báo cáo</div>'; return; }
   body.innerHTML='<div class="card" style="padding:40px;text-align:center"><div class="spinner" style="margin:0 auto"></div></div>';
-  // Ca tối có thể tràn sang hôm sau → load thêm 1 ngày
+  // Ca tối có thể tràn sang hôm sau
   var fromDate=dateStr, toDate=dateStr;
   if(shift==='toi'){ var d=new Date(dateStr); d.setDate(d.getDate()+1); toDate=foToDateKey(d); }
   var rows=await foLoadRange(fromDate, toDate);
   var filtered=rows.filter(function(r){ if(!r._dt) return false; var s=foShiftOf(r._dt); return s.shiftDate===dateStr && s.shiftKey===shift; });
-  _caDashboard(filtered, dateStr, shift);
+  _foCaDashboard(filtered, dateStr, shift);
+  // Status "đang chạy" nếu là ca hiện tại
+  var now=new Date();
+  var sNow=foShiftOf(now);
+  var live=(sNow.shiftDate===dateStr && sNow.shiftKey===shift);
+  var status=document.getElementById('foca-status');
+  if(status){
+    status.innerHTML = live
+      ? '<span style="color:var(--red);font-weight:700">● LIVE</span> (ca đang chạy)'
+      : '';
+  }
 }
 
-function _caDashboard(rows, dateStr, shift){
-  var body=document.getElementById('fo-ca-body');
+function _foCaDashboard(rows, dateStr, shift){
+  var body=document.getElementById('foca-body');
   var active=rows.filter(function(r){return String(r.trang_thai)!=='Hủy';});
   var canceled=rows.filter(function(r){return String(r.trang_thai)==='Hủy';});
-  var total=active.reduce(function(s,r){return s+r.thanh_tien;},0);
-  var vat=active.reduce(function(s,r){return s+r.tien_vat;},0);
-  var conts=new Set(active.map(function(r){return r.so_cont;})).size;
-  var c20=active.filter(function(r){return String(r.size_type).startsWith('20');}).length;
-  var c40=active.filter(function(r){return String(r.size_type).startsWith('40');}).length;
-  var cn=active.filter(function(r){return r.hinh_thuc_tt==='Công nợ';}).reduce(function(s,r){return s+r.thanh_tien;},0);
-  var cancelRate=rows.length?(canceled.length/rows.length*100):0;
 
+  // Pivot theo nhóm phương án × size
+  var SIZES=[];
+  active.forEach(function(r){ if(r.kich_co && SIZES.indexOf(r.kich_co)<0) SIZES.push(r.kich_co); });
+  SIZES.sort(); // 20DV, 40DV, 40HC, 45HC...
+  if(SIZES.length===0) SIZES=['40HC'];
+
+  var pivot={}; FO_PA_ORDER.forEach(function(g){ pivot[g]={sizes:{}, total:0, revenue:0}; SIZES.forEach(function(s){ pivot[g].sizes[s]=0; }); });
+  active.forEach(function(r){
+    var g=r._pa_group; if(!pivot[g]) return;
+    var sz=r.kich_co||'—';
+    if(!pivot[g].sizes[sz]) pivot[g].sizes[sz]=0;
+    pivot[g].sizes[sz]++;
+    pivot[g].total++;
+    pivot[g].revenue += Number(r.thanh_tien)||0;
+  });
+
+  // Tổng
+  var totalLenh=active.reduce(function(s,r){return s+1;},0);
+  var totalRev=active.reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+  var totalSize={}; SIZES.forEach(function(s){ totalSize[s]=0; });
+  SIZES.forEach(function(s){ FO_PA_ORDER.forEach(function(g){ totalSize[s]+=pivot[g].sizes[s]||0; }); });
+
+  // Hình thức thu
+  var tm=active.filter(function(r){return r.hinh_thuc_tt==='Tiền mặt';}).reduce(function(s,r){return s+(r.thanh_tien||0);},0);
+  var ts=active.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).reduce(function(s,r){return s+(r.thanh_tien||0);},0);
+  var cntTm=active.filter(function(r){return r.hinh_thuc_tt==='Tiền mặt';}).length;
+  var cntTs=active.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).length;
+
+  // Header
   var shName=shift==='sang'?'CA SÁNG (08–20)':'CA TỐI (20–08)';
   var dp=dateStr.split('-');
   var html='';
-  html+='<div class="card" style="padding:10px 14px;margin-bottom:12px;background:linear-gradient(90deg,#F0FDFA,#FFF);border-left:3px solid var(--cyan)"><div style="font-weight:700;font-size:13px">'+shName+' — '+dp[2]+'/'+dp[1]+'/'+dp[0]+'</div><div style="font-size:10.5px;color:var(--gray)">'+rows.length+' lệnh ghi nhận</div></div>';
+  html+='<div class="card" style="padding:12px 16px;margin-bottom:12px;background:linear-gradient(90deg,#FFF9E6,#FFF);border-left:4px solid #EAB308">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">';
+  html+='<div style="font-weight:800;font-size:14px;color:#7A5500">📊 BÁO CÁO '+shName+' — '+dp[2]+'/'+dp[1]+'/'+dp[0]+'</div>';
+  html+='<div style="font-size:10.5px;color:var(--gray)">'+rows.length+' lệnh ghi nhận · '+canceled.length+' huỷ</div>';
+  html+='</div></div>';
 
-  html+='<div class="stats-row" style="margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
-  html+=foKpi('💰 Doanh thu', foFmt(total)+' đ', 'VAT: '+foFmt(vat)+' đ', 'var(--green)');
-  html+=foKpi('📝 Số lệnh', active.length.toString(), canceled.length+' huỷ', 'var(--cyan)');
-  html+=foKpi('📦 Cont xử lý', conts.toString(), '20\': '+c20+' | 40\': '+c40, 'var(--amber)');
-  html+=foKpi('⚠️ Tỉ lệ huỷ', cancelRate.toFixed(2)+'%', canceled.length+'/'+rows.length, cancelRate>3?'var(--red)':'var(--gray)');
-  html+=foKpi('💳 Công nợ mới', foFmt(cn)+' đ', (total?(cn/total*100).toFixed(1):'0')+'% DT', '#8B5CF6');
+  // BẢNG SẢN LƯỢNG (format email)
+  html+='<div class="card" style="padding:0;margin-bottom:12px;overflow:hidden">';
+  html+='<div style="padding:12px 16px;background:#FEF3C7;border-bottom:2px solid #000">';
+  html+='<div style="text-align:center;font-weight:800;font-size:14px;color:#B91C1C">BÁO CÁO '+shName+' — NGÀY '+dp[2]+'/'+dp[1]+'/'+dp[0]+'</div>';
   html+='</div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html+='<thead><tr style="background:#FEF3C7;color:#B91C1C">';
+  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">SẢN LƯỢNG</th>';
+  SIZES.forEach(function(s){ html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">'+esc(s)+'</th>'; });
+  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">TỔNG</th>';
+  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">DOANH THU</th>';
+  html+='</tr></thead><tbody>';
+  FO_PA_ORDER.forEach(function(g){
+    var p=pivot[g];
+    html+='<tr>';
+    html+='<td style="padding:6px 12px;border:1px solid #000;font-weight:600">'+esc(g==='Khác'?'Khác (cắt seal, đảo chuyển, rút hàng, kiểm hóa...)':g)+'</td>';
+    SIZES.forEach(function(s){ var v=p.sizes[s]||0; html+='<td style="padding:6px 12px;border:1px solid #000;text-align:center">'+(v||'')+'</td>'; });
+    html+='<td style="padding:6px 12px;border:1px solid #000;text-align:center;font-weight:600">'+(p.total||0)+'</td>';
+    html+='<td style="padding:6px 12px;border:1px solid #000;text-align:right">'+(p.revenue?foFmt(p.revenue):'')+'</td>';
+    html+='</tr>';
+  });
+  // Grand total
+  html+='<tr style="background:#FFF200;font-weight:800;color:#B91C1C">';
+  html+='<td style="padding:8px 12px;border:1px solid #000">GRAND TOTAL</td>';
+  SIZES.forEach(function(s){ html+='<td style="padding:8px 12px;border:1px solid #000;text-align:center">'+(totalSize[s]||0)+'</td>'; });
+  html+='<td style="padding:8px 12px;border:1px solid #000;text-align:center">'+totalLenh+'</td>';
+  html+='<td style="padding:8px 12px;border:1px solid #000;text-align:right">'+foFmt(totalRev)+'</td>';
+  html+='</tr>';
+  html+='</tbody></table></div>';
 
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📈 Doanh thu theo giờ</div><canvas id="fo-ca-chart-hour" style="max-height:220px"></canvas></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🥧 Cơ cấu phương án</div><canvas id="fo-ca-chart-pa" style="max-height:220px"></canvas></div>';
-  html+='</div>';
+  // BẢNG HÌNH THỨC THU
+  html+='<div class="card" style="padding:0;margin-bottom:12px;max-width:480px;overflow:hidden">';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html+='<thead><tr style="background:#DBEAFE;color:#1E40AF">';
+  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">HÌNH THỨC THU</th>';
+  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">SỐ LỆNH</th>';
+  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">SỐ TIỀN</th>';
+  html+='</tr></thead><tbody>';
+  html+='<tr><td style="padding:6px 12px;border:1px solid #000">💵 Tiền mặt</td><td style="padding:6px 12px;border:1px solid #000;text-align:center">'+cntTm+'</td><td style="padding:6px 12px;border:1px solid #000;text-align:right;color:var(--green)">'+foFmt(tm)+'</td></tr>';
+  html+='<tr><td style="padding:6px 12px;border:1px solid #000">📝 Trả sau (công nợ)</td><td style="padding:6px 12px;border:1px solid #000;text-align:center">'+cntTs+'</td><td style="padding:6px 12px;border:1px solid #000;text-align:right;color:#8B5CF6">'+foFmt(ts)+'</td></tr>';
+  html+='<tr style="background:#FEF3C7;font-weight:800"><td style="padding:8px 12px;border:1px solid #000">TỔNG</td><td style="padding:8px 12px;border:1px solid #000;text-align:center">'+(cntTm+cntTs)+'</td><td style="padding:8px 12px;border:1px solid #000;text-align:right">'+foFmt(tm+ts)+'</td></tr>';
+  html+='</tbody></table></div>';
 
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🏆 Top 10 khách hàng</div><div id="fo-ca-top-kh"></div></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">💳 Hình thức thanh toán</div><canvas id="fo-ca-chart-pay" style="max-height:220px"></canvas></div>';
-  html+='</div>';
-
+  // LỆNH HUỶ
   if(canceled.length>0){
-    html+='<div class="card" style="padding:12px;margin-bottom:12px;border-left:3px solid var(--red,#EF4444)"><div style="font-size:12px;font-weight:700;color:var(--red,#EF4444);margin-bottom:8px">⚠️ Lệnh huỷ trong ca ('+canceled.length+')</div><div class="tbl-wrap"><table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="padding:5px;border-bottom:1px solid #EEE;text-align:left">Số lệnh</th><th style="text-align:left">Cont</th><th style="text-align:left">NV huỷ</th><th style="text-align:left">Lý do</th><th style="text-align:right">Thành tiền</th></tr></thead><tbody>';
+    html+='<div class="card" style="padding:12px;margin-bottom:12px;border-left:3px solid var(--red)">';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">⚠️ Lệnh huỷ trong ca ('+canceled.length+')</div>';
+    html+='<div class="tbl-wrap"><table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="padding:5px;border-bottom:1px solid #EEE;text-align:left">Số lệnh</th><th style="text-align:left">Cont</th><th style="text-align:left">NV huỷ</th><th style="text-align:left">Lý do</th><th style="text-align:right">Thành tiền</th></tr></thead><tbody>';
     canceled.forEach(function(r){
       html+='<tr><td style="padding:4px;border-bottom:1px solid #F5F5F5">'+esc(r.so_lenh)+'</td><td>'+esc(r.so_cont)+'</td><td>'+esc(r.nguoi_huy||r.nv_lap)+'</td><td>'+esc(r.ly_do_huy||'—')+'</td><td style="text-align:right">'+foFmt(r.thanh_tien)+'</td></tr>';
     });
     html+='</tbody></table></div></div>';
   }
 
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Năng suất NV trong ca</div><div class="tbl-wrap"><table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:5px;border-bottom:1px solid #EEE">NV</th><th style="text-align:right">Số lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th></tr></thead><tbody>';
+  // NV PRODUCTIVITY
   var nvs={};
   active.forEach(function(r){ var k=r.nv_lap||'—'; if(!nvs[k]) nvs[k]={lenh:0,dt:0,huy:0}; nvs[k].lenh++; nvs[k].dt+=r.thanh_tien; });
   canceled.forEach(function(r){ var k=r.nv_lap||'—'; if(!nvs[k]) nvs[k]={lenh:0,dt:0,huy:0}; nvs[k].huy++; });
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Năng suất NV trong ca</div>';
+  html+='<div class="tbl-wrap"><table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:5px;border-bottom:1px solid #EEE">NV</th><th style="text-align:right">Số lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th></tr></thead><tbody>';
   Object.keys(nvs).map(function(k){return Object.assign({nv:k}, nvs[k]);}).sort(function(a,b){return b.dt-a.dt;}).forEach(function(n){
-    html+='<tr><td style="padding:4px;border-bottom:1px solid #F5F5F5">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right;color:'+(n.huy?'var(--red,#EF4444)':'inherit')+'">'+n.huy+'</td></tr>';
+    html+='<tr><td style="padding:4px;border-bottom:1px solid #F5F5F5">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right;color:'+(n.huy?'var(--red)':'inherit')+'">'+n.huy+'</td></tr>';
   });
   html+='</tbody></table></div></div>';
 
   body.innerHTML=html;
-
-  // Charts
-  var hours=[]; if(shift==='sang'){ for(var h=8;h<20;h++) hours.push(h); } else { for(var h=20;h<24;h++) hours.push(h); for(var h=0;h<8;h++) hours.push(h); }
-  var hData=hours.map(function(h){ return active.filter(function(r){return r._dt && r._dt.getHours()===h;}).reduce(function(s,r){return s+r.thanh_tien;},0); });
-  foDrawChart('fo-ca-chart-hour', {
-    type:'bar',
-    data:{ labels:hours.map(function(h){return String(h).padStart(2,'0')+'h';}), datasets:[{label:'Doanh thu', data:hData, backgroundColor:'rgba(34,211,238,0.65)', borderColor:'#06B6D4', borderWidth:1}] },
-    options:_chartOpts({y:{ticks:{font:{size:10}, callback:function(v){return (v/1000000).toFixed(1)+'M';}}}})
-  });
-  foDrawChart('fo-ca-chart-pa', _grpPie(active, 'phuong_an', 'thanh_tien'));
-  foDrawChart('fo-ca-chart-pay', _grpPie(active, 'hinh_thuc_tt', 'thanh_tien'));
-
-  var khMap={}; active.forEach(function(r){ var k=r.doi_tuong_tt||'—'; khMap[k]=(khMap[k]||0)+r.thanh_tien; });
-  var khArr=Object.entries(khMap).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
-  var khHtml='<ol style="margin:0;padding-left:20px;font-size:11px">';
-  khArr.forEach(function(kv){ khHtml+='<li style="margin-bottom:3px"><b>'+esc(_khName(kv[0]))+'</b> — '+foFmt(kv[1])+' đ</li>'; });
-  khHtml+='</ol>';
-  document.getElementById('fo-ca-top-kh').innerHTML=khHtml;
 }
 
-// ---- DASHBOARD TUẦN ----
-async function foRenderTuan(){
-  var startStr=document.getElementById('fo-tuan-start').value;
-  var body=document.getElementById('fo-tuan-body');
-  if(!startStr) return;
-  var start=new Date(startStr);
-  var mon=foWeekStart(start); var monStr=foToDateKey(mon);
-  if(monStr!==startStr){ document.getElementById('fo-tuan-start').value=monStr; }
-  var end=new Date(mon); end.setDate(end.getDate()+6); var endStr=foToDateKey(end);
-  document.getElementById('fo-tuan-range').textContent='('+foFmtD(mon)+' → '+foFmtD(end)+')';
+function foCaExport(){ toast('Export Excel ca — S2b sẽ bổ sung', 3000); }
+
+// ══════════════════════════════════════════════════════════════════════
+// MÀN 2 — BÁO CÁO KỲ
+// ══════════════════════════════════════════════════════════════════════
+function foKyInit(){
+  if(!fo.foKy.inited){
+    fo.foKy.inited=true;
+    foKyTypeChange();
+  } else {
+    foKyRender();
+  }
+}
+
+function foKyTypeChange(){
+  fo.foKy.type=document.getElementById('foky-type').value;
+  var picker=document.getElementById('foky-picker');
+  var t=new Date();
+  if(fo.foKy.type==='tuan'){
+    var mon=foWeekStart(t);
+    picker.innerHTML='<div><div class="fl" style="margin-bottom:3px">Thứ 2 (đầu tuần)</div><input class="fi" type="date" id="foky-start" value="'+foToDateKey(mon)+'" onchange="foKyRender()" style="width:150px"></div>';
+  } else if(fo.foKy.type==='thang'){
+    picker.innerHTML='<div><div class="fl" style="margin-bottom:3px">Tháng</div><select class="fi" id="foky-m" onchange="foKyRender()" style="width:90px"></select></div>'
+      +'<div><div class="fl" style="margin-bottom:3px">Năm</div><select class="fi" id="foky-y" onchange="foKyRender()" style="width:90px"></select></div>';
+    var sm=document.getElementById('foky-m');
+    for(var i=1;i<=12;i++) sm.innerHTML+='<option value="'+i+'">'+String(i).padStart(2,'0')+'</option>';
+    sm.value=t.getMonth()+1;
+    var sy=document.getElementById('foky-y');
+    for(var y=t.getFullYear()-3;y<=t.getFullYear()+1;y++) sy.innerHTML+='<option value="'+y+'">'+y+'</option>';
+    sy.value=t.getFullYear();
+  } else if(fo.foKy.type==='quy'){
+    picker.innerHTML='<div><div class="fl" style="margin-bottom:3px">Quý</div><select class="fi" id="foky-q" onchange="foKyRender()" style="width:100px"><option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option></select></div>'
+      +'<div><div class="fl" style="margin-bottom:3px">Năm</div><select class="fi" id="foky-y" onchange="foKyRender()" style="width:90px"></select></div>';
+    var q=Math.ceil((t.getMonth()+1)/3);
+    document.getElementById('foky-q').value=q;
+    var sy=document.getElementById('foky-y');
+    for(var y=t.getFullYear()-3;y<=t.getFullYear()+1;y++) sy.innerHTML+='<option value="'+y+'">'+y+'</option>';
+    sy.value=t.getFullYear();
+  } else { // nam
+    picker.innerHTML='<div><div class="fl" style="margin-bottom:3px">Năm</div><select class="fi" id="foky-y" onchange="foKyRender()" style="width:90px"></select></div>';
+    var sy=document.getElementById('foky-y');
+    for(var y=t.getFullYear()-3;y<=t.getFullYear()+1;y++) sy.innerHTML+='<option value="'+y+'">'+y+'</option>';
+    sy.value=t.getFullYear();
+  }
+  foKyRender();
+}
+
+function foKyShift(n){
+  var t=fo.foKy.type;
+  if(t==='tuan'){
+    var el=document.getElementById('foky-start'); if(!el) return;
+    var d=new Date(el.value); d.setDate(d.getDate()+n*7); el.value=foToDateKey(d);
+  } else if(t==='thang'){
+    var m=+document.getElementById('foky-m').value+n, y=+document.getElementById('foky-y').value;
+    while(m<1){m+=12;y--;} while(m>12){m-=12;y++;}
+    document.getElementById('foky-m').value=m;
+    document.getElementById('foky-y').value=y;
+  } else if(t==='quy'){
+    var q=+document.getElementById('foky-q').value+n, y=+document.getElementById('foky-y').value;
+    while(q<1){q+=4;y--;} while(q>4){q-=4;y++;}
+    document.getElementById('foky-q').value=q;
+    document.getElementById('foky-y').value=y;
+  } else {
+    var y=+document.getElementById('foky-y').value+n;
+    document.getElementById('foky-y').value=y;
+  }
+  foKyRender();
+}
+
+function foKyRange(){
+  var t=fo.foKy.type;
+  if(t==='tuan'){
+    var el=document.getElementById('foky-start'); if(!el||!el.value) return null;
+    var mon=foWeekStart(new Date(el.value));
+    if(foToDateKey(mon)!==el.value) el.value=foToDateKey(mon);
+    var sun=new Date(mon); sun.setDate(sun.getDate()+6);
+    return {from:foToDateKey(mon), to:foToDateKey(sun), label:'Tuần '+foFmtD(mon)+' → '+foFmtD(sun)};
+  } else if(t==='thang'){
+    var m=+document.getElementById('foky-m').value, y=+document.getElementById('foky-y').value;
+    var last=new Date(y,m,0).getDate();
+    return {from:y+'-'+String(m).padStart(2,'0')+'-01', to:y+'-'+String(m).padStart(2,'0')+'-'+String(last).padStart(2,'0'), label:'Tháng '+String(m).padStart(2,'0')+'/'+y};
+  } else if(t==='quy'){
+    var q=+document.getElementById('foky-q').value, y=+document.getElementById('foky-y').value;
+    var m1=(q-1)*3+1, m2=q*3;
+    var last=new Date(y,m2,0).getDate();
+    return {from:y+'-'+String(m1).padStart(2,'0')+'-01', to:y+'-'+String(m2).padStart(2,'0')+'-'+String(last).padStart(2,'0'), label:'Quý '+q+'/'+y};
+  } else {
+    var y=+document.getElementById('foky-y').value;
+    return {from:y+'-01-01', to:y+'-12-31', label:'Năm '+y};
+  }
+}
+
+async function foKyRender(){
+  var r=foKyRange(); if(!r) return;
+  document.getElementById('foky-range').textContent='('+r.label+')';
+  var body=document.getElementById('foky-body');
   body.innerHTML='<div class="card" style="padding:40px;text-align:center"><div class="spinner" style="margin:0 auto"></div></div>';
-  var rows=await foLoadRange(monStr, endStr);
-  _tuanDashboard(rows, mon, end);
+  var rows=await foLoadRange(r.from, r.to);
+  // Previous period for comparison
+  var prevR=_foKyPrevRange(r); var prevRows=[];
+  if(prevR) prevRows=await foLoadRange(prevR.from, prevR.to);
+  _foKyDashboard(rows, prevRows, r);
 }
 
-function foTuanShift(n){
-  var el=document.getElementById('fo-tuan-start'); if(!el.value) return;
-  var d=new Date(el.value); d.setDate(d.getDate()+n*7); el.value=foToDateKey(d); foRenderTuan();
+function _foKyPrevRange(r){
+  var from=new Date(r.from), to=new Date(r.to);
+  var ms=to-from+86400000;
+  var pTo=new Date(from.getTime()-86400000);
+  var pFrom=new Date(pTo.getTime()-ms+86400000);
+  return {from:foToDateKey(pFrom), to:foToDateKey(pTo)};
 }
 
-function _tuanDashboard(rows, mon, sun){
-  var body=document.getElementById('fo-tuan-body');
-  var active=rows.filter(function(r){return String(r.trang_thai)!=='Hủy';});
-  var canceled=rows.filter(function(r){return String(r.trang_thai)==='Hủy';});
-  var total=active.reduce(function(s,r){return s+r.thanh_tien;},0);
-  var conts=new Set(active.map(function(r){return r.so_cont;})).size;
-  var khs=new Set(active.map(function(r){return r.doi_tuong_tt;})).size;
-  var cancelRate=rows.length?(canceled.length/rows.length*100):0;
-  var cn=active.filter(function(r){return r.hinh_thuc_tt==='Công nợ';}).reduce(function(s,r){return s+r.thanh_tien;},0);
-
-  var html='';
-  html+='<div class="card" style="padding:10px 14px;margin-bottom:12px;background:linear-gradient(90deg,#FEF3C7,#FFF);border-left:3px solid var(--amber)"><div style="font-weight:700;font-size:13px">BÁO CÁO TUẦN — '+foFmtD(mon)+' → '+foFmtD(sun)+'</div><div style="font-size:10.5px;color:var(--gray)">'+rows.length+' lệnh</div></div>';
-
-  html+='<div class="stats-row" style="margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
-  html+=foKpi('💰 Doanh thu', foFmt(total)+' đ', active.length+' lệnh', 'var(--green)');
-  html+=foKpi('📦 Cont', conts.toString(), 'unique', 'var(--cyan)');
-  html+=foKpi('👥 Khách hàng', khs.toString(), 'active', 'var(--amber)');
-  html+=foKpi('⚠️ Tỉ lệ huỷ', cancelRate.toFixed(2)+'%', canceled.length+' lệnh', cancelRate>3?'var(--red,#EF4444)':'var(--gray)');
-  html+=foKpi('💳 Công nợ', foFmt(cn)+' đ', (total?(cn/total*100).toFixed(1):'0')+'% DT', '#8B5CF6');
-  html+='</div>';
-
-  html+='<div class="card" style="padding:12px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📊 Doanh thu 7 ngày × Phương án</div><canvas id="fo-tuan-chart-day" style="max-height:260px"></canvas></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🚢 Theo Hãng tàu</div><canvas id="fo-tuan-chart-hang" style="max-height:220px"></canvas></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">💳 Hình thức thanh toán</div><canvas id="fo-tuan-chart-pay" style="max-height:220px"></canvas></div>';
-  html+='</div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🏆 Top 10 khách hàng</div><div id="fo-tuan-top-kh"></div></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Năng suất NV</div><div id="fo-tuan-nv"></div></div>';
-  html+='</div>';
-
-  body.innerHTML=html;
-
-  // Stacked chart 7 ngày × phương án
-  var days=[]; for(var i=0;i<7;i++){ var d=new Date(mon); d.setDate(d.getDate()+i); days.push(d); }
-  var DOW=['T2','T3','T4','T5','T6','T7','CN'];
-  var labels=days.map(function(d,i){ return DOW[i]+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); });
-  var pas={}; active.forEach(function(r){ pas[r.phuong_an||'—']=true; });
-  var paList=Object.keys(pas);
-  var COLORS=['#22D3EE','#34D399','#F59E0B','#EC4899','#8B5CF6','#60A5FA','#F87171','#FBBF24'];
-  var datasets=paList.map(function(pa, idx){
-    return { label:pa, data:days.map(function(d){ return active.filter(function(r){ return r._dt && foToDateKey(r._dt)===foToDateKey(d) && (r.phuong_an||'—')===pa; }).reduce(function(s,r){return s+r.thanh_tien;},0); }), backgroundColor:COLORS[idx%COLORS.length] };
-  });
-  foDrawChart('fo-tuan-chart-day', {
-    type:'bar', data:{labels:labels, datasets:datasets},
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:'top',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+foFmt(ctx.raw);}}} },
-      scales:{ x:{stacked:true,ticks:{font:{size:10}}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:10},callback:function(v){return (v/1000000).toFixed(1)+'M';}}} }
-    }
-  });
-  foDrawChart('fo-tuan-chart-hang', _grpPie(active, 'hang_tau', 'thanh_tien'));
-  foDrawChart('fo-tuan-chart-pay', _grpPie(active, 'hinh_thuc_tt', 'thanh_tien'));
-
-  var khMap={}, nvMap={};
-  active.forEach(function(r){ var k=r.doi_tuong_tt||'—'; khMap[k]=(khMap[k]||0)+r.thanh_tien; var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].lenh++; nvMap[n].dt+=r.thanh_tien; });
-  canceled.forEach(function(r){ var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].huy++; });
-  var khArr=Object.entries(khMap).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
-  var khHtml='<ol style="margin:0;padding-left:20px;font-size:11px">';
-  khArr.forEach(function(kv){ khHtml+='<li style="margin-bottom:3px"><b>'+esc(_khName(kv[0]))+'</b> — '+foFmt(kv[1])+' đ</li>'; });
-  khHtml+='</ol>';
-  document.getElementById('fo-tuan-top-kh').innerHTML=khHtml;
-
-  var nvArr=Object.keys(nvMap).map(function(k){return Object.assign({nv:k}, nvMap[k]);}).sort(function(a,b){return b.dt-a.dt;});
-  var nvHtml='<table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:4px">NV</th><th style="text-align:right">Lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th></tr></thead><tbody>';
-  nvArr.forEach(function(n){ nvHtml+='<tr><td style="padding:4px">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right;color:'+(n.huy?'var(--red,#EF4444)':'inherit')+'">'+n.huy+'</td></tr>'; });
-  nvHtml+='</tbody></table>';
-  document.getElementById('fo-tuan-nv').innerHTML=nvHtml;
-}
-
-// ---- DASHBOARD THÁNG ----
-async function foRenderThang(){
-  var m=parseInt(document.getElementById('fo-thang-m').value,10);
-  var y=parseInt(document.getElementById('fo-thang-y').value,10);
-  var body=document.getElementById('fo-thang-body');
-  if(!m||!y) return;
-  var lastDay=new Date(y, m, 0).getDate();
-  var from=y+'-'+String(m).padStart(2,'0')+'-01';
-  var to=y+'-'+String(m).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
-  body.innerHTML='<div class="card" style="padding:40px;text-align:center"><div class="spinner" style="margin:0 auto"></div></div>';
-  var rows=await foLoadRange(from, to);
-  // Previous month for MoM
-  var pM=m===1?12:m-1, pY=m===1?y-1:y;
-  var pLast=new Date(pY, pM, 0).getDate();
-  var pFrom=pY+'-'+String(pM).padStart(2,'0')+'-01';
-  var pTo=pY+'-'+String(pM).padStart(2,'0')+'-'+String(pLast).padStart(2,'0');
-  var prevRows=await foLoadRange(pFrom, pTo);
-  _thangDashboard(rows, prevRows, y, m);
-}
-
-function _thangDashboard(rows, prevRows, y, m){
-  var body=document.getElementById('fo-thang-body');
+function _foKyDashboard(rows, prevRows, range){
+  var body=document.getElementById('foky-body');
   var active=rows.filter(function(r){return String(r.trang_thai)!=='Hủy';});
   var canceled=rows.filter(function(r){return String(r.trang_thai)==='Hủy';});
   var pActive=prevRows.filter(function(r){return String(r.trang_thai)!=='Hủy';});
-  var total=active.reduce(function(s,r){return s+r.thanh_tien;},0);
-  var pTotal=pActive.reduce(function(s,r){return s+r.thanh_tien;},0);
+  var total=active.reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+  var pTotal=pActive.reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
   var conts=new Set(active.map(function(r){return r.so_cont;})).size;
   var khs=new Set(active.map(function(r){return r.doi_tuong_tt;})).size;
   var aov=active.length?total/active.length:0;
   var cancelRate=rows.length?(canceled.length/rows.length*100):0;
-  var momPct=pTotal?((total-pTotal)/pTotal*100):0;
+  var delta=pTotal?((total-pTotal)/pTotal*100):0;
+  var tm=active.filter(function(r){return r.hinh_thuc_tt==='Tiền mặt';}).reduce(function(s,r){return s+(r.thanh_tien||0);},0);
+  var ts=active.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).reduce(function(s,r){return s+(r.thanh_tien||0);},0);
 
   var html='';
-  html+='<div class="card" style="padding:10px 14px;margin-bottom:12px;background:linear-gradient(90deg,#EDE9FE,#FFF);border-left:3px solid #8B5CF6"><div style="font-weight:700;font-size:13px">BÁO CÁO THÁNG — Tháng '+String(m).padStart(2,'0')+'/'+y+'</div><div style="font-size:10.5px;color:var(--gray)">'+rows.length+' lệnh</div></div>';
+  html+='<div class="card" style="padding:12px 16px;margin-bottom:12px;background:linear-gradient(90deg,#EDE9FE,#FFF);border-left:4px solid #8B5CF6"><div style="font-weight:800;font-size:14px;color:#5B21B6">📈 BÁO CÁO '+esc(range.label.toUpperCase())+'</div><div style="font-size:10.5px;color:var(--gray)">'+rows.length+' lệnh · '+range.from+' → '+range.to+'</div></div>';
 
+  // KPI row
   html+='<div class="stats-row" style="margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">';
-  html+=foKpi('💰 Doanh thu', foFmt(total)+' đ', (momPct>=0?'↑ ':'↓ ')+Math.abs(momPct).toFixed(1)+'% vs tháng trước', momPct>=0?'var(--green)':'var(--red,#EF4444)');
-  html+=foKpi('📝 Số lệnh', active.length.toLocaleString('vi-VN'), 'Huỷ: '+canceled.length, 'var(--cyan)');
-  html+=foKpi('💵 GTTB/lệnh', foFmt(aov)+' đ', 'AOV', 'var(--amber)');
-  html+=foKpi('📦 Cont', conts.toLocaleString('vi-VN'), 'unique', '#3B82F6');
-  html+=foKpi('👥 Khách active', khs.toString(), 'unique', '#8B5CF6');
-  html+=foKpi('⚠️ Tỉ lệ huỷ', cancelRate.toFixed(2)+'%', 'Mức <3%', cancelRate>3?'var(--red,#EF4444)':'var(--gray)');
+  html+=_foKpi('💰 Doanh thu', foFmt(total)+' đ', (delta>=0?'↑ ':'↓ ')+Math.abs(delta).toFixed(1)+'% vs kỳ trước', delta>=0?'var(--green)':'var(--red)');
+  html+=_foKpi('📝 Số lệnh', active.length.toLocaleString('vi-VN'), 'Huỷ: '+canceled.length, 'var(--cyan)');
+  html+=_foKpi('💵 GTTB/lệnh', foFmt(aov)+' đ', 'AOV', 'var(--amber)');
+  html+=_foKpi('📦 Cont', conts.toLocaleString('vi-VN'), 'unique', '#3B82F6');
+  html+=_foKpi('👥 Khách active', khs.toString(), 'unique', '#8B5CF6');
+  html+=_foKpi('⚠️ Tỉ lệ huỷ', cancelRate.toFixed(2)+'%', '', cancelRate>3?'var(--red)':'var(--gray)');
   html+='</div>';
 
-  html+='<div class="card" style="padding:12px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📈 Doanh thu theo ngày</div><canvas id="fo-thang-chart-day" style="max-height:240px"></canvas></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🥧 Cơ cấu Phương án</div><canvas id="fo-thang-chart-pa" style="max-height:240px"></canvas></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🚢 Hãng tàu</div><canvas id="fo-thang-chart-hang" style="max-height:240px"></canvas></div>';
+  html+='<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📊 Doanh thu theo ngày</div><canvas id="foky-chart-daily" style="max-height:250px"></canvas></div>';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">💳 Tiền mặt vs Trả sau</div><canvas id="foky-chart-ht" style="max-height:250px"></canvas></div>';
   html+='</div>';
-  html+='<div class="card" style="padding:12px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📊 Top 20 khách hàng (Pareto)</div><canvas id="fo-thang-chart-kh" style="max-height:300px"></canvas></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Hiệu suất nhân sự</div><div id="fo-thang-nv"></div></div>';
+
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🥧 Cơ cấu phương án</div><canvas id="foky-chart-pa" style="max-height:230px"></canvas></div>';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🚢 Hãng khai thác</div><canvas id="foky-chart-hang" style="max-height:230px"></canvas></div>';
+  html+='</div>';
+
+  // Top KH + NV
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">🏆 Top 10 khách hàng</div><div id="foky-top-kh"></div></div>';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Hiệu suất NV</div><div id="foky-nv"></div></div>';
+  html+='</div>';
 
   body.innerHTML=html;
 
-  var lastDay=new Date(y, m, 0).getDate();
-  var days=[]; for(var i=1;i<=lastDay;i++) days.push(i);
-  var dData=days.map(function(d){ return active.filter(function(r){return r._dt && r._dt.getDate()===d;}).reduce(function(s,r){return s+r.thanh_tien;},0); });
-  foDrawChart('fo-thang-chart-day', {
+  // Charts
+  // Daily revenue line
+  var from=new Date(range.from), to=new Date(range.to);
+  var days=[]; for(var d=new Date(from);d<=to;d.setDate(d.getDate()+1)) days.push(new Date(d));
+  var dailyData=days.map(function(d){ var key=foToDateKey(d); return active.filter(function(r){return r._dt && foToDateKey(r._dt)===key;}).reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0); });
+  foDrawChart('foky-chart-daily', {
     type:'line',
-    data:{ labels:days, datasets:[{label:'Doanh thu', data:dData, borderColor:'#8B5CF6', backgroundColor:'rgba(139,92,246,0.15)', fill:true, tension:0.25, pointRadius:2}] },
-    options:_chartOpts({y:{ticks:{font:{size:10}, callback:function(v){return (v/1000000).toFixed(1)+'M';}}}})
+    data:{labels:days.map(function(d){return foFmtD(d).substring(0,5);}), datasets:[{label:'Doanh thu', data:dailyData, borderColor:'#8B5CF6', backgroundColor:'rgba(139,92,246,0.15)', fill:true, tension:0.25, pointRadius:2}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return foFmt(ctx.raw)+' đ';}}}}, scales:{y:{beginAtZero:true, ticks:{callback:function(v){return (v/1000000).toFixed(1)+'M';}}}, x:{ticks:{font:{size:9}, maxRotation:45, minRotation:45}}}}
   });
-  foDrawChart('fo-thang-chart-pa', _grpPie(active, 'phuong_an', 'thanh_tien'));
-  foDrawChart('fo-thang-chart-hang', _grpPie(active, 'hang_tau', 'thanh_tien'));
 
-  // Pareto top 20 KH
-  var khMap={}; active.forEach(function(r){ var k=r.doi_tuong_tt||'—'; khMap[k]=(khMap[k]||0)+r.thanh_tien; });
-  var khArr=Object.entries(khMap).sort(function(a,b){return b[1]-a[1];}).slice(0,20);
-  var khLabels=khArr.map(function(e){return _khName(e[0]).substring(0,22);});
-  var khVals=khArr.map(function(e){return e[1];});
-  var khTotal=khVals.reduce(function(s,v){return s+v;},0);
-  var cum=[], acc=0;
-  khVals.forEach(function(v){ acc+=v; cum.push(khTotal?acc/khTotal*100:0); });
-  foDrawChart('fo-thang-chart-kh', {
-    data:{ labels:khLabels, datasets:[
-      {type:'bar', label:'Doanh thu', data:khVals, backgroundColor:'rgba(34,211,238,0.7)', yAxisID:'y', order:2},
-      {type:'line', label:'% Cộng dồn', data:cum, borderColor:'#EF4444', backgroundColor:'transparent', yAxisID:'y1', pointRadius:2, order:1}
-    ] },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:'top',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){ return ctx.dataset.label+': '+(ctx.dataset.yAxisID==='y1'?ctx.raw.toFixed(1)+'%':foFmt(ctx.raw)+' đ'); }}} },
-      scales:{ x:{ticks:{font:{size:9}, maxRotation:60, minRotation:45}},
-        y:{beginAtZero:true, position:'left', ticks:{font:{size:10}, callback:function(v){return (v/1000000).toFixed(0)+'M';}}},
-        y1:{beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:10}, callback:function(v){return v+'%';}}}
-      }
-    }
+  // HT stacked doughnut
+  foDrawChart('foky-chart-ht', {
+    type:'doughnut',
+    data:{labels:['💵 Tiền mặt','📝 Trả sau'], datasets:[{data:[tm,ts], backgroundColor:['#10B981','#8B5CF6']}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+foFmt(ctx.raw)+' đ';}}}}}
   });
+
+  foDrawChart('foky-chart-pa', _foPie(active, '_pa_group', 'thanh_tien'));
+  foDrawChart('foky-chart-hang', _foPie(active, 'hang_tau', 'thanh_tien'));
+
+  // Top KH
+  var khMap={};
+  active.forEach(function(r){ var k=r.doi_tuong_tt||'—'; khMap[k]=(khMap[k]||0)+(Number(r.thanh_tien)||0); });
+  var khArr=Object.entries(khMap).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  var khHtml='<ol style="margin:0;padding-left:20px;font-size:11px">';
+  khArr.forEach(function(kv){ khHtml+='<li style="margin-bottom:3px"><b>'+esc(foKhName(kv[0]))+'</b> — '+foFmt(kv[1])+' đ</li>'; });
+  khHtml+='</ol>';
+  document.getElementById('foky-top-kh').innerHTML=khHtml;
 
   // NV
   var nvMap={};
-  active.forEach(function(r){ var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].lenh++; nvMap[n].dt+=r.thanh_tien; });
+  active.forEach(function(r){ var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].lenh++; nvMap[n].dt+=(Number(r.thanh_tien)||0); });
   canceled.forEach(function(r){ var n=r.nv_lap||'—'; if(!nvMap[n]) nvMap[n]={lenh:0,dt:0,huy:0}; nvMap[n].huy++; });
   var nvArr=Object.keys(nvMap).map(function(k){return Object.assign({nv:k}, nvMap[k]);}).sort(function(a,b){return b.dt-a.dt;});
-  var nvHtml='<table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:5px">NV</th><th style="text-align:right">Số lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th><th style="text-align:right">Tỉ lệ huỷ</th></tr></thead><tbody>';
-  nvArr.forEach(function(n){
-    var hr=(n.lenh+n.huy)?n.huy/(n.lenh+n.huy)*100:0;
-    nvHtml+='<tr><td style="padding:4px">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right">'+n.huy+'</td><td style="text-align:right;color:'+(hr>3?'var(--red,#EF4444)':'inherit')+'">'+hr.toFixed(2)+'%</td></tr>';
-  });
+  var nvHtml='<table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:4px">NV</th><th style="text-align:right">Lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th></tr></thead><tbody>';
+  nvArr.forEach(function(n){ nvHtml+='<tr><td style="padding:4px">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right;color:'+(n.huy?'var(--red)':'inherit')+'">'+n.huy+'</td></tr>'; });
   nvHtml+='</tbody></table>';
-  document.getElementById('fo-thang-nv').innerHTML=nvHtml;
+  document.getElementById('foky-nv').innerHTML=nvHtml;
 }
 
-// ---- EXPORT (MVP placeholder) ----
-function foExportCa(){ toast('Export Ca — sẽ bổ sung ở Sprint 2', 3000); }
-function foExportTuan(){ toast('Export Tuần — sẽ bổ sung ở Sprint 2', 3000); }
-function foExportThang(){ toast('Export Tháng — sẽ bổ sung ở Sprint 2', 3000); }
+function _foKpi(lbl, val, sub, color){
+  return '<div class="card" style="padding:10px 12px;border-top:3px solid '+color+'"><div style="font-size:10.5px;color:var(--gray);margin-bottom:3px">'+lbl+'</div><div style="font-size:18px;font-weight:800;color:'+color+';line-height:1.15">'+val+'</div><div style="font-size:10px;color:var(--gray);margin-top:2px">'+sub+'</div></div>';
+}
+
+function _foPie(rows, field, valueField){
+  var map={};
+  rows.forEach(function(r){ var k=r[field]||'—'; map[k]=(map[k]||0)+(valueField?(Number(r[valueField])||0):1); });
+  var ent=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
+  var C=['#EC4899','#10B981','#F59E0B','#3B82F6','#8B5CF6','#EF4444','#06B6D4','#F97316'];
+  return {
+    type:'doughnut',
+    data:{labels:ent.map(function(e){return e[0];}), datasets:[{data:ent.map(function(e){return e[1];}), backgroundColor:ent.map(function(_,i){return C[i%C.length];})}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+foFmt(ctx.raw)+' đ';}}}}}
+  };
+}
+
+function foKyExport(){ toast('Export Excel kỳ — S2b sẽ bổ sung', 3000); }
+
+// ══════════════════════════════════════════════════════════════════════
+// MÀN 3 — DỮ LIỆU CHI TIẾT
+// ══════════════════════════════════════════════════════════════════════
+async function foDetailInit(){
+  if(!fo.foDetail.inited){
+    fo.foDetail.inited=true;
+    var t=new Date();
+    var first=new Date(t.getFullYear(), t.getMonth(), 1);
+    document.getElementById('fod-from').value=foToDateKey(first);
+    document.getElementById('fod-to').value=foToDateKey(t);
+  }
+  await foReloadMeta();
+  // Fill dropdowns Hãng, Phương án
+  await foDetailRender();
+}
+
+async function foDetailRender(){
+  var from=document.getElementById('fod-from').value;
+  var to=document.getElementById('fod-to').value;
+  var body=document.getElementById('fod-body');
+  if(!from||!to){ body.innerHTML='<div class="card" style="padding:20px;text-align:center;color:var(--gray)">Chọn khoảng ngày</div>'; return; }
+  body.innerHTML='<div class="card" style="padding:40px;text-align:center"><div class="spinner" style="margin:0 auto"></div></div>';
+  var allRows=await foLoadRange(from, to);
+
+  // Fill dropdowns once
+  var selC=document.getElementById('fod-carrier');
+  if(selC && selC.options.length<=1){
+    var hangs=[...new Set(allRows.map(function(r){return r.hang_tau;}).filter(Boolean))].sort();
+    hangs.forEach(function(h){ var o=document.createElement('option'); o.value=h; o.textContent=h; selC.appendChild(o); });
+  }
+  var selP=document.getElementById('fod-pa');
+  if(selP && selP.options.length<=1){
+    var pas=[...new Set(allRows.map(function(r){return r.phuong_an;}).filter(Boolean))].sort();
+    pas.forEach(function(p){ var o=document.createElement('option'); o.value=p; o.textContent=p; selP.appendChild(o); });
+  }
+
+  var fC=document.getElementById('fod-carrier').value;
+  var fP=document.getElementById('fod-pa').value;
+  var fH=document.getElementById('fod-httt').value;
+  var rows=allRows.filter(function(r){
+    if(fC && r.hang_tau!==fC) return false;
+    if(fP && r.phuong_an!==fP) return false;
+    if(fH && r.hinh_thuc_tt!==fH) return false;
+    return true;
+  });
+
+  // Meta
+  var meta=document.getElementById('fod-meta');
+  if(meta) meta.innerHTML='📌 <b>'+rows.length.toLocaleString('vi-VN')+'</b> lệnh · Tổng: <b>'+foFmt(rows.reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0))+' đ</b>'+(fo.meta && fo.meta.last_import?' · Lần import cuối: <b>'+foFmtDisplayStr(fo.meta.last_import)+'</b>':'');
+
+  _foDetailPivot(rows, from, to);
+}
+
+function _foDetailPivot(rows, from, to){
+  var body=document.getElementById('fod-body');
+  var active=rows.filter(function(r){return String(r.trang_thai)!=='Hủy';});
+
+  // Group by day
+  var byDay={};
+  active.forEach(function(r){ if(!r._dt) return; var k=foToDateKey(r._dt); if(!byDay[k]) byDay[k]=[]; byDay[k].push(r); });
+
+  // Sort desc
+  var days=Object.keys(byDay).sort().reverse();
+
+  var html='<div class="card" style="padding:0;overflow:hidden"><div class="tbl-wrap">';
+  html+='<table style="width:100%;font-size:11.5px;border-collapse:collapse">';
+  html+='<thead><tr style="background:var(--bg-1,#F8F8F8)">';
+  html+='<th style="padding:8px 10px;text-align:left;border-bottom:1px solid #E5E5E5;width:30px"></th>';
+  html+='<th style="padding:8px 10px;text-align:left;border-bottom:1px solid #E5E5E5">Ngày</th>';
+  html+='<th style="padding:8px 10px;text-align:right;border-bottom:1px solid #E5E5E5">Lệnh</th>';
+  FO_PA_ORDER.forEach(function(g){ if(g!=='Khác') html+='<th style="padding:8px 10px;text-align:right;border-bottom:1px solid #E5E5E5">'+esc(g)+'</th>'; });
+  html+='<th style="padding:8px 10px;text-align:right;border-bottom:1px solid #E5E5E5">💵 Tiền mặt</th>';
+  html+='<th style="padding:8px 10px;text-align:right;border-bottom:1px solid #E5E5E5">📝 Trả sau</th>';
+  html+='<th style="padding:8px 10px;text-align:right;border-bottom:1px solid #E5E5E5">Doanh thu</th>';
+  html+='</tr></thead><tbody>';
+
+  days.forEach(function(day){
+    var drows=byDay[day];
+    var isExp=!!fo.foDetail.expanded[day];
+    var paCount={}; FO_PA_ORDER.forEach(function(g){ paCount[g]=0; });
+    drows.forEach(function(r){ paCount[r._pa_group]++; });
+    var tm=drows.filter(function(r){return r.hinh_thuc_tt==='Tiền mặt';}).reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+    var ts=drows.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+    var tot=drows.reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+    var dp=day.split('-');
+    html+='<tr data-day="'+day+'" style="cursor:pointer;border-bottom:1px solid #F5F5F5" onclick="foDetailToggle(\''+day+'\')">';
+    html+='<td style="padding:6px 10px;color:var(--cyan)">'+(isExp?'▼':'▶')+'</td>';
+    html+='<td style="padding:6px 10px;font-weight:600">'+dp[2]+'/'+dp[1]+'/'+dp[0]+'</td>';
+    html+='<td style="padding:6px 10px;text-align:right;font-weight:600">'+drows.length+'</td>';
+    FO_PA_ORDER.forEach(function(g){ if(g!=='Khác') html+='<td style="padding:6px 10px;text-align:right">'+(paCount[g]||'')+'</td>'; });
+    html+='<td style="padding:6px 10px;text-align:right;color:var(--green)">'+foFmt(tm)+'</td>';
+    html+='<td style="padding:6px 10px;text-align:right;color:#8B5CF6">'+foFmt(ts)+'</td>';
+    html+='<td style="padding:6px 10px;text-align:right;font-weight:700">'+foFmt(tot)+'</td>';
+    html+='</tr>';
+    if(isExp){
+      html+='<tr><td colspan="9" style="padding:0;background:#FAFAFA"><div style="padding:8px 16px"><table style="width:100%;font-size:10.5px;border-collapse:collapse"><thead><tr style="color:var(--gray)"><th style="text-align:left;padding:4px">Giờ</th><th style="text-align:left">Số lệnh</th><th style="text-align:left">Cont</th><th style="text-align:left">Hãng</th><th style="text-align:left">Size</th><th style="text-align:left">P.án</th><th style="text-align:left">Khách</th><th style="text-align:left">NV</th><th style="text-align:left">HT.TT</th><th style="text-align:right">Thành tiền</th></tr></thead><tbody>';
+      drows.sort(function(a,b){return a._dt-b._dt;}).forEach(function(r){
+        var p=function(x){return String(x).padStart(2,'0');};
+        var gs=r._dt?p(r._dt.getHours())+':'+p(r._dt.getMinutes()):'';
+        html+='<tr style="border-top:1px dashed #E5E5E5">';
+        html+='<td style="padding:3px 4px">'+gs+'</td>';
+        html+='<td style="padding:3px 4px;color:var(--cyan);font-family:monospace">'+esc(r.so_lenh)+'</td>';
+        html+='<td style="padding:3px 4px;font-family:monospace">'+esc(r.so_cont)+'</td>';
+        html+='<td style="padding:3px 4px">'+esc(r.hang_tau)+'</td>';
+        html+='<td style="padding:3px 4px">'+esc(r.kich_co)+'</td>';
+        html+='<td style="padding:3px 4px">'+esc(r.phuong_an)+'</td>';
+        html+='<td style="padding:3px 4px">'+esc(foKhName(r.doi_tuong_tt))+'</td>';
+        html+='<td style="padding:3px 4px">'+esc(r.nv_lap)+'</td>';
+        html+='<td style="padding:3px 4px">'+esc(r.hinh_thuc_tt)+'</td>';
+        html+='<td style="padding:3px 4px;text-align:right">'+foFmt(r.thanh_tien)+'</td>';
+        html+='</tr>';
+      });
+      html+='</tbody></table></div></td></tr>';
+    }
+  });
+
+  // Totals row
+  var allPaCount={}; FO_PA_ORDER.forEach(function(g){ allPaCount[g]=0; });
+  active.forEach(function(r){ allPaCount[r._pa_group]++; });
+  var allTm=active.filter(function(r){return r.hinh_thuc_tt==='Tiền mặt';}).reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+  var allTs=active.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+  var allTot=active.reduce(function(s,r){return s+(Number(r.thanh_tien)||0);},0);
+  html+='<tr style="background:#FEF3C7;font-weight:800;border-top:2px solid #EAB308">';
+  html+='<td style="padding:8px 10px" colspan="2">TỔNG CỘNG</td>';
+  html+='<td style="padding:8px 10px;text-align:right">'+active.length+'</td>';
+  FO_PA_ORDER.forEach(function(g){ if(g!=='Khác') html+='<td style="padding:8px 10px;text-align:right">'+(allPaCount[g]||0)+'</td>'; });
+  html+='<td style="padding:8px 10px;text-align:right;color:var(--green)">'+foFmt(allTm)+'</td>';
+  html+='<td style="padding:8px 10px;text-align:right;color:#8B5CF6">'+foFmt(allTs)+'</td>';
+  html+='<td style="padding:8px 10px;text-align:right">'+foFmt(allTot)+'</td>';
+  html+='</tr>';
+
+  html+='</tbody></table></div></div>';
+
+  if(days.length===0){
+    html='<div class="card" style="padding:40px;text-align:center;color:var(--gray)">📭 Không có lệnh nào trong khoảng ngày/bộ lọc này</div>';
+  }
+
+  body.innerHTML=html;
+}
+
+function foDetailToggle(day){
+  fo.foDetail.expanded[day]=!fo.foDetail.expanded[day];
+  foDetailRender();
+}
+
+function foDetailExport(){ toast('Export Excel chi tiết — S2b sẽ bổ sung', 3000); }
+
 </script>
 
 <datalist id="dl-unit"><option value="QTY"><option value="CMT"></datalist>
