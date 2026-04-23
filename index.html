@@ -1390,45 +1390,14 @@ td input:focus,td select:focus{background:#FEFAF0}
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbzZQ22ErS32LJV8dS0dVKGG3d6fhDlQxupeYQREb4pbbWjXnmHxoMPWFXNBcQmj4DmtaQ/exec';
 
-// Auto restore session khi F5
+// KHÔNG auto-restore session — mỗi lần F5/mở app đều bắt login lại
+// Xoá sạch session/key cũ (nếu có từ version trước)
 window.addEventListener('load', function() {
   try {
-    var saved = localStorage.getItem('mnr_session');
-    if (saved && saved.length > 10) {
-      var session = null;
-      try { session = JSON.parse(saved); } catch(e) { localStorage.removeItem('mnr_session'); return; }
-      if (session && session.expiry && session.fullname) {
-        var parts = session.expiry.split('/');
-        if (parts.length === 3) {
-          var expiry = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
-          expiry.setHours(23,59,59,0);
-          if (new Date() <= expiry) {
-            state.user = session;
-            state.user.username = session.username || '';
-            var _ssKey = sessionStorage.getItem('mnr_key');
-            var _lsKey = '';
-            try { _lsKey = decodeURIComponent(atob(localStorage.getItem('mnr_key_enc')||'')); } catch(e) {}
-            state.user.key = _ssKey || _lsKey || '';
-            if (!_ssKey && _lsKey) sessionStorage.setItem('mnr_key', _lsKey); // restore sessionStorage
-            var _dLeft = Math.ceil((expiry - new Date()) / (1000*60*60*24));
-            setTimeout(function(){ checkExpiryWarning(_dLeft, session.expiry); }, 500);
-            document.getElementById('sb-username').textContent = session.fullname || session.username;
-            document.getElementById('sb-expiry').textContent = session.title || ((session.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            if ((session.role||'').toLowerCase() === 'admin') {
-              document.getElementById('nav-users').style.display = 'flex';
-              document.getElementById('nav-actlog').style.display = 'flex';
-            }
-            applyPermissions(session.role || 'user', session.permissions || '');
-            loadInitialData();
-            return;
-          }
-        }
-      }
-    }
+    localStorage.removeItem('mnr_session');
+    localStorage.removeItem('mnr_key_enc');
+    sessionStorage.removeItem('mnr_key');
   } catch(e) {}
-  localStorage.removeItem('mnr_session');
 });
 
 // STATE
@@ -1995,14 +1964,9 @@ async function doLogin() {
     if (res.success) {
       state.user = res;
       state.user.username = username;
-      state.user.key = key; // lưu tạm trong memory cho admin calls
+      state.user.key = key; // chỉ giữ trong memory phiên hiện tại — không persist
       checkExpiryWarning(res.days_left, res.expiry);
-      // Lưu session vào localStorage
-      localStorage.setItem('mnr_session', JSON.stringify({
-        username, fullname: res.fullname, expiry: res.expiry, role: res.role || 'user', permissions: res.permissions || '', title: res.title || ''
-      }));
-      sessionStorage.setItem('mnr_key', key);
-      localStorage.setItem('mnr_key_enc', btoa(encodeURIComponent(key))); // backup key
+      // KHÔNG lưu localStorage/sessionStorage → mỗi lần F5 phải login lại
       document.getElementById('sb-username').textContent = res.fullname || username;
       document.getElementById('sb-expiry').textContent = res.title || ((res.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
       document.getElementById('login-screen').style.display = 'none';
