@@ -7423,7 +7423,7 @@ async function foImportRun(){
   }
   log.innerHTML='<span style="color:var(--green)">✅ Hoàn tất.</span> Thêm mới: <b style="color:var(--green)">'+added+'</b> · Cập nhật: <b style="color:var(--amber)">'+updated+'</b> · Không đổi: <b style="color:var(--gray)">'+unchanged+'</b>';
   toast('Import: +'+added+' / ~'+updated+' / ='+unchanged, 3500);
-  fo.parsed=null; fo.cache=null;
+  fo.parsed=null; fo.cache=null; fo._trend365=null;
   document.getElementById('fo-file').value='';
   foReloadMeta();
   if(document.getElementById('screen-fo-detail').classList.contains('active')) foDetailRender();
@@ -7749,9 +7749,10 @@ function _foKyDashboard(rows, prevRows, range){
   html+=_foKpi('⚠️ Tỉ lệ huỷ', cancelRate.toFixed(2)+'%', '', cancelRate>3?'var(--red)':'var(--gray)');
   html+='</div>';
 
-  html+='<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px">';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📊 Doanh thu theo ngày</div><canvas id="foky-chart-daily" style="max-height:250px"></canvas></div>';
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">💳 Tiền mặt vs Trả sau</div><canvas id="foky-chart-ht" style="max-height:250px"></canvas></div>';
+  html+='<div class="card" style="padding:12px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📊 Doanh thu theo ngày (kỳ đang xem)</div><canvas id="foky-chart-daily" style="max-height:230px"></canvas></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📈 Xu hướng doanh thu — 12 tuần gần nhất</div><canvas id="foky-chart-12w" style="max-height:220px"></canvas></div>';
+  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">📈 Xu hướng doanh thu — 12 tháng gần nhất</div><canvas id="foky-chart-12m" style="max-height:220px"></canvas></div>';
   html+='</div>';
 
   html+='<div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px">';
@@ -7772,14 +7773,43 @@ function _foKyDashboard(rows, prevRows, range){
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return foFmt(ctx.raw)+' đ';}}}}, scales:{y:{beginAtZero:true, ticks:{callback:function(v){return (v/1000000).toFixed(1)+'M';}}}, x:{ticks:{font:{size:9}, maxRotation:45, minRotation:45}}}}
   });
 
-  // HT stacked doughnut
-  foDrawChart('foky-chart-ht', {
-    type:'doughnut',
-    data:{labels:['💵 Tiền mặt','📝 Trả sau'], datasets:[{data:[tm,ts], backgroundColor:['#10B981','#8B5CF6']}]},
-    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+foFmt(ctx.raw)+' đ';}}}}}
+  // Xu hướng 12 tuần + 12 tháng (load riêng data 365 ngày, cache)
+  foKyLoadTrends().then(function(trendRows){
+    if(!trendRows) return;
+    var weeks=_foCompute12Weeks(trendRows);
+    foDrawChart('foky-chart-12w', {
+      type:'line',
+      data:{labels:weeks.map(function(w){return w.label;}), datasets:[{label:'Doanh thu', data:weeks.map(function(w){return w.value;}), borderColor:'#06B6D4', backgroundColor:'rgba(6,182,212,0.15)', fill:true, tension:0.3, pointRadius:3, pointBackgroundColor:'#06B6D4'}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return foFmt(ctx.raw)+' đ';}}}}, scales:{y:{beginAtZero:true, ticks:{callback:function(v){return (v/1000000).toFixed(0)+'M';}}}, x:{ticks:{font:{size:10}}}}}
+    });
+    var months=_foCompute12Months(trendRows);
+    foDrawChart('foky-chart-12m', {
+      type:'line',
+      data:{labels:months.map(function(m){return m.label;}), datasets:[{label:'Doanh thu', data:months.map(function(m){return m.value;}), borderColor:'#F59E0B', backgroundColor:'rgba(245,158,11,0.15)', fill:true, tension:0.3, pointRadius:3, pointBackgroundColor:'#F59E0B'}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return foFmt(ctx.raw)+' đ';}}}}, scales:{y:{beginAtZero:true, ticks:{callback:function(v){return (v/1000000).toFixed(0)+'M';}}}, x:{ticks:{font:{size:10}}}}}
+    });
   });
 
-  foDrawChart('foky-chart-pa', _foPie(active, '_pa_group', 'thanh_tien'));
+  // Chart đứng: Phương án × Doanh thu (bar) + Số lệnh (line)
+  var paMap={}; FO_PA_ORDER.forEach(function(g){ paMap[g]={count:0, revenue:0}; });
+  active.forEach(function(r){ var g=r._pa_group; if(!paMap[g]) paMap[g]={count:0,revenue:0}; paMap[g].count++; paMap[g].revenue+=(Number(r.thanh_tien)||0); });
+  var paLabels=[], paCounts=[], paRevs=[];
+  FO_PA_ORDER.forEach(function(g){ if(paMap[g].count>0){ paLabels.push(g); paCounts.push(paMap[g].count); paRevs.push(paMap[g].revenue); }});
+  foDrawChart('foky-chart-pa', {
+    data:{labels:paLabels, datasets:[
+      {type:'bar', label:'Doanh thu (đ)', data:paRevs, backgroundColor:'rgba(139,92,246,0.75)', borderColor:'#8B5CF6', borderWidth:1, borderRadius:4, yAxisID:'y', order:2},
+      {type:'line', label:'Số lệnh', data:paCounts, borderColor:'#F59E0B', backgroundColor:'#F59E0B', yAxisID:'y1', pointRadius:5, pointHoverRadius:7, tension:0.25, borderWidth:2, order:1}
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top', labels:{font:{size:10}, boxWidth:10}}, tooltip:{callbacks:{label:function(ctx){var d=ctx.dataset; return d.yAxisID==='y1' ? d.label+': '+ctx.raw+' lệnh' : d.label+': '+foFmt(ctx.raw)+' đ';}}}},
+      scales:{
+        x:{ticks:{font:{size:10}}, grid:{display:false}},
+        y:{position:'left', beginAtZero:true, ticks:{font:{size:9}, callback:function(v){return (v/1000000).toFixed(0)+'M';}}, grid:{color:'rgba(139,92,246,0.08)'}, title:{display:true, text:'Doanh thu', font:{size:9}, color:'#8B5CF6'}},
+        y1:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, ticks:{font:{size:9}, stepSize:1}, title:{display:true, text:'Số lệnh', font:{size:9}, color:'#F59E0B'}}
+      }
+    }
+  });
 
   // Công nợ khách hàng (chỉ lệnh Trả sau)
   var cnMap={};
@@ -7807,7 +7837,7 @@ function _foKyDashboard(rows, prevRows, range){
       var pct=totalCn?(no/totalCn*100):0;
       var barPct=Math.round(no/maxCn*100);
       cnHtml+='<tr style="border-bottom:1px solid #F5F5F5">';
-      cnHtml+='<td style="padding:6px 8px"><b style="color:#5B21B6">'+(i+1)+'.</b> '+esc(kh)+'</td>';
+      cnHtml+='<td style="padding:6px 8px;text-align:left"><b style="color:#5B21B6">'+(i+1)+'.</b> '+esc(kh)+'</td>';
       cnHtml+='<td style="text-align:right;padding:6px 8px">'+e[1].lenh+'</td>';
       cnHtml+='<td style="text-align:right;padding:6px 8px;color:#8B5CF6;font-weight:700">'+foFmt(no)+'</td>';
       cnHtml+='<td style="padding:6px 8px"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;background:#F3F4F6;height:8px;border-radius:4px;overflow:hidden"><div style="background:linear-gradient(90deg,#8B5CF6,#A78BFA);height:100%;width:'+barPct+'%"></div></div><span style="font-size:10px;color:var(--gray);min-width:36px;text-align:right">'+pct.toFixed(1)+'%</span></div></td>';
@@ -7832,6 +7862,46 @@ function _foPie(rows, field, valueField){
     data:{labels:ent.map(function(e){return e[0];}), datasets:[{data:ent.map(function(e){return e[1];}), backgroundColor:ent.map(function(_,i){return C[i%C.length];})}]},
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{font:{size:10}}}, tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+foFmt(ctx.raw)+' đ';}}}}}
   };
+}
+
+// Load data 365 ngày gần nhất (cache 1 lần/session) để vẽ xu hướng 12 tuần + 12 tháng
+async function foKyLoadTrends(){
+  if(fo._trend365) return fo._trend365;
+  var today=new Date();
+  var from=new Date(today.getTime()-365*86400000);
+  var res=await apiGet({action:'getFoOrders', from:foToDateKey(from), to:foToDateKey(today)});
+  if(!res.success) return null;
+  var rows=(res.data||[]).map(function(r){ r._dt=foParseDate(r.ngay_lenh); return r; })
+    .filter(function(r){ return r._dt && String(r.trang_thai)!=='Hủy'; });
+  fo._trend365=rows;
+  return rows;
+}
+
+function _foCompute12Weeks(rows){
+  var today=new Date(); today.setHours(23,59,59,999);
+  var mon0=foWeekStart(today);
+  var weeks=[];
+  var pad=function(n){return String(n).padStart(2,'0');};
+  for(var i=11;i>=0;i--){
+    var mon=new Date(mon0); mon.setDate(mon.getDate()-i*7); mon.setHours(0,0,0,0);
+    var sun=new Date(mon); sun.setDate(sun.getDate()+6); sun.setHours(23,59,59,999);
+    var sum=rows.reduce(function(s,r){ return (r._dt>=mon && r._dt<=sun) ? s+(Number(r.thanh_tien)||0) : s; }, 0);
+    weeks.push({label: pad(mon.getDate())+'/'+pad(mon.getMonth()+1), value:sum});
+  }
+  return weeks;
+}
+
+function _foCompute12Months(rows){
+  var today=new Date();
+  var months=[];
+  var pad=function(n){return String(n).padStart(2,'0');};
+  for(var i=11;i>=0;i--){
+    var start=new Date(today.getFullYear(), today.getMonth()-i, 1, 0,0,0,0);
+    var end=new Date(start.getFullYear(), start.getMonth()+1, 0, 23,59,59,999);
+    var sum=rows.reduce(function(s,r){ return (r._dt>=start && r._dt<=end) ? s+(Number(r.thanh_tien)||0) : s; }, 0);
+    months.push({label: pad(start.getMonth()+1)+'/'+String(start.getFullYear()).substr(2), value:sum});
+  }
+  return months;
 }
 
 function foKyExport(){ toast('Export Excel kỳ — S2b sẽ bổ sung', 3000); }
