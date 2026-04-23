@@ -5265,10 +5265,34 @@ function previewRefNos() {
           el.textContent = item.count + ' ảnh';
           el.style.color = item.count > 0 ? 'var(--blue)' : 'var(--red)';
           el.style.fontWeight = item.count > 0 ? '600' : 'normal';
+          // Smart Heal: count=0 → thử scan Drive trực tiếp (DriveApp, 0 UrlFetch)
+          if (item.count === 0) tryHealCont(carrier, loaiAnh, item.cont, el);
         }
       });
     })
     .catch(function() {});
+}
+
+// Smart Heal: tự sync photo_index cho 1 cont khi countPhotos trả 0
+// Throttle 1 lần/cont/session để không spam
+async function tryHealCont(carrier, loaiAnh, contNo, el) {
+  var key = 'healed_' + carrier + '_' + loaiAnh + '_' + contNo;
+  if (sessionStorage.getItem(key)) return;
+  sessionStorage.setItem(key, '1');
+  try {
+    var res = await apiGet({
+      action:   'healPhotoIndex',
+      carrier:  carrier,
+      loai_anh: loaiAnh,
+      cont_no:  contNo
+    });
+    if (res && res.success && res.count > 0 && el) {
+      el.textContent = res.count + ' ảnh ✨';
+      el.style.color = 'var(--blue)';
+      el.style.fontWeight = '600';
+      el.title = 'Tự sync ' + res.count + ' ảnh từ Drive (vừa cập nhật index)';
+    }
+  } catch(e) {}
 }
 
 function fillContFromBulk() {
