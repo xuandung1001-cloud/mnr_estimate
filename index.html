@@ -7203,6 +7203,11 @@ function exportInventoryExcel() {
 // FO — BÁO CÁO THƯƠNG VỤ (3 màn: Ca / Kỳ / Chi tiết) — S2a
 // ══════════════════════════════════════════════════════════════════════
 
+// Polyfill esc() — App MNR không có global helper này
+if (typeof esc === 'undefined') {
+  window.esc = function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+}
+
 // ───── STATE ─────
 var fo = {
   cache: null,          // {from, to, rows} — last loaded range
