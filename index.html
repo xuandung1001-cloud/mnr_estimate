@@ -1485,11 +1485,6 @@ td input:focus,td select:focus{background:#FEFAF0}
         <input type="file" id="fo-file" accept=".xls,.xlsx" onchange="foPickFile()" style="font-size:12px">
         <button class="btn btn-sm btn-blue" onclick="foImportRun()" id="fo-btn-import" disabled>📤 Import</button>
       </div>
-      <div id="fo-preview" style="display:none">
-        <div style="font-size:12px;font-weight:600;margin-bottom:6px">👀 Xem trước (top 10 dòng)</div>
-        <div class="tbl-wrap" style="max-height:220px;overflow:auto"><table id="fo-preview-tbl" style="font-size:10.5px;width:100%;border-collapse:collapse"></table></div>
-        <div id="fo-preview-info" style="font-size:11px;color:var(--gray);margin-top:8px"></div>
-      </div>
       <div id="fo-import-log" style="margin-top:12px;font-size:11.5px"></div>
     </div>
   </div>
@@ -7293,7 +7288,6 @@ function foImportModalOpen(){
   fo.parsed=null;
   document.getElementById('fo-import-modal').style.display='flex';
   document.getElementById('fo-file').value='';
-  document.getElementById('fo-preview').style.display='none';
   document.getElementById('fo-import-log').innerHTML='';
   document.getElementById('fo-btn-import').disabled=true;
 }
@@ -7310,80 +7304,76 @@ function foPickFile(){
   var f=input.files[0]; if(!f) return;
   fo._fileName=f.name;
   var btn=document.getElementById('fo-btn-import'); btn.disabled=true;
-  document.getElementById('fo-preview').style.display='none';
-  document.getElementById('fo-import-log').innerHTML='<span class="spinner" style="display:inline-block"></span> Đang đọc file...';
+  var log=document.getElementById('fo-import-log');
+  log.innerHTML='<span class="spinner" style="display:inline-block"></span> Đang load SheetJS...';
   foLoadXLSX(function(){
+    log.innerHTML='<span class="spinner" style="display:inline-block"></span> Đang đọc file '+esc(f.name)+' ('+Math.round(f.size/1024)+' KB)...';
     var fr=new FileReader();
+    fr.onerror=function(){ log.innerHTML='<span style="color:var(--red)">❌ Không đọc được file</span>'; };
     fr.onload=function(e){
-      try{
-        var wb=XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:false});
-        var ws=wb.Sheets[wb.SheetNames[0]];
-        var rows=XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
-        var parsed=[];
-        // Cột TOS (0-indexed): 1=so_cont, 2=so_lenh, 4=ngay_lenh, 6=trang_thai, 7=hang_tau,
-        // 8=kich_co, 10=loai_hang, 11=fe, 15=phuong_an, 27=loai_dt_tt, 28=doi_tuong_tt,
-        // 29=hinh_thuc_tt, 31=nv_lap, 32=so_phieu_cuoc, 33=so_hoa_don, 35=ngay_huy,
-        // 36=nguoi_huy, 37=ly_do_huy, 42=tien_hang, 43=tien_vat, 44=thanh_tien
-        for(var i=1;i<rows.length;i++){
-          var r=rows[i]; if(!r||r.length===0) continue;
-          var soLenh=String(r[2]||'').trim(); if(!soLenh) continue;
-          var ngayLenh=foParseDate(r[4]); var ngayHuy=foParseDate(r[35]);
-          parsed.push({
-            so_lenh:soLenh,
-            so_cont:String(r[1]||'').trim().toUpperCase(),
-            ngay_lenh:ngayLenh?foToIsoStr(ngayLenh):'',
-            trang_thai:String(r[6]||'').trim(),
-            hang_tau:String(r[7]||'').trim(),
-            kich_co:String(r[8]||'').trim(),
-            fe:String(r[11]||'').trim(),
-            loai_hang:String(r[10]||'').trim(),
-            phuong_an:String(r[15]||'').trim(),
-            nv_lap:String(r[31]||'').trim(),
-            loai_dt_tt:String(r[27]||'').trim(),
-            doi_tuong_tt:String(r[28]||'').trim(),
-            hinh_thuc_tt:String(r[29]||'').trim(),
-            ngay_huy:ngayHuy?foToIsoStr(ngayHuy):'',
-            nguoi_huy:String(r[36]||'').trim(),
-            ly_do_huy:String(r[37]||'').trim(),
-            tien_hang:foNum(r[42]), tien_vat:foNum(r[43]), thanh_tien:foNum(r[44]),
-            so_hoa_don:String(r[33]||'').trim(),
-            so_phieu_cuoc:String(r[32]||'').trim()
-          });
+      log.innerHTML='<span class="spinner" style="display:inline-block"></span> Đang parse Excel (có thể mất vài giây)...';
+      // Yield 1 tick để UI update trước khi XLSX.read block main thread
+      setTimeout(function(){
+        try{
+          var wb=XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:false});
+          var ws=wb.Sheets[wb.SheetNames[0]];
+          var rows=XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+          log.innerHTML='<span class="spinner" style="display:inline-block"></span> Đang xử lý '+rows.length+' dòng...';
+          setTimeout(function(){
+            try{
+              var parsed=[];
+              // Cột TOS (0-indexed): 1=so_cont, 2=so_lenh, 4=ngay_lenh, 6=trang_thai, 7=hang_tau,
+              // 8=kich_co, 10=loai_hang, 11=fe, 15=phuong_an, 27=loai_dt_tt, 28=doi_tuong_tt,
+              // 29=hinh_thuc_tt, 31=nv_lap, 32=so_phieu_cuoc, 33=so_hoa_don, 35=ngay_huy,
+              // 36=nguoi_huy, 37=ly_do_huy, 42=tien_hang, 43=tien_vat, 44=thanh_tien
+              for(var i=1;i<rows.length;i++){
+                var r=rows[i]; if(!r||r.length===0) continue;
+                var soLenh=String(r[2]||'').trim(); if(!soLenh) continue;
+                var ngayLenh=foParseDate(r[4]); var ngayHuy=foParseDate(r[35]);
+                parsed.push({
+                  so_lenh:soLenh,
+                  so_cont:String(r[1]||'').trim().toUpperCase(),
+                  ngay_lenh:ngayLenh?foToIsoStr(ngayLenh):'',
+                  trang_thai:String(r[6]||'').trim(),
+                  hang_tau:String(r[7]||'').trim(),
+                  kich_co:String(r[8]||'').trim(),
+                  fe:String(r[11]||'').trim(),
+                  loai_hang:String(r[10]||'').trim(),
+                  phuong_an:String(r[15]||'').trim(),
+                  nv_lap:String(r[31]||'').trim(),
+                  loai_dt_tt:String(r[27]||'').trim(),
+                  doi_tuong_tt:String(r[28]||'').trim(),
+                  hinh_thuc_tt:String(r[29]||'').trim(),
+                  ngay_huy:ngayHuy?foToIsoStr(ngayHuy):'',
+                  nguoi_huy:String(r[36]||'').trim(),
+                  ly_do_huy:String(r[37]||'').trim(),
+                  tien_hang:foNum(r[42]), tien_vat:foNum(r[43]), thanh_tien:foNum(r[44]),
+                  so_hoa_don:String(r[33]||'').trim(),
+                  so_phieu_cuoc:String(r[32]||'').trim()
+                });
+              }
+              fo.parsed=parsed;
+              var sum=parsed.reduce(function(s,r){return s+r.thanh_tien;},0);
+              if(parsed.length===0){
+                log.innerHTML='<span style="color:var(--red)">❌ File không có dữ liệu hợp lệ (không có Số lệnh)</span>';
+                btn.disabled=true;
+              } else {
+                log.innerHTML='<span style="color:var(--green)">✅ Đọc được <b>'+parsed.length.toLocaleString('vi-VN')+'</b> lệnh · Tổng: <b>'+foFmt(sum)+' đ</b>. Bấm <b>Import</b> để lưu vào hệ thống.</span>';
+                btn.disabled=false;
+              }
+            }catch(err){
+              console.error(err);
+              log.innerHTML='<span style="color:var(--red)">❌ Lỗi xử lý dòng: '+esc(err.message)+'</span>';
+            }
+          }, 10);
+        }catch(err){
+          console.error(err);
+          log.innerHTML='<span style="color:var(--red)">❌ Lỗi parse Excel: '+esc(err.message)+'</span>';
         }
-        fo.parsed=parsed;
-        foRenderPreview(parsed);
-        document.getElementById('fo-import-log').innerHTML='';
-        btn.disabled=parsed.length===0;
-        if(parsed.length===0) toast('File không có dữ liệu hợp lệ', 3000);
-      }catch(err){
-        console.error(err);
-        document.getElementById('fo-import-log').innerHTML='<span style="color:var(--red)">❌ Lỗi đọc file: '+esc(err.message)+'</span>';
-      }
+      }, 10);
     };
     fr.readAsArrayBuffer(f);
   });
-}
-
-function foRenderPreview(rows){
-  var box=document.getElementById('fo-preview');
-  var tbl=document.getElementById('fo-preview-tbl');
-  var info=document.getElementById('fo-preview-info');
-  if(rows.length===0){ box.style.display='none'; return; }
-  box.style.display='';
-  var cols=[['Số lệnh','so_lenh'],['Cont','so_cont'],['Ngày','ngay_lenh'],['TT','trang_thai'],['Size','kich_co'],['P.án','phuong_an'],['HT.TT','hinh_thuc_tt'],['Thành tiền','thanh_tien']];
-  var html='<thead><tr>'+cols.map(function(c){return '<th style="padding:4px 6px;border:1px solid #E5E5E5;background:#F8F8F8;font-size:10.5px">'+c[0]+'</th>';}).join('')+'</tr></thead><tbody>';
-  rows.slice(0,10).forEach(function(r){
-    html+='<tr>'+cols.map(function(c){
-      var v=r[c[1]]; var disp=v;
-      if(c[1]==='ngay_lenh') disp=foFmtDisplayStr(v);
-      if(c[1]==='thanh_tien') disp=foFmt(v);
-      return '<td style="padding:3px 6px;border:1px solid #EEE">'+esc(disp)+'</td>';
-    }).join('')+'</tr>';
-  });
-  html+='</tbody>';
-  tbl.innerHTML=html;
-  var sum=rows.reduce(function(s,r){return s+r.thanh_tien;},0);
-  info.textContent='📊 '+rows.length.toLocaleString('vi-VN')+' lệnh · Tổng: '+foFmt(sum)+' đ';
 }
 
 async function foImportRun(){
@@ -7404,7 +7394,6 @@ async function foImportRun(){
   toast('Import: +'+added+' / ~'+updated+' / ='+unchanged, 3500);
   fo.parsed=null; fo.cache=null;
   document.getElementById('fo-file').value='';
-  document.getElementById('fo-preview').style.display='none';
   foReloadMeta();
   if(document.getElementById('screen-fo-detail').classList.contains('active')) foDetailRender();
   if(document.getElementById('screen-fo-ca').classList.contains('active')) foCaRender();
