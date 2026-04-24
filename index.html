@@ -1239,11 +1239,12 @@ td input:focus,td select:focus{background:#FEFAF0}
                   <th style="width:140px">Chức vụ</th>
                   <th style="width:100px">Hết hạn</th>
                   <th style="width:80px">Role</th>
-                  <th>Thao tác</th>
+                  <th style="min-width:280px">Màn hình được phép</th>
+                  <th style="width:140px">Thao tác</th>
                 </tr>
               </thead>
               <tbody id="users-rows">
-                <tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -6165,6 +6166,37 @@ async function handleStockUpload(input) {
 // ===================== PHÂN QUYỀN =====================
 const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog','fo-ca','fo-ky','fo-detail'];
 const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc'; // tariff + thương vụ ẩn mặc định
+const SCREEN_LABELS = {
+  estimate:'Nhập BG', revise:'Sửa BG', ovm:'OVM',
+  tracking:'DS Báo giá', summary:'Tổng hợp', bulk:'Xuất Bulk', stock:'Tồn rỗng',
+  warehouse:'Thống kê kho', 'phieu-kho':'Phiếu nhập', ccdc:'Lịch sử CCDC',
+  tariff:'Bảng giá', actlog:'Nhật ký',
+  report:'BC tháng', pictures:'Xuất hình', inventory:'MSC Inv', photos:'Xem hình',
+  'fo-ca':'TV - Ca', 'fo-ky':'TV - Kỳ', 'fo-detail':'TV - Chi tiết'
+};
+const SCREEN_GROUP_COLOR = {
+  estimate:'#22d3ee', revise:'#22d3ee', ovm:'#22d3ee',
+  tracking:'#34d399', summary:'#34d399', bulk:'#34d399', stock:'#34d399',
+  warehouse:'#fbbf24', 'phieu-kho':'#fbbf24', ccdc:'#fbbf24',
+  tariff:'#a78bfa', actlog:'#a78bfa',
+  report:'#f472b6', pictures:'#f472b6', inventory:'#f472b6', photos:'#f472b6',
+  'fo-ca':'#fb923c', 'fo-ky':'#fb923c', 'fo-detail':'#fb923c'
+};
+function renderPermBadges(role, permissions) {
+  if (role === 'admin') {
+    return '<span class="badge b-wa" style="font-size:10px">Tất cả màn hình</span>';
+  }
+  const permsStr = permissions && String(permissions).trim() ? String(permissions) : DEFAULT_USER_PERMS;
+  const allowed = permsStr.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!allowed.length) return '<span style="color:var(--gray);font-size:11px">— Chưa gán —</span>';
+  return allowed.map(s => {
+    const label = SCREEN_LABELS[s] || s;
+    const color = SCREEN_GROUP_COLOR[s] || '#94a3b8';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;margin:2px 3px 2px 0;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid ${color}40;font-size:10.5px;color:#e2e8f0">
+      <span style="width:6px;height:6px;border-radius:50%;background:${color}"></span>${esc(label)}
+    </span>`;
+  }).join('');
+}
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -6324,12 +6356,12 @@ function renderActLog() {
 async function renderUsers() {
   const tbody = document.getElementById('users-rows');
   if (!state.user) return;
-  tbody.innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
     const res = await apiGet({ action: 'getUsers', username: state.user.username, key: state.user.key || localStorage.getItem('mnr_key') || '' });
-    if (!res.success) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
+    if (!res.success) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
     const data = res.data || [];
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:20px">Chưa có user nào</td></tr>'; return; }
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:20px">Chưa có user nào</td></tr>'; return; }
     tbody.innerHTML = data.map((u, i) => `
       <tr>
         <td>${i+1}</td>
@@ -6338,6 +6370,7 @@ async function renderUsers() {
         <td style="text-align:left">${u.title||'—'}</td>
         <td>${u.expiry||'—'}</td>
         <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${u.role||'user'}</span></td>
+        <td style="text-align:left;line-height:1.8">${renderPermBadges(u.role, u.permissions)}</td>
         <td style="text-align:left">
           <button onclick="showEditUserModal('${u.username}','${(u.fullname||'').replace(/'/g,'\`')}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}','${(u.title||'').replace(/'/g,'\`')}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
           <button onclick="doDeleteUser('${u.username}')" class="btn btn-sm btn-red">Xoá</button>
@@ -6345,7 +6378,7 @@ async function renderUsers() {
       </tr>
     `).join('');
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--red);padding:20px">Lỗi: ${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi: ${e.message}</td></tr>`;
   }
 }
 
