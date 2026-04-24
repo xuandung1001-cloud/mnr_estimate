@@ -3461,7 +3461,8 @@ function renderTracking() {
 
 function calcTrackingStats(data) {
   // Tối ưu: 1 vòng loop thay vì 9 lần filter
-  var s = { total: 0, approved: 0, partial: 0, revised: 0, sent: 0, repair: 0, repaired: 0, rejected: 0, pending: 0 };
+  var s = { total: 0, approved: 0, partial: 0, revised: 0, sent: 0, repair: 0, repaired: 0, rejected: 0, pending: 0, termite: 0 };
+  var CLOSED_TRM = ['Repaired', 'Rejected'];
   for (var i = 0; i < data.length; i++) {
     var st = data[i].approval_status || '';
     switch (st) {
@@ -3475,6 +3476,8 @@ function calcTrackingStats(data) {
       case 'Pending':                      s.pending++;  s.total++; break;
       default:                             s.pending++;  s.total++; break; // empty status = Pending
     }
+    // Termite Attack: chỉ đếm cont đang xử lý (không Repaired/Rejected)
+    if (data[i].special_flag === 'Termite Attack' && !CLOSED_TRM.includes(st)) s.termite++;
   }
   return s;
 }
@@ -3514,6 +3517,11 @@ function renderTrackingStats(s) {
     ${s.pending ? `<div class="stat-card" style="background:#f8fafc;border-left:3px solid #94a3b8">
       <div class="stat-label" style="color:#64748b">Pending</div>
       <div class="stat-value" style="color:#94a3b8">${s.pending}</div>
+    </div>` : ''}
+    ${s.termite ? `<div class="stat-card" style="background:#fff1f2;border-left:3px solid #be123c">
+      <div class="stat-label" style="color:#be123c">🪲 Termite Attack</div>
+      <div class="stat-value" style="color:#be123c">${s.termite}</div>
+      <div class="stat-sub" style="color:#fda4af">cont đang xử lý mối mọt</div>
     </div>` : ''}
   `;
 }
@@ -6770,7 +6778,6 @@ var _whChart1 = null, _whChart2 = null;
 
 function _whFmtVND(val) {
   if (!val || val === 0) return '—';
-  if (val >= 1e6) return Math.round(val/1e6).toLocaleString('vi-VN') + ' triệu';
   return Math.round(val).toLocaleString('vi-VN');
 }
 
