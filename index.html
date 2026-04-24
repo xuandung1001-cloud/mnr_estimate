@@ -863,8 +863,8 @@ td input:focus,td select:focus{background:#FEFAF0}
               <span style="font-size:11px;color:var(--gray);font-weight:600">Tỷ giá USD:</span>
               <input id="wh-rate" type="number" value="25000" min="1" style="width:90px;font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px" onchange="onWhRateManualChange()">
               <span style="font-size:11px;color:var(--gray)">VND/USD</span>
-              <button class="btn btn-sm" id="wh-rate-btn" onclick="loadUsdRate(true)" title="Lấy tỷ giá mới nhất" style="padding:3px 8px;font-size:11px">🔄 Live</button>
-              <span id="wh-rate-info" style="font-size:10.5px;color:var(--gray);font-style:italic"></span>
+              <button id="wh-rate-btn" style="display:none"></button>
+              <span id="wh-rate-info" style="display:none"></span>
             </div>
             <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Bảng chi tiết</button>
             <button class="btn btn-sm" id="btn-trend-month" onclick="toggleTrendTable('month')">Xu hướng tháng</button>
@@ -2155,7 +2155,14 @@ async function loadInitialData() {
     if (results[0] && results[0].success) state.tracking = results[0].data;
     if (results[1] && results[1].success) state.summary  = results[1].data;
     if (_expEl) _expEl.textContent = _expOrig;
-    genDashboard();
+    // Pre-load warehouse data để màn Báo cáo tháng có số liệu Xuất/Tồn kho ngay lần đầu
+    if (!_whData) {
+      refreshWarehouse().then(function(){ try { genDashboard(); } catch(e){} });
+    } else {
+      genDashboard();
+    }
+    // Schedule auto-fetch tỷ giá USD lúc 7h sáng mỗi ngày
+    scheduleDailyRateUpdate();
   } catch(e) {
     console.error('Data load error:', e);
     if (_expEl) _expEl.textContent = _expOrig;
@@ -6156,8 +6163,8 @@ async function handleStockUpload(input) {
 }
 
 // ===================== PHÂN QUYỀN =====================
-const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog'];
-const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc'; // tariff ẩn mặc định
+const ALL_SCREENS = ['estimate','revise','ovm','tracking','summary','bulk','stock','tariff','report','pictures','inventory','photos','warehouse','phieu-kho','ccdc','actlog','fo-ca','fo-ky','fo-detail'];
+const DEFAULT_USER_PERMS = 'estimate,revise,ovm,tracking,summary,bulk,stock,report,pictures,inventory,photos,warehouse,phieu-kho,ccdc'; // tariff + thương vụ ẩn mặc định
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
@@ -6179,6 +6186,9 @@ function applyPermissions(role, permissions) {
     'phieu-kho': '[id="nav-phieu-kho"]',
     ccdc:        '[id="nav-ccdc"]',
     actlog:      '[id="nav-actlog"]',
+    'fo-ca':     '[id="nav-fo-ca"]',
+    'fo-ky':     '[id="nav-fo-ky"]',
+    'fo-detail': '[id="nav-fo-detail"]',
   };
   ALL_SCREENS.forEach(screen => {
     const el = document.querySelector('.nav-item' + (navMap[screen]||''));
@@ -6834,37 +6844,38 @@ function onWhRateManualChange() {
 }
 
 async function loadUsdRate(force) {
-  var info = document.getElementById('wh-rate-info');
-  var btn  = document.getElementById('wh-rate-btn');
-  if (!info || !btn) return;
   // Nếu user đã chỉnh tay và không force → không ghi đè
   if (_whRateUserOverride && !force) return;
-
-  info.textContent = '(đang lấy...)';
-  btn.disabled = true;
   try {
     var res = await apiGet({ action: 'getUsdRate', _t: Date.now() });
     if (res && res.success && res.rate > 0) {
-      document.getElementById('wh-rate').value = Math.round(res.rate);
+      var rateInp = document.getElementById('wh-rate');
+      if (rateInp) rateInp.value = Math.round(res.rate);
       _whRateUserOverride = false;
-      var src = res.source || 'API';
-      var upd = res.updated ? (' · ' + String(res.updated).substring(0, 16).replace('T', ' ')) : '';
-      info.innerHTML = '<span style="color:var(--green)">✓ ' + src + upd + '</span>';
-      info.title = 'Buy: ' + (res.buy||'—') + ' · Transfer: ' + (res.transfer||'—') + ' · Sell: ' + (res.sell||'—');
-      renderWarehouse();
+      if (typeof renderWarehouse === 'function') renderWarehouse();
       // Refresh dashboard nếu đang mở màn báo cáo
       var rpt2 = document.getElementById('screen-report');
       if (rpt2 && rpt2.classList.contains('active') && state.tracking && state.tracking.length) {
         try { genDashboard(); } catch(e) {}
       }
-    } else {
-      info.innerHTML = '<span style="color:var(--red)">✕ ' + (res && res.error || 'Không lấy được') + '</span>';
     }
-  } catch(e) {
-    info.innerHTML = '<span style="color:var(--red)">✕ Lỗi kết nối</span>';
-  } finally {
-    btn.disabled = false;
-  }
+  } catch(e) {}
+}
+
+// Schedule auto-fetch tỷ giá USD lúc 7h sáng mỗi ngày (client-side)
+// Chỉ chạy khi app đang mở. Khi đóng/mở lại app sau 7h cùng ngày thì refreshWarehouse
+// sẽ gọi loadUsdRate (qua cache 1h backend) nên rate vẫn được refresh.
+var _dailyRateTimer = null;
+function scheduleDailyRateUpdate() {
+  if (_dailyRateTimer) clearTimeout(_dailyRateTimer);
+  var now = new Date();
+  var next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  var delay = next - now;
+  _dailyRateTimer = setTimeout(function() {
+    try { loadUsdRate(true); } catch(e) {}
+    scheduleDailyRateUpdate(); // reschedule cho ngày tiếp theo
+  }, delay);
 }
 
 function _whParseDate(s) {
@@ -8158,65 +8169,177 @@ function foDetailExport(){ toast('Export Excel chi tiết — S2b sẽ bổ sung
 <datalist id="dl-unit"><option value="QTY"><option value="CMT"></datalist>
 <datalist id="dl-resp"><option value="C"><option value="D"><option value="H"><option value="I"><option value="O"><option value="OT"><option value="S"><option value="SU"><option value="T"><option value="U"><option value="V"><option value="W"><option value="PO"></datalist>
 <!-- MODAL THÊM/SỬA USER -->
-<div id="modal-user" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:12px;padding:28px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
-    <div style="font-size:15px;font-weight:700;color:#1A1A1A;margin-bottom:16px" id="modal-user-title">Thêm User mới</div>
-    <div class="form-grid grid-2" style="margin-bottom:0">
-      <div class="fg">
-        <div class="fl">Username *</div>
-        <input class="fi" id="u-username" placeholder="vd: nguyen.van.a">
-      </div>
-      <div class="fg">
-        <div class="fl">Mật khẩu <span id="u-pwd-hint" style="font-weight:400;text-transform:none">(bắt buộc)</span></div>
-        <input class="fi" id="u-password" type="password" placeholder="Nhập mật khẩu">
-      </div>
-      <div class="fg">
-        <div class="fl">Họ tên</div>
-        <input class="fi" id="u-fullname" placeholder="Nguyễn Văn A">
-      </div>
-      <div class="fg">
-        <div class="fl">Chức vụ</div>
-        <input class="fi" id="u-title" placeholder="VD: Trưởng bộ phận MNR">
-      </div>
-      <div class="fg">
-        <div class="fl">Hết hạn</div>
-        <input class="fi" id="u-expiry" placeholder="31/12/2026">
-      </div>
-      <div class="fg">
-        <div class="fl">Role</div>
-        <select class="fi" id="u-role" onchange="onUserRoleChange()">
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
+<style>
+.u-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);z-index:200;align-items:center;justify-content:center;padding:20px}
+.u-card{background:#fff;border-radius:16px;width:760px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden}
+.u-head{padding:18px 24px;background:linear-gradient(135deg,#FEFAF0,#FFF);border-bottom:1px solid #F0E8D0;display:flex;align-items:center;justify-content:space-between}
+.u-head h2{font-size:16px;font-weight:700;color:#1A1A1A;margin:0;display:flex;align-items:center;gap:8px}
+.u-head h2::before{content:"👤";font-size:18px}
+.u-x{background:none;border:none;font-size:24px;cursor:pointer;color:#94a3b8;line-height:1;padding:0 4px;border-radius:6px;transition:all .15s}
+.u-x:hover{color:#dc2626;background:#fef2f2}
+.u-body{padding:20px 24px;overflow-y:auto;flex:1}
+.u-section{margin-bottom:18px}
+.u-section-title{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid #F0E8D0;display:flex;align-items:center;gap:6px}
+.u-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.u-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.u-fg{display:flex;flex-direction:column;gap:4px}
+.u-label{font-size:10.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.u-input{padding:8px 11px;font-size:13px;border:1.5px solid #E5E7EB;border-radius:8px;background:#fff;color:#1a202c;font-family:inherit;transition:all .15s;outline:none}
+.u-input:focus{border-color:#F5C842;box-shadow:0 0 0 3px rgba(245,200,66,0.18)}
+.u-input:disabled{background:#F9FAFB;color:#94a3b8}
+.u-perms-group{margin-bottom:14px}
+.u-perms-group:last-child{margin-bottom:0}
+.u-perms-label{font-size:11px;font-weight:700;color:#1A1A1A;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.u-perms-label .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.u-perms-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 12px}
+.u-chk{display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;border:1.5px solid #EEF2F6;border-radius:8px;background:#fff;transition:all .12s;font-size:12px;color:#334155}
+.u-chk:hover{border-color:#F5C842;background:#FEFAF0}
+.u-chk input{width:14px;height:14px;cursor:pointer;accent-color:#F5C842}
+.u-chk.sel{border-color:#F5C842;background:#FEFAF0;color:#7A5500;font-weight:600}
+.u-foot{padding:16px 24px;border-top:1px solid #F0F0F0;display:flex;gap:10px;justify-content:flex-end;background:#FAFAFA}
+.u-foot .btn{padding:9px 22px;font-size:13px;border-radius:8px}
+.u-perms-toolbar{display:flex;gap:8px;margin-bottom:10px}
+.u-perms-toolbar button{padding:4px 10px;font-size:11px;border:1px solid #E5E7EB;border-radius:6px;background:#fff;cursor:pointer;color:#64748b;font-family:inherit;transition:all .15s}
+.u-perms-toolbar button:hover{border-color:#F5C842;color:#7A5500;background:#FEFAF0}
+</style>
+<div id="modal-user" class="u-modal">
+  <div class="u-card">
+    <div class="u-head">
+      <h2 id="modal-user-title">Thêm User mới</h2>
+      <button class="u-x" onclick="hideUserModal()" title="Đóng">×</button>
     </div>
-    <div id="u-perms-block" style="margin-top:12px">
-      <div class="fl" style="margin-bottom:6px">Màn hình được phép truy cập</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-estimate" value="estimate"> Nhập Báo Giá</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-revise" value="revise"> Chỉnh sửa Báo Giá</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-ovm" value="ovm"> Cập nhật OVM</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-tracking" value="tracking"> Danh sách Báo Giá</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-summary" value="summary"> Tổng hợp</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-bulk" value="bulk"> Xuất Bulk</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-stock" value="stock"> Tồn Rỗng</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-tariff" value="tariff"> Quản lý Bảng Giá</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-report" value="report"> Báo cáo tháng</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-pictures" value="pictures"> Xuất hình ảnh</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-photos" value="photos"> Xem Hình Ảnh</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-warehouse" value="warehouse"> Thống kê kho</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-phieu-kho" value="phieu-kho"> Phiếu nhập xuất</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="perm-ccdc" value="ccdc"> Lịch sử CCDC</label>
+    <div class="u-body">
+      <!-- THÔNG TIN CƠ BẢN -->
+      <div class="u-section">
+        <div class="u-section-title">📋 Thông tin tài khoản</div>
+        <div class="u-grid-2">
+          <div class="u-fg">
+            <div class="u-label">Username *</div>
+            <input class="u-input" id="u-username" placeholder="vd: nguyen.van.a">
+          </div>
+          <div class="u-fg">
+            <div class="u-label">Mật khẩu <span id="u-pwd-hint" style="font-weight:400;text-transform:none;color:#94a3b8">(bắt buộc)</span></div>
+            <input class="u-input" id="u-password" type="password" placeholder="Nhập mật khẩu">
+          </div>
+          <div class="u-fg">
+            <div class="u-label">Họ tên</div>
+            <input class="u-input" id="u-fullname" placeholder="Nguyễn Văn A">
+          </div>
+          <div class="u-fg">
+            <div class="u-label">Chức vụ</div>
+            <input class="u-input" id="u-title" placeholder="VD: Trưởng bộ phận MNR">
+          </div>
+          <div class="u-fg">
+            <div class="u-label">Hết hạn</div>
+            <input class="u-input" id="u-expiry" placeholder="31/12/2026">
+          </div>
+          <div class="u-fg">
+            <div class="u-label">Role</div>
+            <select class="u-input" id="u-role" onchange="onUserRoleChange()">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
       </div>
+
+      <!-- PHÂN QUYỀN -->
+      <div id="u-perms-block" class="u-section">
+        <div class="u-section-title" style="justify-content:space-between">
+          <span>🔐 Màn hình được phép truy cập</span>
+          <div class="u-perms-toolbar">
+            <button type="button" onclick="permSelectAll()">✓ Chọn tất cả</button>
+            <button type="button" onclick="permClearAll()">✕ Bỏ chọn</button>
+            <button type="button" onclick="permDefault()">↺ Mặc định</button>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#F59E0B"></span>Thao tác</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="perm-estimate" value="estimate"> Nhập Báo Giá</label>
+            <label class="u-chk"><input type="checkbox" id="perm-revise" value="revise"> Chỉnh sửa Báo Giá</label>
+            <label class="u-chk"><input type="checkbox" id="perm-ovm" value="ovm"> Cập nhật OVM</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#3B82F6"></span>Theo dõi</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="perm-tracking" value="tracking"> Danh sách Báo Giá</label>
+            <label class="u-chk"><input type="checkbox" id="perm-summary" value="summary"> Tổng hợp</label>
+            <label class="u-chk"><input type="checkbox" id="perm-bulk" value="bulk"> Xuất Bulk</label>
+            <label class="u-chk"><input type="checkbox" id="perm-stock" value="stock"> Tồn Rỗng</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#10B981"></span>Vật tư kho</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="perm-warehouse" value="warehouse"> Thống kê kho</label>
+            <label class="u-chk"><input type="checkbox" id="perm-phieu-kho" value="phieu-kho"> Phiếu nhập xuất</label>
+            <label class="u-chk"><input type="checkbox" id="perm-ccdc" value="ccdc"> Lịch sử CCDC</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#8B5CF6"></span>Hệ thống</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="perm-tariff" value="tariff"> Quản lý Bảng Giá</label>
+            <label class="u-chk"><input type="checkbox" id="perm-actlog" value="actlog"> Nhật ký hoạt động</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#38BDF8"></span>Báo cáo</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="perm-report" value="report"> Báo cáo tháng</label>
+            <label class="u-chk"><input type="checkbox" id="perm-pictures" value="pictures"> Xuất hình ảnh</label>
+            <label class="u-chk"><input type="checkbox" id="perm-inventory" value="inventory"> MSC Inventory</label>
+            <label class="u-chk"><input type="checkbox" id="perm-photos" value="photos"> Xem Hình Ảnh</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#EC4899"></span>Thương vụ</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="perm-fo-ca" value="fo-ca"> Báo cáo Ca</label>
+            <label class="u-chk"><input type="checkbox" id="perm-fo-ky" value="fo-ky"> Báo cáo Kỳ</label>
+            <label class="u-chk"><input type="checkbox" id="perm-fo-detail" value="fo-detail"> Dữ liệu chi tiết</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
     </div>
-    <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button onclick="hideUserModal()" class="btn" style="flex:1">Huỷ</button>
-      <button onclick="doSaveUser()" class="btn btn-blue" style="flex:2" id="u-save-btn">Lưu</button>
+    <div class="u-foot">
+      <button onclick="hideUserModal()" class="btn">Huỷ</button>
+      <button onclick="doSaveUser()" class="btn btn-blue" id="u-save-btn">💾 Lưu</button>
     </div>
   </div>
 </div>
+<script>
+// Highlight checkbox label khi check/uncheck
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.matches && e.target.matches('#modal-user .u-chk input[type="checkbox"]')) {
+    var lbl = e.target.closest('.u-chk');
+    if (lbl) lbl.classList.toggle('sel', e.target.checked);
+  }
+});
+// Init chk highlight sau khi mở modal
+var _origSetPermCheckboxes = setPermCheckboxes;
+setPermCheckboxes = function(permsStr) {
+  _origSetPermCheckboxes(permsStr);
+  document.querySelectorAll('#modal-user .u-chk').forEach(function(lbl){
+    var cb = lbl.querySelector('input[type="checkbox"]');
+    if (cb) lbl.classList.toggle('sel', cb.checked);
+  });
+};
+// Helpers cho toolbar buttons
+window.permSelectAll = function(){ setPermCheckboxes(ALL_SCREENS.join(',')); };
+window.permClearAll  = function(){ setPermCheckboxes(''); };
+window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
+</script>
 
 
 
