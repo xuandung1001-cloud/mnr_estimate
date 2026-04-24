@@ -859,6 +859,13 @@ td input:focus,td select:focus{background:#FEFAF0}
             </select>
             <select class="fi" id="rpt-year" onchange="genDashboard()" style="width:90px"></select>
             <select class="fi" id="rpt-carrier" onchange="genDashboard()" style="width:120px"><option value="MSC">MSC</option></select>
+            <div style="display:flex;align-items:center;gap:6px;padding-left:8px;border-left:1px solid var(--border)">
+              <span style="font-size:11px;color:var(--gray);font-weight:600">Tỷ giá USD:</span>
+              <input id="wh-rate" type="number" value="25000" min="1" style="width:90px;font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px" onchange="onWhRateManualChange()">
+              <span style="font-size:11px;color:var(--gray)">VND/USD</span>
+              <button class="btn btn-sm" id="wh-rate-btn" onclick="loadUsdRate(true)" title="Lấy tỷ giá mới nhất" style="padding:3px 8px;font-size:11px">🔄 Live</button>
+              <span id="wh-rate-info" style="font-size:10.5px;color:var(--gray);font-style:italic"></span>
+            </div>
             <button class="btn btn-sm" id="btn-detailed-report" onclick="genDetailedReport()">Bảng chi tiết</button>
             <button class="btn btn-sm" id="btn-trend-month" onclick="toggleTrendTable('month')">Xu hướng tháng</button>
             <button class="btn btn-sm" id="btn-trend-week" onclick="toggleTrendTable('week')">Xu hướng tuần</button>
@@ -1280,11 +1287,7 @@ td input:focus,td select:focus{background:#FEFAF0}
             <select id="wh-year" onchange="renderWarehouse()" style="font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px">
               <option value="2025">2025</option><option value="2026">2026</option>
             </select>
-            <div style="font-size:12px;color:var(--gray);margin-left:8px">Tỷ giá USD:</div>
-            <input id="wh-rate" type="number" value="25000" min="1" style="width:90px;font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px" onchange="onWhRateManualChange()">
-            <span style="font-size:12px;color:var(--gray)">VND/USD</span>
-            <button class="btn btn-sm" id="wh-rate-btn" onclick="loadUsdRate(true)" title="Lấy tỷ giá mới nhất từ Vietcombank" style="padding:3px 8px;font-size:11px">🔄 Live</button>
-            <span id="wh-rate-info" style="font-size:10.5px;color:var(--gray);font-style:italic"></span>
+            <div style="font-size:11px;color:var(--gray);margin-left:8px;font-style:italic">(Tỷ giá USD đặt ở màn Báo cáo tháng)</div>
             <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
               <div style="font-size:12px;color:var(--gray)" id="wh-updated"></div>
               <button class="btn btn-sm" onclick="refreshWarehouse()">&#8635; Refresh</button>
@@ -2207,7 +2210,14 @@ function nav(screen, el) {
   const cfg = configs[screen] || { title: screen, actions: [] };
   setTopbar(cfg.title, cfg.actions);
 
-  if (screen === 'report' && state.tracking && state.tracking.length) genDashboard();
+  if (screen === 'report' && state.tracking && state.tracking.length) {
+    // Pre-load warehouse data để có số liệu Xuất/Tồn/Lợi nhuận cho KPI cards
+    if (!_whData) {
+      refreshWarehouse().then(function(){ try { genDashboard(); } catch(e){} });
+    } else {
+      genDashboard();
+    }
+  }
   if (screen === 'tracking') renderTracking();
   if (screen === 'summary') autoSyncSummary();
   if (screen === 'inventory') renderInventoryReport();
@@ -4806,37 +4816,60 @@ function genDashboard() {
 
   const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
   const noVat    = round2(totalApp / 1.1);
-  const unitCost = filtered.length ? round2(noVat / filtered.length) : 0;
-  // Pending: tất cả cont chưa Repaired/Rejected (không filter theo tháng)
-  const pending  = state.tracking.filter(r => r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected' && (!carrier || r.carrier === carrier)).length;
-  const termite = state.tracking.filter(r => r.special_flag === 'Termite Attack' && r.approval_status !== 'Repaired' && r.approval_status !== 'Rejected' && (!carrier || r.carrier === carrier)).length;
 
-  // KPI Cards
+  // Tỷ giá + financial data từ warehouse report (lazy load nếu chưa có)
+  var rate = (typeof _whGetRate === 'function') ? _whGetRate() : 25000;
+  var dtVND = noVat * rate;
+  var mkey = year + '-' + String(monthIdx+1).padStart(2,'0');
+  var xuatVND = 0, tonVND = 0;
+  if (_whData && _whData.months) {
+    if (isAllYear) {
+      // Cả năm: sum xuất_kho trong năm, tồn_kho = giá trị cuối năm
+      var lastIdx = -1;
+      _whData.months.forEach(function(m, i) {
+        if (m.indexOf(String(year)) === 0) {
+          xuatVND += _whData.tien_xuat[i] || 0;
+          lastIdx = i;
+        }
+      });
+      if (lastIdx >= 0) tonVND = _whData.tien_ton[lastIdx] || 0;
+    } else {
+      var idx = _whData.months.indexOf(mkey);
+      if (idx >= 0) {
+        xuatVND = _whData.tien_xuat[idx] || 0;
+        tonVND  = _whData.tien_ton[idx]  || 0;
+      }
+    }
+  }
+  var profit = dtVND - xuatVND;
+  var fmtVND = (typeof _whFmtVND === 'function') ? _whFmtVND : function(v){ return v ? Math.round(v).toLocaleString('vi-VN') : '—'; };
+
+  // KPI Cards — đồng bộ với màn Thống kê kho
   document.getElementById('rpt-kpi').innerHTML = `
-    <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #22c55e">
-      <div class="stat-label" style="color:#15803d">Tổng containers</div>
-      <div class="stat-value" style="color:#15803d">${filtered.length}</div>
+    <div class="stat-card" style="background:#f0f4f8;border-left:4px solid #94a3b8">
+      <div class="stat-label" style="color:#64748b">Tổng containers</div>
+      <div class="stat-value" style="color:#1e293b">${filtered.length}</div>
       <div class="stat-sub">${isAllYear ? 'Cả năm ' + year : month + ' ' + year}</div>
     </div>
-    <div class="stat-card" style="background:#eff6ff;border-left:4px solid #3b82f6">
-      <div class="stat-label" style="color:#1d4ed8">Total No VAT</div>
-      <div class="stat-value" style="color:#1d4ed8;font-size:16px">${num(noVat)}</div>
-      <div class="stat-sub">USD</div>
+    <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #1D9E75">
+      <div class="stat-label" style="color:#0F6E56">Doanh thu MNR</div>
+      <div class="stat-value" style="color:#0F6E56;font-size:16px">${dtVND > 0 ? fmtVND(dtVND) : '—'}</div>
+      <div class="stat-sub">$${noVat.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} USD · No VAT</div>
     </div>
-    <div class="stat-card" style="background:#fffbeb;border-left:4px solid #f59e0b">
-      <div class="stat-label" style="color:#A06010">Unit Cost TB</div>
-      <div class="stat-value" style="color:#A06010;font-size:16px">${num(unitCost)}</div>
-      <div class="stat-sub">USD / cont</div>
+    <div class="stat-card" style="background:#fff7ed;border-left:4px solid #D85A30">
+      <div class="stat-label" style="color:#993C1D">Xuất kho tháng</div>
+      <div class="stat-value" style="color:#993C1D;font-size:16px">${xuatVND > 0 ? fmtVND(xuatVND) : '—'}</div>
+      <div class="stat-sub">giá trị xuất (VNĐ)</div>
     </div>
-    <div class="stat-card" style="background:#eef2ff;border-left:4px solid #6366f1">
-      <div class="stat-label" style="color:#4338ca">Đang chờ xử lý</div>
-      <div class="stat-value" style="color:#4338ca">${pending}</div>
-      <div class="stat-sub">Partially / Revised / Sent</div>
+    <div class="stat-card" style="background:#fffbeb;border-left:4px solid #F5C842">
+      <div class="stat-label" style="color:#A06010">Tồn kho tháng</div>
+      <div class="stat-value" style="color:#A06010;font-size:16px">${tonVND > 0 ? fmtVND(tonVND) : '—'}</div>
+      <div class="stat-sub">lũy kế đến tháng</div>
     </div>
-    <div class="stat-card" style="background:#fff1f2;border-left:4px solid #be123c">
-      <div class="stat-label" style="color:#be123c">🪲 Termite Attack</div>
-      <div class="stat-value" style="color:#be123c">${termite}</div>
-      <div class="stat-sub">cont đang xử lý mối mọt</div>
+    <div class="stat-card" style="background:#f0fdf4;border-left:4px solid #16a34a">
+      <div class="stat-label" style="color:#15803d">Lợi nhuận gộp</div>
+      <div class="stat-value" style="color:${profit >= 0 ? '#15803d' : '#dc2626'};font-size:16px">${profit !== 0 ? fmtVND(profit) : '—'}</div>
+      <div class="stat-sub">Doanh thu - Xuất kho</div>
     </div>
   `;
 
@@ -6786,6 +6819,11 @@ function onWhRateManualChange() {
   var info = document.getElementById('wh-rate-info');
   if (info) info.textContent = '(nhập tay)';
   renderWarehouse();
+  // Nếu đang ở màn báo cáo tháng, refresh dashboard để cập nhật Doanh thu MNR theo tỷ giá mới
+  var rpt = document.getElementById('screen-report');
+  if (rpt && rpt.classList.contains('active') && state.tracking && state.tracking.length) {
+    try { genDashboard(); } catch(e) {}
+  }
 }
 
 async function loadUsdRate(force) {
@@ -6807,6 +6845,11 @@ async function loadUsdRate(force) {
       info.innerHTML = '<span style="color:var(--green)">✓ ' + src + upd + '</span>';
       info.title = 'Buy: ' + (res.buy||'—') + ' · Transfer: ' + (res.transfer||'—') + ' · Sell: ' + (res.sell||'—');
       renderWarehouse();
+      // Refresh dashboard nếu đang mở màn báo cáo
+      var rpt2 = document.getElementById('screen-report');
+      if (rpt2 && rpt2.classList.contains('active') && state.tracking && state.tracking.length) {
+        try { genDashboard(); } catch(e) {}
+      }
     } else {
       info.innerHTML = '<span style="color:var(--red)">✕ ' + (res && res.error || 'Không lấy được') + '</span>';
     }
