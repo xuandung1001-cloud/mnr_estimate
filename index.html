@@ -7805,8 +7805,8 @@ function _foKyDashboard(rows, prevRows, range){
       plugins:{legend:{position:'top', labels:{font:{size:10}, boxWidth:10}}, tooltip:{callbacks:{label:function(ctx){var d=ctx.dataset; return d.yAxisID==='y1' ? d.label+': '+ctx.raw+' lệnh' : d.label+': '+foFmt(ctx.raw)+' đ';}}}},
       scales:{
         x:{ticks:{font:{size:10}}, grid:{display:false}},
-        y:{position:'left', beginAtZero:true, ticks:{font:{size:9}, callback:function(v){return (v/1000000).toFixed(0)+'M';}}, grid:{color:'rgba(139,92,246,0.08)'}, title:{display:true, text:'Doanh thu', font:{size:9}, color:'#8B5CF6'}},
-        y1:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, ticks:{font:{size:9}, stepSize:1}, title:{display:true, text:'Số lệnh', font:{size:9}, color:'#F59E0B'}}
+        y:{position:'left', beginAtZero:true, ticks:{font:{size:9}, callback:function(v){return (v/1000000).toFixed(0)+'M';}}, grid:{color:'rgba(139,92,246,0.08)'}},
+        y1:{position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, ticks:{font:{size:9}, stepSize:1}}
       }
     }
   });
@@ -7830,7 +7830,7 @@ function _foKyDashboard(rows, prevRows, range){
     cnEl.innerHTML='<div style="padding:30px;text-align:center;color:var(--gray);font-size:11px">📭 Không có công nợ phát sinh trong kỳ</div>';
   } else {
     var cnHtml='<table style="font-size:11px;width:100%;border-collapse:collapse">';
-    cnHtml+='<thead><tr style="background:#FAFAFA"><th style="text-align:left;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE">Khách hàng</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:50px">Lệnh</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:110px">Công nợ</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:140px">%</th></tr></thead><tbody>';
+    cnHtml+='<thead><tr style="background:#FAFAFA"><th style="text-align:left;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE">Khách hàng</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:75px">Lệnh</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:170px">Công nợ</th><th style="text-align:right;padding:6px 8px;font-weight:600;color:var(--gray);border-bottom:1px solid #EEE;width:170px">%</th></tr></thead><tbody>';
     cnArr.forEach(function(e, i){
       var kh=foKhName(e[0]);
       var no=e[1].no;
