@@ -7701,82 +7701,109 @@ function _foCaDashboard(rows, dateStr, shift){
   var cntTm=active.filter(function(r){return r.hinh_thuc_tt==='Tiền mặt';}).length;
   var cntTs=active.filter(function(r){return r.hinh_thuc_tt==='Trả sau';}).length;
 
-  // Header
-  var shName=shift==='sang'?'CA SÁNG (08–20)':'CA TỐI (20–08)';
+  var shName=shift==='sang'?'Ca sáng (08–20)':'Ca tối (20–08)';
+  var shIcon=shift==='sang'?'☀':'🌙';
   var dp=dateStr.split('-');
+  var ddmmyyyy=dp[2]+'/'+dp[1]+'/'+dp[0];
+  var aov=active.length?Math.round(totalRev/active.length):0;
+  var cancelRate=rows.length?(canceled.length/rows.length*100):0;
+
   var html='';
-  html+='<div class="card" style="padding:12px 16px;margin-bottom:12px;background:linear-gradient(90deg,#FFF9E6,#FFF);border-left:4px solid #EAB308">';
+
+  // HERO HEADER với KPI overview
+  html+='<div class="card" style="padding:0;margin-bottom:12px;overflow:hidden;border:none">';
+  html+='<div style="padding:14px 20px;background:linear-gradient(135deg,#FFF9E6 0%,#FEFAF0 100%);border-bottom:1px solid #F0E8D0">';
   html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">';
-  html+='<div style="font-weight:800;font-size:14px;color:#7A5500">📊 BÁO CÁO '+shName+' — '+dp[2]+'/'+dp[1]+'/'+dp[0]+'</div>';
-  html+='<div style="font-size:10.5px;color:var(--gray)">'+rows.length+' lệnh ghi nhận · '+canceled.length+' huỷ</div>';
+  html+='<div>';
+  html+='<div style="font-size:11px;color:#A06010;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Báo cáo ca thương vụ</div>';
+  html+='<div style="font-size:18px;font-weight:700;color:#1A1A1A">'+shIcon+' '+shName+' — '+ddmmyyyy+'</div>';
+  html+='</div>';
+  html+='<div style="text-align:right;font-size:11px;color:var(--gray-dark)">'+rows.length+' lệnh ghi nhận · <span style="color:'+(canceled.length?'#DC2626':'#64748B')+';font-weight:600">'+canceled.length+' huỷ</span></div>';
   html+='</div></div>';
 
-  // BẢNG SẢN LƯỢNG (format email)
+  // KPI tiles
+  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:#fff">';
+  html+=_foCaKpi('Doanh thu', foFmt(totalRev)+' đ', '#0F6E56', 'right:1px solid #F0F0F0');
+  html+=_foCaKpi('Số lệnh', active.length.toLocaleString('vi-VN'), '#1E40AF', 'right:1px solid #F0F0F0');
+  html+=_foCaKpi('GT TB/lệnh', foFmt(aov)+' đ', '#A06010', 'right:1px solid #F0F0F0');
+  html+=_foCaKpi('Tỷ lệ huỷ', cancelRate.toFixed(1)+'%', cancelRate>3?'#DC2626':'#64748B', '');
+  html+='</div></div>';
+
+  // BẢNG SẢN LƯỢNG
   html+='<div class="card" style="padding:0;margin-bottom:12px;overflow:hidden">';
-  html+='<div style="padding:12px 16px;background:#FEF3C7;border-bottom:2px solid #000">';
-  html+='<div style="text-align:center;font-weight:800;font-size:14px;color:#B91C1C">BÁO CÁO '+shName+' — NGÀY '+dp[2]+'/'+dp[1]+'/'+dp[0]+'</div>';
+  html+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
+  html+='<div style="font-size:13px;font-weight:700;color:#1A1A1A">📊 Sản lượng theo phương án</div>';
+  html+='<div style="font-size:11px;color:var(--gray-dark)">'+SIZES.length+' size · '+FO_PA_ORDER.length+' nhóm phương án</div>';
   html+='</div>';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  html+='<thead><tr style="background:#FEF3C7;color:#B91C1C">';
-  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">SẢN LƯỢNG</th>';
-  SIZES.forEach(function(s){ html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">'+esc(s)+'</th>'; });
-  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">TỔNG</th>';
-  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">DOANH THU</th>';
+  html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:auto">';
+  html+='<thead><tr style="background:#FFF9E6">';
+  html+='<th style="padding:10px 14px;text-align:left;font-weight:700;color:#7A5500;border-bottom:2px solid #F5EDD0">Phương án</th>';
+  SIZES.forEach(function(s){ html+='<th style="padding:10px 12px;text-align:center;font-weight:700;color:#7A5500;border-bottom:2px solid #F5EDD0;min-width:70px">'+esc(s)+'</th>'; });
+  html+='<th style="padding:10px 12px;text-align:center;font-weight:700;color:#7A5500;border-bottom:2px solid #F5EDD0;min-width:70px">Tổng</th>';
+  html+='<th style="padding:10px 14px;text-align:right;font-weight:700;color:#7A5500;border-bottom:2px solid #F5EDD0;min-width:130px">Doanh thu (đ)</th>';
   html+='</tr></thead><tbody>';
-  FO_PA_ORDER.forEach(function(g){
+  FO_PA_ORDER.forEach(function(g, gi){
     var p=pivot[g];
-    html+='<tr>';
-    html+='<td style="padding:6px 12px;border:1px solid #000;font-weight:600">'+esc(g==='Khác'?'Khác (cắt seal, đảo chuyển, rút hàng, kiểm hóa...)':g)+'</td>';
-    SIZES.forEach(function(s){ var v=p.sizes[s]||0; html+='<td style="padding:6px 12px;border:1px solid #000;text-align:center">'+(v||'')+'</td>'; });
-    html+='<td style="padding:6px 12px;border:1px solid #000;text-align:center;font-weight:600">'+(p.total||0)+'</td>';
-    html+='<td style="padding:6px 12px;border:1px solid #000;text-align:right">'+(p.revenue?foFmt(p.revenue):'')+'</td>';
+    var labelMain=g==='Khác'?'Khác':g;
+    var labelSub=g==='Khác'?'<span style="font-size:10px;color:var(--gray);font-weight:400"> · cắt seal, đảo chuyển, rút hàng…</span>':'';
+    var rowBg=gi%2===1?'background:#FAFAFA':'';
+    html+='<tr style="'+rowBg+'border-bottom:1px solid #F0F0F0">';
+    html+='<td style="padding:8px 14px;font-weight:600;color:#1A1A1A">'+esc(labelMain)+labelSub+'</td>';
+    SIZES.forEach(function(s){ var v=p.sizes[s]||0; html+='<td style="padding:8px 12px;text-align:center;color:'+(v?'#1A1A1A':'#CBD5E1')+'">'+(v||'—')+'</td>'; });
+    html+='<td style="padding:8px 12px;text-align:center;font-weight:700;color:#1A1A1A">'+(p.total||0)+'</td>';
+    html+='<td style="padding:8px 14px;text-align:right;color:'+(p.revenue?'#15803d':'#CBD5E1')+';font-weight:'+(p.revenue?'600':'400')+'">'+(p.revenue?foFmt(p.revenue):'—')+'</td>';
     html+='</tr>';
   });
   // Grand total
-  html+='<tr style="background:#FFF200;font-weight:800;color:#B91C1C">';
-  html+='<td style="padding:8px 12px;border:1px solid #000">GRAND TOTAL</td>';
-  SIZES.forEach(function(s){ html+='<td style="padding:8px 12px;border:1px solid #000;text-align:center">'+(totalSize[s]||0)+'</td>'; });
-  html+='<td style="padding:8px 12px;border:1px solid #000;text-align:center">'+totalLenh+'</td>';
-  html+='<td style="padding:8px 12px;border:1px solid #000;text-align:right">'+foFmt(totalRev)+'</td>';
+  html+='<tr style="background:linear-gradient(90deg,#FFF9E6,#FEFAF0);font-weight:700;border-top:2px solid #F5C842">';
+  html+='<td style="padding:11px 14px;color:#7A5500;font-size:12px;letter-spacing:.02em">TỔNG CỘNG</td>';
+  SIZES.forEach(function(s){ html+='<td style="padding:11px 12px;text-align:center;color:#7A5500">'+(totalSize[s]||0)+'</td>'; });
+  html+='<td style="padding:11px 12px;text-align:center;color:#7A5500;font-size:13px">'+totalLenh+'</td>';
+  html+='<td style="padding:11px 14px;text-align:right;color:#0F6E56;font-size:13px">'+foFmt(totalRev)+'</td>';
   html+='</tr>';
-  html+='</tbody></table></div>';
+  html+='</tbody></table></div></div>';
 
-  // BẢNG HÌNH THỨC THU
-  html+='<div class="card" style="padding:0;margin-bottom:12px;max-width:480px;overflow:hidden">';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  html+='<thead><tr style="background:#DBEAFE;color:#1E40AF">';
-  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">HÌNH THỨC THU</th>';
-  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">SỐ LỆNH</th>';
-  html+='<th style="padding:8px 12px;border:1px solid #000;text-align:center;font-weight:800">SỐ TIỀN</th>';
-  html+='</tr></thead><tbody>';
-  html+='<tr><td style="padding:6px 12px;border:1px solid #000">💵 Tiền mặt</td><td style="padding:6px 12px;border:1px solid #000;text-align:center">'+cntTm+'</td><td style="padding:6px 12px;border:1px solid #000;text-align:right;color:var(--green)">'+foFmt(tm)+'</td></tr>';
-  html+='<tr><td style="padding:6px 12px;border:1px solid #000">📝 Trả sau (công nợ)</td><td style="padding:6px 12px;border:1px solid #000;text-align:center">'+cntTs+'</td><td style="padding:6px 12px;border:1px solid #000;text-align:right;color:#8B5CF6">'+foFmt(ts)+'</td></tr>';
-  html+='<tr style="background:#FEF3C7;font-weight:800"><td style="padding:8px 12px;border:1px solid #000">TỔNG</td><td style="padding:8px 12px;border:1px solid #000;text-align:center">'+(cntTm+cntTs)+'</td><td style="padding:8px 12px;border:1px solid #000;text-align:right">'+foFmt(tm+ts)+'</td></tr>';
-  html+='</tbody></table></div>';
+  // HÌNH THỨC THU — 2 card ngang
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html+='<div class="card" style="padding:14px 16px;border-left:3px solid #1D9E75;margin:0">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;color:#0F6E56;font-weight:600;text-transform:uppercase;letter-spacing:.06em">💵 Tiền mặt</div><div style="font-size:11px;color:var(--gray-dark);font-weight:500">'+cntTm+' lệnh</div></div>';
+  html+='<div style="font-size:20px;font-weight:700;color:#0F6E56">'+foFmt(tm)+' <span style="font-size:12px;font-weight:500">đ</span></div>';
+  html+='</div>';
+  html+='<div class="card" style="padding:14px 16px;border-left:3px solid #8B5CF6;margin:0">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;color:#5B21B6;font-weight:600;text-transform:uppercase;letter-spacing:.06em">📝 Trả sau (công nợ)</div><div style="font-size:11px;color:var(--gray-dark);font-weight:500">'+cntTs+' lệnh</div></div>';
+  html+='<div style="font-size:20px;font-weight:700;color:#5B21B6">'+foFmt(ts)+' <span style="font-size:12px;font-weight:500">đ</span></div>';
+  html+='</div>';
+  html+='</div>';
 
   // LỆNH HUỶ
   if(canceled.length>0){
-    html+='<div class="card" style="padding:12px;margin-bottom:12px;border-left:3px solid var(--red)">';
-    html+='<div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">⚠️ Lệnh huỷ trong ca ('+canceled.length+')</div>';
-    html+='<div class="tbl-wrap"><table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="padding:5px;border-bottom:1px solid #EEE;text-align:left">Số lệnh</th><th style="text-align:left">Cont</th><th style="text-align:left">NV huỷ</th><th style="text-align:left">Lý do</th><th style="text-align:right">Thành tiền</th></tr></thead><tbody>';
-    canceled.forEach(function(r){
-      html+='<tr><td style="padding:4px;border-bottom:1px solid #F5F5F5">'+esc(r.so_lenh)+'</td><td>'+esc(r.so_cont)+'</td><td>'+esc(r.nguoi_huy||r.nv_lap)+'</td><td>'+esc(r.ly_do_huy||'—')+'</td><td style="text-align:right">'+foFmt(r.thanh_tien)+'</td></tr>';
+    html+='<div class="card" style="padding:0;margin-bottom:12px;overflow:hidden;border-left:3px solid #DC2626">';
+    html+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
+    html+='<div style="font-size:13px;font-weight:700;color:#991B1B">⚠ Lệnh huỷ trong ca</div>';
+    html+='<div style="font-size:11px;color:#DC2626;font-weight:600">'+canceled.length+' lệnh</div>';
+    html+='</div>';
+    html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:#FEF2F2"><th style="padding:8px 12px;text-align:left;color:#991B1B;font-weight:600;border-bottom:1px solid #FCA5A5">Số lệnh</th><th style="padding:8px 12px;text-align:left;color:#991B1B;font-weight:600;border-bottom:1px solid #FCA5A5">Container</th><th style="padding:8px 12px;text-align:left;color:#991B1B;font-weight:600;border-bottom:1px solid #FCA5A5">NV huỷ</th><th style="padding:8px 12px;text-align:left;color:#991B1B;font-weight:600;border-bottom:1px solid #FCA5A5">Lý do</th><th style="padding:8px 12px;text-align:right;color:#991B1B;font-weight:600;border-bottom:1px solid #FCA5A5">Thành tiền</th></tr></thead><tbody>';
+    canceled.forEach(function(r, i){
+      var bg=i%2===1?'background:#FAFAFA':'';
+      html+='<tr style="'+bg+';border-bottom:1px solid #F5F5F5">';
+      html+='<td style="padding:7px 12px;font-family:monospace;color:#1A1A1A">'+esc(r.so_lenh)+'</td>';
+      html+='<td style="padding:7px 12px;font-family:monospace">'+esc(r.so_cont)+'</td>';
+      html+='<td style="padding:7px 12px">'+esc(r.nguoi_huy||r.nv_lap)+'</td>';
+      html+='<td style="padding:7px 12px;color:var(--gray-dark);font-style:italic">'+esc(r.ly_do_huy||'—')+'</td>';
+      html+='<td style="padding:7px 12px;text-align:right;color:#DC2626">'+foFmt(r.thanh_tien)+'</td>';
+      html+='</tr>';
     });
     html+='</tbody></table></div></div>';
   }
 
-  // NV PRODUCTIVITY
-  var nvs={};
-  active.forEach(function(r){ var k=r.nv_lap||'—'; if(!nvs[k]) nvs[k]={lenh:0,dt:0,huy:0}; nvs[k].lenh++; nvs[k].dt+=r.thanh_tien; });
-  canceled.forEach(function(r){ var k=r.nv_lap||'—'; if(!nvs[k]) nvs[k]={lenh:0,dt:0,huy:0}; nvs[k].huy++; });
-  html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 Năng suất NV trong ca</div>';
-  html+='<div class="tbl-wrap"><table style="font-size:11px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:5px;border-bottom:1px solid #EEE">NV</th><th style="text-align:right">Số lệnh</th><th style="text-align:right">Doanh thu</th><th style="text-align:right">Huỷ</th></tr></thead><tbody>';
-  Object.keys(nvs).map(function(k){return Object.assign({nv:k}, nvs[k]);}).sort(function(a,b){return b.dt-a.dt;}).forEach(function(n){
-    html+='<tr><td style="padding:4px;border-bottom:1px solid #F5F5F5">'+esc(n.nv)+'</td><td style="text-align:right">'+n.lenh+'</td><td style="text-align:right">'+foFmt(n.dt)+'</td><td style="text-align:right;color:'+(n.huy?'var(--red)':'inherit')+'">'+n.huy+'</td></tr>';
-  });
-  html+='</tbody></table></div></div>';
-
   body.innerHTML=html;
+}
+
+function _foCaKpi(lbl, val, color, sep){
+  return '<div style="padding:14px 18px;border-'+sep+'">'
+    +'<div style="font-size:10.5px;color:var(--gray-dark);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:4px">'+lbl+'</div>'
+    +'<div style="font-size:18px;font-weight:700;color:'+color+';line-height:1.2">'+val+'</div>'
+    +'</div>';
 }
 
 function foCaExport(){ toast('Export Excel ca — S2b sẽ bổ sung', 3000); }
