@@ -1281,8 +1281,10 @@ td input:focus,td select:focus{background:#FEFAF0}
               <option value="2025">2025</option><option value="2026">2026</option>
             </select>
             <div style="font-size:12px;color:var(--gray);margin-left:8px">Tỷ giá USD:</div>
-            <input id="wh-rate" type="number" value="25000" min="1" style="width:90px;font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px" onchange="renderWarehouse()">
+            <input id="wh-rate" type="number" value="25000" min="1" style="width:90px;font-size:12px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:6px" onchange="onWhRateManualChange()">
             <span style="font-size:12px;color:var(--gray)">VND/USD</span>
+            <button class="btn btn-sm" id="wh-rate-btn" onclick="loadUsdRate(true)" title="Lấy tỷ giá mới nhất từ Vietcombank" style="padding:3px 8px;font-size:11px">🔄 Live</button>
+            <span id="wh-rate-info" style="font-size:10.5px;color:var(--gray);font-style:italic"></span>
             <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
               <div style="font-size:12px;color:var(--gray)" id="wh-updated"></div>
               <button class="btn btn-sm" onclick="refreshWarehouse()">&#8635; Refresh</button>
@@ -6763,6 +6765,8 @@ async function refreshWarehouse() {
       window._whVtList = res.vt_list || [];
       window._whVtSelected = '';
       renderWhVtDropdown('');
+      // Auto-fetch tỷ giá USD (không chờ để không block dashboard)
+      loadUsdRate(false);
       renderWarehouse();
       document.getElementById('wh-updated').textContent = 'Cập nhật: '
         + now.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -6771,6 +6775,45 @@ async function refreshWarehouse() {
     }
   } catch(e) {
     document.getElementById('wh-updated').textContent = 'Lỗi kết nối';
+  }
+}
+
+// ───── Tỷ giá USD live từ Vietcombank ─────
+var _whRateUserOverride = false; // true nếu user đã sửa tay
+
+function onWhRateManualChange() {
+  _whRateUserOverride = true;
+  var info = document.getElementById('wh-rate-info');
+  if (info) info.textContent = '(nhập tay)';
+  renderWarehouse();
+}
+
+async function loadUsdRate(force) {
+  var info = document.getElementById('wh-rate-info');
+  var btn  = document.getElementById('wh-rate-btn');
+  if (!info || !btn) return;
+  // Nếu user đã chỉnh tay và không force → không ghi đè
+  if (_whRateUserOverride && !force) return;
+
+  info.textContent = '(đang lấy...)';
+  btn.disabled = true;
+  try {
+    var res = await apiGet({ action: 'getUsdRate', _t: Date.now() });
+    if (res && res.success && res.rate > 0) {
+      document.getElementById('wh-rate').value = Math.round(res.rate);
+      _whRateUserOverride = false;
+      var src = res.source || 'API';
+      var upd = res.updated ? (' · ' + String(res.updated).substring(0, 16).replace('T', ' ')) : '';
+      info.innerHTML = '<span style="color:var(--green)">✓ ' + src + upd + '</span>';
+      info.title = 'Buy: ' + (res.buy||'—') + ' · Transfer: ' + (res.transfer||'—') + ' · Sell: ' + (res.sell||'—');
+      renderWarehouse();
+    } else {
+      info.innerHTML = '<span style="color:var(--red)">✕ ' + (res && res.error || 'Không lấy được') + '</span>';
+    }
+  } catch(e) {
+    info.innerHTML = '<span style="color:var(--red)">✕ Lỗi kết nối</span>';
+  } finally {
+    btn.disabled = false;
   }
 }
 
