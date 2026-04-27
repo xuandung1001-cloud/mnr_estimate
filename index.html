@@ -244,14 +244,42 @@ select.fi{padding-right:24px;background-image:url("data:image/svg+xml;utf8,<svg 
 .dash-card{padding:var(--sp-3) var(--sp-4);margin:0}
 .dash-title{font-size:var(--text-sm);font-weight:600;color:var(--gray-900);margin-bottom:var(--sp-3);padding-bottom:var(--sp-2);border-bottom:1px solid var(--gray-200);letter-spacing:.01em}
 /* KPI clickable cards — đồng bộ amber accent toàn bộ */
-.kpi-card{cursor:pointer;transition:box-shadow .15s,transform .1s;border-top:3px solid var(--amber);position:relative}
+.kpi-card{cursor:pointer;transition:box-shadow .15s,transform .1s,border-color .15s;border-top:4px solid var(--amber);position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at top right,currentColor 0%,transparent 70%);opacity:.06;pointer-events:none}
 .kpi-card .stat-value{color:var(--amber-text)}
-.kpi-card:hover{box-shadow:var(--shadow-md,0 4px 12px rgba(0,0,0,.08))}
-.kpi-card:active{transform:translateY(1px)}
-/* Alert variant — nổi bật khi có cảnh báo */
-.kpi-card.is-alert{background:var(--amber-bg);border-top-color:var(--error-text);border-top-width:4px}
-.kpi-card.is-alert .stat-value{color:var(--error-text)}
-.kpi-card.is-alert .stat-label{color:var(--error-text);font-weight:600}
+.kpi-card:hover{box-shadow:var(--shadow-md,0 4px 12px rgba(0,0,0,.08));transform:translateY(-1px)}
+.kpi-card:active{transform:translateY(0)}
+/* Tone variants — mỗi KPI 1 màu semantic */
+.kpi-card.kpi-blue   {border-top-color:#3B82F6;color:#3B82F6;background:linear-gradient(180deg,#EFF6FF 0%,#fff 60%)}
+.kpi-card.kpi-blue   .stat-value{color:#1D4ED8}
+.kpi-card.kpi-blue   .stat-label{color:#1E40AF}
+.kpi-card.kpi-green  {border-top-color:#16A34A;color:#16A34A;background:linear-gradient(180deg,#F0FDF4 0%,#fff 60%)}
+.kpi-card.kpi-green  .stat-value{color:#15803D}
+.kpi-card.kpi-green  .stat-label{color:#166534}
+.kpi-card.kpi-teal   {border-top-color:#0EA5E9;color:#0EA5E9;background:linear-gradient(180deg,#F0F9FF 0%,#fff 60%)}
+.kpi-card.kpi-teal   .stat-value{color:#0369A1}
+.kpi-card.kpi-teal   .stat-label{color:#075985}
+.kpi-card.kpi-orange {border-top-color:#F97316;color:#F97316;background:linear-gradient(180deg,#FFF7ED 0%,#fff 60%)}
+.kpi-card.kpi-orange .stat-value{color:#C2410C}
+.kpi-card.kpi-orange .stat-label{color:#9A3412}
+.kpi-card.kpi-purple {border-top-color:#8B5CF6;color:#8B5CF6;background:linear-gradient(180deg,#F5F3FF 0%,#fff 60%)}
+.kpi-card.kpi-purple .stat-value{color:#6D28D9}
+.kpi-card.kpi-purple .stat-label{color:#5B21B6}
+.kpi-card.kpi-red    {border-top-color:#DC2626;color:#DC2626;background:linear-gradient(180deg,#FEF2F2 0%,#fff 60%)}
+.kpi-card.kpi-red    .stat-value{color:#B91C1C}
+.kpi-card.kpi-red    .stat-label{color:#991B1B}
+/* Profit dynamic: âm = đỏ, dương = xanh */
+.kpi-card.kpi-profit-pos{border-top-color:#16A34A;color:#16A34A;background:linear-gradient(180deg,#F0FDF4 0%,#fff 60%)}
+.kpi-card.kpi-profit-pos .stat-value{color:#15803D}
+.kpi-card.kpi-profit-pos .stat-label{color:#166534}
+.kpi-card.kpi-profit-neg{border-top-color:#DC2626;color:#DC2626;background:linear-gradient(180deg,#FEF2F2 0%,#fff 60%)}
+.kpi-card.kpi-profit-neg .stat-value{color:#B91C1C}
+.kpi-card.kpi-profit-neg .stat-label{color:#991B1B}
+/* Alert variant — nổi bật khi có cảnh báo (giữ behaviour cũ) */
+.kpi-card.is-alert{background:linear-gradient(180deg,#FEF2F2 0%,#FEE2E2 100%);border-top-color:#DC2626;border-top-width:4px;color:#DC2626;animation:kpiPulse 2s ease-in-out infinite}
+.kpi-card.is-alert .stat-value{color:#B91C1C}
+.kpi-card.is-alert .stat-label{color:#991B1B;font-weight:600}
+@keyframes kpiPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
 /* Alert list rows — semantic color theo loại */
 .alert-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--gray-100);font-size:var(--text-sm);cursor:pointer;transition:background .12s;border-left:3px solid transparent}
 .alert-row:last-child{border-bottom:none}
@@ -1822,6 +1850,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <label class="chip-toggle warn"><input type="checkbox" id="vt-low-stock" onchange="filterDmVatTu()"> Cần nhập thêm</label>
             <span id="vt-count" style="display:none"></span>
             <button class="btn btn-sm" onclick="loadDmVatTu()">Refresh</button>
+            <button class="btn btn-sm" onclick="exportDmVatTu()" title="Export Excel theo filter hiện tại">Export Excel</button>
             <button class="btn btn-sm btn-tag" onclick="openBulkBarcodeModal('vt')" title="In tem hàng loạt">In tem hàng loạt</button>
             <button class="btn btn-sm btn-blue" onclick="showVatTuModal()">+ Thêm vật tư</button>
           </div>
@@ -1863,6 +1892,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             </select>
             <span id="ccm-count" style="display:none"></span>
             <button class="btn btn-sm" onclick="loadDmCongCu()">Refresh</button>
+            <button class="btn btn-sm" onclick="exportDmCongCu()" title="Export Excel theo filter hiện tại">Export Excel</button>
             <button class="btn btn-sm btn-tag" onclick="openBulkBarcodeModal('cc')" title="In tem hàng loạt">In tem hàng loạt</button>
             <button class="btn btn-sm btn-blue" onclick="showCongCuModal()">+ Thêm công cụ</button>
           </div>
@@ -1908,6 +1938,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <input class="fi" id="pk-search" placeholder="Tìm mã phiếu, đối tượng..." oninput="_pkSearchDebounce()" style="flex:1;min-width:160px">
             <span id="pk-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
             <button class="btn btn-sm" onclick="loadPhieuKhoList()">Refresh</button>
+            <button class="btn btn-sm" onclick="exportPhieuKho()" title="Export Excel theo filter hiện tại">Export Excel</button>
             <button class="btn btn-sm btn-blue" onclick="openPhieuKhoForm('NHẬP')">Nhập</button>
             <button class="btn btn-sm btn-blue" onclick="openPhieuKhoForm('XUẤT')">Xuất</button>
           </div>
@@ -2063,9 +2094,12 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <option value="">Tất cả loại</option>
               <option value="CAP_PHAT">Cấp phát</option>
               <option value="THU_HOI">Thu hồi</option>
-              <option value="BAO_DUONG">Bảo dưỡng</option>
-              <option value="MAT">Báo mất</option>
               <option value="HONG">Báo hỏng</option>
+              <option value="SUA_CHUA">Mang đi sửa</option>
+              <option value="BD_DINH_KY">BD định kỳ</option>
+              <option value="MAT">Báo mất</option>
+              <option value="THANH_LY">Thanh lý</option>
+              <option value="TIM_THAY">Tìm thấy</option>
             </select>
             <input class="fi" type="date" id="ccdc-from" onchange="loadCcdcList()" style="width:140px" title="Từ ngày">
             <span style="font-size:11px;color:var(--gray);align-self:center">→</span>
@@ -2073,14 +2107,15 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <input class="fi" id="ccdc-search" placeholder="Tìm mã CC, tên, người nhận..." oninput="_ccdcSearchDebounce()" style="flex:1;min-width:160px">
             <span id="ccdc-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
             <button class="btn btn-sm" onclick="loadCcdcList()">Refresh</button>
+            <button class="btn btn-sm" onclick="exportCcdcList()" title="Export Excel theo filter hiện tại">Export Excel</button>
             <button class="btn btn-sm btn-blue" onclick="openCcdcForm()">+ Tạo giao dịch</button>
           </div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 240px);overflow-y:auto">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:130px"><col style="width:110px"><col style="width:290px">
-                <col style="width:140px"><col style="width:160px"><col style="width:130px">
-                <col><col style="width:120px">
+                <col style="width:130px"><col style="width:110px"><col style="width:260px">
+                <col style="width:240px"><col style="width:160px"><col style="width:130px">
+                <col><col style="width:90px">
               </colgroup>
               <thead>
                 <tr>
@@ -2107,33 +2142,48 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="filter-bar">
             <input class="fi" id="bt-ma-cc" list="dl-ma-cc-bt" placeholder="Lọc theo Mã CC..." style="width:170px" oninput="_btSearchDebounce()">
             <datalist id="dl-ma-cc-bt"></datalist>
+            <select class="fi" id="bt-loai-filter" onchange="loadBaoTriList()" style="width:140px">
+              <option value="">Tất cả loại</option>
+              <option value="SUA_CHUA">🔧 Sửa chữa</option>
+              <option value="BD_DINH_KY">🔄 BD định kỳ</option>
+            </select>
+            <select class="fi" id="bt-tt-filter" onchange="loadBaoTriList()" style="width:160px">
+              <option value="">Tất cả trạng thái</option>
+              <option value="DANG_SUA">Đang sửa</option>
+              <option value="HOAN_THANH">Hoàn thành</option>
+              <option value="SUA_KHONG_DUOC">Sửa không được</option>
+            </select>
             <input class="fi" type="date" id="bt-from" onchange="loadBaoTriList()" style="width:140px" title="Từ ngày">
             <span style="font-size:11px;color:var(--gray);align-self:center">→</span>
             <input class="fi" type="date" id="bt-to" onchange="loadBaoTriList()" style="width:140px" title="Đến ngày">
             <input class="fi" id="bt-search" placeholder="Tìm mã phiếu, nội dung sửa, đơn vị..." oninput="_btSearchDebounce()" style="flex:1;min-width:160px">
             <span id="bt-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
             <button class="btn btn-sm" onclick="loadBaoTriList()">Refresh</button>
+            <button class="btn btn-sm" onclick="exportBaoTri()" title="Export Excel theo filter hiện tại">Export Excel</button>
             <button class="btn btn-sm btn-blue" onclick="openBaoTriForm()">+ Tạo phiếu sửa</button>
           </div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 240px);overflow-y:auto">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:130px"><col style="width:90px"><col style="width:290px">
-                <col><col style="width:160px"><col style="width:120px"><col style="width:70px"><col style="width:140px">
+                <col style="width:130px"><col style="width:90px"><col style="width:90px"><col style="width:120px">
+                <col style="width:240px"><col><col style="width:140px">
+                <col style="width:110px"><col style="width:60px"><col style="width:160px">
               </colgroup>
               <thead>
                 <tr>
                   <th style="text-align:left">Mã phiếu</th>
-                  <th>Ngày sửa</th>
+                  <th>Ngày bắt đầu</th>
+                  <th>Loại</th>
+                  <th>Trạng thái</th>
                   <th style="text-align:left">Mã CC / Tên</th>
-                  <th style="text-align:left">Nội dung sửa</th>
-                  <th style="text-align:left">Đơn vị sửa</th>
+                  <th style="text-align:left">Nội dung</th>
+                  <th style="text-align:left">Đơn vị</th>
                   <th style="text-align:right">Chi phí</th>
-                  <th>Hóa đơn</th>
+                  <th>HĐ</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
-              <tbody id="bt-list-rows"><tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
+              <tbody id="bt-list-rows"><tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2146,6 +2196,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="filter-bar">
             <div style="flex:1"></div>
             <button class="btn btn-sm" onclick="loadKiemKeList()">Refresh</button>
+            <button class="btn btn-sm" onclick="exportKiemKe()" title="Export danh sách đợt kiểm kê ra Excel">Export Excel</button>
             <button class="btn btn-sm btn-blue" onclick="openCreateKkModal()">+ Tạo đợt mới</button>
           </div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 240px);overflow-y:auto">
@@ -5859,7 +5910,8 @@ function genDashboard() {
 
   function _kpi(label, value, sub, opts) {
     opts = opts || {};
-    var cls = 'stat-card kpi-card' + (opts.alert ? ' is-alert' : '');
+    var toneCls = opts.tone ? ' kpi-' + opts.tone : '';
+    var cls = 'stat-card kpi-card' + toneCls + (opts.alert ? ' is-alert' : '');
     var jump = opts.jump ? ' onclick="' + opts.jump + '"' : '';
     var subHtml = opts.subRaw ? sub : esc(sub);
     return '<div class="'+cls+'"'+jump+'>'
@@ -5874,13 +5926,15 @@ function genDashboard() {
     ? ('$' + noVat.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' · No VAT · ' + rateLabel)
     : ('chưa có · tỷ giá ' + rateLabel);
 
+  // Lợi nhuận tone: dương → green, âm → red, = 0 → purple neutral
+  var profitTone = profit > 0 ? 'profit-pos' : (profit < 0 ? 'profit-neg' : 'purple');
   document.getElementById('rpt-kpi').innerHTML =
-      _kpi('Cont chờ duyệt',  pendingCount,                       'tất cả carrier · chưa close', { jump: "var n=document.querySelector('.nav-item[onclick*=tracking]');if(n)nav('tracking',n)" })
-    + _kpi('Cont đã sửa kỳ',  filtered.length,                    isAllYear ? ('cả năm ' + year) : (month + ' ' + year))
-    + _kpi('Doanh thu MNR',   dtVND > 0 ? fmtVND(dtVND) : '—',    dtSub, { subRaw: true })
-    + _kpi('Xuất kho kỳ',     xuatVND > 0 ? fmtVND(xuatVND) : '—', 'giá trị xuất (VNĐ)')
-    + _kpi('Lợi nhuận gộp',   profit !== 0 ? fmtVND(profit) : '—', profit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho')
-    + _kpi('Cảnh báo',        alertCount,                         alertCount ? 'cần xử lý ngay' : 'không có',   { alert: alertCount > 0, jump: "document.getElementById('rpt-alert-list').scrollIntoView({behavior:'smooth'})" });
+      _kpi('Cont chờ duyệt',  pendingCount,                       'tất cả carrier · chưa close', { tone:'blue',   jump: "var n=document.querySelector('.nav-item[onclick*=tracking]');if(n)nav('tracking',n)" })
+    + _kpi('Cont đã sửa kỳ',  filtered.length,                    isAllYear ? ('cả năm ' + year) : (month + ' ' + year), { tone:'green' })
+    + _kpi('Doanh thu MNR',   dtVND > 0 ? fmtVND(dtVND) : '—',    dtSub,                                                  { tone:'teal',  subRaw: true })
+    + _kpi('Xuất kho kỳ',     xuatVND > 0 ? fmtVND(xuatVND) : '—', 'giá trị xuất (VNĐ)',                                  { tone:'orange' })
+    + _kpi('Lợi nhuận gộp',   profit !== 0 ? fmtVND(profit) : '—', profit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho', { tone: profitTone })
+    + _kpi('Cảnh báo',        alertCount,                         alertCount ? 'cần xử lý ngay' : 'không có',             { alert: alertCount > 0, tone: alertCount > 0 ? null : 'red', jump: "document.getElementById('rpt-alert-list').scrollIntoView({behavior:'smooth'})" });
 
   // --- Chart 1: Stock emty donut theo container_status + grade combo ---
   const stockData = state.stock || [];
@@ -8600,6 +8654,135 @@ function _khoRenderImgPreview(elId, url) {
   }
 }
 
+// ═════════════════════ EXPORT XLSX (KHO) ═════════════════════
+// Lazy load XLSX library (chỉ load khi user bấm Export — tiết kiệm bandwidth)
+function _khoLoadXLSX(cb) {
+  if (window.XLSX) { cb(); return; }
+  toast('Đang tải thư viện Excel...', 1500);
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  s.onload = cb;
+  s.onerror = function(){ toast('Không tải được thư viện Excel — kiểm tra mạng', 'err'); };
+  document.head.appendChild(s);
+}
+
+// Helper chung: export array data → file Excel với auto width
+function _khoExportXLSX(filename, headers, rows, sheetName) {
+  if (!rows || !rows.length) { toast('Không có dữ liệu để export', 'err'); return; }
+  _khoLoadXLSX(function(){
+    var aoa = [headers].concat(rows);
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    // Auto col width theo content (max 50)
+    ws['!cols'] = headers.map(function(h, c) {
+      var maxLen = String(h||'').length;
+      for (var r = 0; r < rows.length; r++) {
+        var v = rows[r][c];
+        var len = (v == null) ? 0 : String(v).length;
+        if (len > maxLen) maxLen = len;
+      }
+      return { wch: Math.min(maxLen + 2, 50) };
+    });
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+    var ds = todayStr().replace(/\//g,'-');
+    XLSX.writeFile(wb, filename + '_' + ds + '.xlsx');
+    toast('Export Excel xong! ' + rows.length + ' dòng', 2500);
+  });
+}
+
+// DM Vật tư — export theo filter hiện tại (search + cần nhập thêm)
+function exportDmVatTu() {
+  var q = (document.getElementById('vt-search').value||'').toLowerCase();
+  var lowOnly = document.getElementById('vt-low-stock').checked;
+  var data = (_dmVatTu||[]).filter(function(r){
+    if (lowOnly && !r.can_nhap_them) return false;
+    if (!q) return true;
+    return ((r.ma_vt||'')+' '+(r.ten_vat_tu||'')+' '+(r.qui_cach||'')).toLowerCase().indexOf(q) >= 0;
+  });
+  var rows = data.map(function(r){
+    return [r.ma_vt||'', r.ten_vat_tu||'', r.qui_cach||'', r.don_vi||'',
+            r.ton_toi_thieu||0, r.ton_dau||0, r.ton_hien_tai||0,
+            r.can_nhap_them ? 'Cần nhập thêm' : ''];
+  });
+  _khoExportXLSX('DM_VatTu',
+    ['Mã VT','Tên vật tư','Qui cách','ĐVT','Tồn tối thiểu','Tồn đầu','Tồn hiện tại','Cảnh báo'],
+    rows, 'DM_VatTu');
+}
+
+// DM Công cụ — export theo filter hiện tại (search + status)
+function exportDmCongCu() {
+  var q = (document.getElementById('cc-search-master').value||'').toLowerCase();
+  var st = document.getElementById('cc-status-master').value;
+  var data = (_dmCongCu||[]).filter(function(r){
+    if (st && r.trang_thai !== st) return false;
+    if (!q) return true;
+    return ((r.ma_cong_cu||'')+' '+(r.ten_cong_cu||'')+' '+(r.model_serial||'')).toLowerCase().indexOf(q) >= 0;
+  });
+  var rows = data.map(function(r){
+    return [r.ma_cong_cu||'', r.ten_cong_cu||'', r.model_serial||'',
+            r.ngay_mua||'', r.nguyen_gia||0, r.so_thang_kh||'',
+            _normalizeCcStatus(r.trang_thai), r.nguoi_giu||'',
+            r.so_thang_bh||'', r.thong_tin_bh||''];
+  });
+  _khoExportXLSX('DM_CongCu',
+    ['Mã CC','Tên công cụ','Model/Serial','Ngày mua','Nguyên giá','Số tháng KH','Trạng thái','Người giữ','Số tháng BH','Thông tin BH'],
+    rows, 'DM_CongCu');
+}
+
+// Phiếu Nhập/Xuất — export header phiếu (không kèm chi tiết)
+function exportPhieuKho() {
+  var rows = (_pkList||[]).map(function(r){
+    return [r.ma_phieu||'', r.ngay||'', r.loai||'', r.nguoi_thuc_hien||'',
+            r.doi_tuong||'', r.bp_su_dung||'', r.ghi_chu||'',
+            r.so_dong||0, r.tong_tien||0];
+  });
+  _khoExportXLSX('Phieu_NhapXuat',
+    ['Mã phiếu','Ngày','Loại','Người thực hiện','Đối tượng/NCC','Bộ phận sử dụng','Ghi chú','SL dòng','Tổng tiền'],
+    rows, 'Phieu_Kho');
+}
+
+// Lịch sử CCDC
+function exportCcdcList() {
+  var uMap = {};
+  (_khoUsersList||[]).forEach(function(u){ uMap[u.username] = u.fullname || u.username; });
+  var rows = (_ccdcList||[]).map(function(r){
+    var loaiLbl = (CCDC_LOAI_LABELS[r.loai_gd] && CCDC_LOAI_LABELS[r.loai_gd].label) || r.loai_gd || '';
+    return [r.ngay_gio||'', loaiLbl, r.ma_cc||'', r.ten_cc||'',
+            r.model_serial||'', uMap[r.nguoi_nhan] || r.nguoi_nhan || '',
+            r.tinh_trang_may||'', r.ghi_chu||''];
+  });
+  _khoExportXLSX('LichSu_CCDC',
+    ['Ngày giờ','Loại GD','Mã CC','Tên CC','Model/Serial','Người nhận','Tình trạng','Ghi chú'],
+    rows, 'LichSu_CCDC');
+}
+
+// Bảo trì sửa chữa
+function exportBaoTri() {
+  var ttMap   = { DANG_SUA:'Đang sửa', HOAN_THANH:'Hoàn thành', SUA_KHONG_DUOC:'Sửa không được' };
+  var loaiMap = { SUA_CHUA:'Sửa chữa', BD_DINH_KY:'BD định kỳ' };
+  var rows = (_btList||[]).map(function(r){
+    return [r.ma_phieu_sua||'', r.ngay_sua||'', loaiMap[r.loai_bt]||r.loai_bt||'Sửa chữa',
+            ttMap[r.trang_thai_phieu]||r.trang_thai_phieu||'',
+            r.ma_cc||'', r.ten_cc||'', r.noi_dung_sua||'', r.don_vi_sua||'', r.chi_phi_sc||0,
+            r.ngay_hoan_thanh||'', r.nguoi_nhan_sau_sua||'', r.ghi_chu||''];
+  });
+  _khoExportXLSX('BaoTri_SuaChua',
+    ['Mã phiếu','Ngày bắt đầu','Loại','Trạng thái','Mã CC','Tên CC','Nội dung','Đơn vị','Chi phí','Ngày hoàn thành','Người nhận sau sửa','Ghi chú'],
+    rows, 'BaoTri');
+}
+
+// Kiểm kê tồn — export list các đợt
+function exportKiemKe() {
+  var rows = (_kkList||[]).map(function(r){
+    var stLbl = (KK_STATUS_LABELS[r.trang_thai] && KK_STATUS_LABELS[r.trang_thai].label) || r.trang_thai || '';
+    return [r.ma_dot||'', r.ten_dot||'', r.ngay_kk||'', stLbl,
+            r.so_da_kiem||0, r.so_dong||0, r.tien_do_pct||0, r.so_lech||0];
+  });
+  _khoExportXLSX('KiemKe_Ton',
+    ['Mã đợt','Tên đợt','Ngày KK','Trạng thái','Đã kiểm','Tổng dòng','Tiến độ %','Số lệch'],
+    rows, 'KiemKe');
+}
+
 // ═════════════════════ DM VẬT TƯ ═════════════════════
 async function loadDmVatTu(force) {
   document.getElementById('vt-rows').innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
@@ -8760,13 +8943,15 @@ function renderDmCongCu(data) {
 }
 
 // Chuẩn hóa trạng thái CC: map legacy "Hư hỏng"/"Bảo trì" → enum mới + style
+// State machine: docs/user_guide/01-ccdc-state-machine.md
 var CC_STATUS_CFG = {
-  'Trong kho':      { label:'Trong kho',     bg:'#F3F4F6', color:'#374151' },
-  'Đang sử dụng':   { label:'Đang sử dụng',  bg:'#DCFCE7', color:'#166534' },
-  'Đang bảo trì':   { label:'Đang bảo trì',  bg:'#FEF3C7', color:'#92400E' },
-  'Hỏng':           { label:'Hỏng',          bg:'#FEE2E2', color:'#991B1B' },
-  'Mất':            { label:'Mất',           bg:'#FECACA', color:'#7F1D1D' },
-  'Thanh lý':       { label:'Thanh lý',      bg:'#F1F5F9', color:'#64748B' }
+  'Trong kho':         { label:'Trong kho',         bg:'#F3F4F6', color:'#374151' },
+  'Đang sử dụng':      { label:'Đang sử dụng',      bg:'#DCFCE7', color:'#166534' },
+  'Đang sửa':          { label:'Đang sửa',          bg:'#FFEDD5', color:'#9A3412' }, // cam — corrective
+  'Đang BD định kỳ':   { label:'Đang BD định kỳ',   bg:'#FEF3C7', color:'#92400E' }, // vàng — preventive
+  'Hỏng':              { label:'Hỏng',              bg:'#FEE2E2', color:'#991B1B' },
+  'Mất':               { label:'Mất',               bg:'#FECACA', color:'#7F1D1D' },
+  'Thanh lý':          { label:'Thanh lý',          bg:'#F1F5F9', color:'#64748B' }
 };
 function _normalizeCcStatus(raw) {
   var s = String(raw||'').trim();
@@ -8774,7 +8959,7 @@ function _normalizeCcStatus(raw) {
   if (CC_STATUS_CFG[s]) return s;
   // Map legacy
   if (s === 'Hư hỏng') return 'Hỏng';
-  if (s === 'Bảo trì') return 'Đang bảo trì';
+  if (s === 'Bảo trì' || s === 'Đang bảo trì') return 'Đang sửa'; // legacy → mặc định coi là sửa
   if (s.toLowerCase() === 'sẵn sàng') return 'Trong kho';
   return s; // unknown — giữ nguyên
 }
@@ -9570,6 +9755,7 @@ async function savePhieuKhoForm() {
     });
     if (res && res.success) {
       toast('Đã lưu phiếu '+res.ma_phieu+'!', 2500);
+      _whData = null; // invalidate dashboard cache để Tổng quan refetch tien_xuat/tien_ton
       closePhieuKhoForm();
       loadPhieuKhoList();
     } else {
@@ -9583,7 +9769,7 @@ async function deletePhieuKhoCurrent() {
   if (!_pkfState || !_pkfState.ma_phieu) return;
   if (!confirm('Xoá phiếu '+_pkfState.ma_phieu+' và toàn bộ chi tiết?')) return;
   var res = await apiPost({ action: 'deletePhieuKho', username: state.user && state.user.username || '', ma_phieu: _pkfState.ma_phieu });
-  if (res && res.success) { toast('Đã xoá phiếu!', 2000); closePhieuKhoForm(); loadPhieuKhoList(); }
+  if (res && res.success) { _whData = null; toast('Đã xoá phiếu!', 2000); closePhieuKhoForm(); loadPhieuKhoList(); }
   else toast('Lỗi: '+(res&&res.error||'unknown'), 4000);
 }
 
@@ -9760,11 +9946,16 @@ function _docSoTien(n) {
 // =====================================================================
 var _ccdcList = [], _ccdcSearchTimer = null;
 var CCDC_LOAI_LABELS = {
-  CAP_PHAT:  { label:'Cấp phát',   color:'#16A34A', bg:'#DCFCE7' },
-  THU_HOI:   { label:'Thu hồi',    color:'#0369A1', bg:'#DBEAFE' },
-  BAO_DUONG: { label:'Bảo dưỡng',  color:'#92400E', bg:'#FEF3C7' },
-  MAT:       { label:'Báo mất',    color:'#991B1B', bg:'#FEE2E2' },
-  HONG:      { label:'Báo hỏng',   color:'#991B1B', bg:'#FEE2E2' }
+  CAP_PHAT:    { label:'Cấp phát',     color:'#16A34A', bg:'#DCFCE7' },
+  THU_HOI:     { label:'Thu hồi',      color:'#0369A1', bg:'#DBEAFE' },
+  HONG:        { label:'Báo hỏng',     color:'#991B1B', bg:'#FEE2E2' },
+  SUA_CHUA:    { label:'Mang đi sửa',  color:'#9A3412', bg:'#FFEDD5' },
+  BD_DINH_KY:  { label:'BD định kỳ',   color:'#92400E', bg:'#FEF3C7' },
+  MAT:         { label:'Báo mất',      color:'#7F1D1D', bg:'#FECACA' },
+  THANH_LY:    { label:'Thanh lý',     color:'#64748B', bg:'#F1F5F9' },
+  TIM_THAY:    { label:'Tìm thấy',     color:'#15803D', bg:'#DCFCE7' },
+  // Legacy alias: data cũ dùng BAO_DUONG → hiển thị như Mang đi sửa
+  BAO_DUONG:   { label:'Mang đi sửa',  color:'#9A3412', bg:'#FFEDD5' }
 };
 
 function _ccdcSearchDebounce() {
@@ -9795,14 +9986,17 @@ async function loadCcdcList() {
 
 function renderCcdcStats() {
   var statsEl = document.getElementById('ccdc-stats');
-  var counts = { CAP_PHAT:0, THU_HOI:0, BAO_DUONG:0, MAT:0, HONG:0 };
+  var counts = { CAP_PHAT:0, THU_HOI:0, HONG:0, SUA_CHUA:0, BD_DINH_KY:0, MAT:0, THANH_LY:0, TIM_THAY:0, BAO_DUONG:0 };
   _ccdcList.forEach(function(r){ if (counts[r.loai_gd] !== undefined) counts[r.loai_gd]++; });
+  // Gộp legacy BAO_DUONG vào SUA_CHUA cho hiển thị
+  var sua = counts.SUA_CHUA + counts.BAO_DUONG;
   statsEl.innerHTML =
-      _kstat({ label:'Tổng GD',    value:_ccdcList.length,        icon:'📦', color:'slate' })
-    + _kstat({ label:'Cấp phát',   value:counts.CAP_PHAT,         icon:'➕', color:'green' })
-    + _kstat({ label:'Thu hồi',    value:counts.THU_HOI,          icon:'↩',  color:'blue' })
-    + _kstat({ label:'Bảo dưỡng',  value:counts.BAO_DUONG,        icon:'🔧', color:'orange' })
-    + _kstat({ label:'Mất / Hỏng', value:counts.MAT+counts.HONG,  icon:'⚠',  color:'red' });
+      _kstat({ label:'Tổng GD',     value:_ccdcList.length,     icon:'📦', color:'slate' })
+    + _kstat({ label:'Cấp phát',    value:counts.CAP_PHAT,      icon:'➕', color:'green' })
+    + _kstat({ label:'Thu hồi',     value:counts.THU_HOI,       icon:'↩',  color:'blue' })
+    + _kstat({ label:'Sửa / BD',    value:sua + counts.BD_DINH_KY, icon:'🔧', color:'orange' })
+    + _kstat({ label:'Mất / Hỏng',  value:counts.MAT+counts.HONG, icon:'⚠',  color:'red' })
+    + _kstat({ label:'Thanh lý',    value:counts.THANH_LY,      icon:'🗑', color:'slate' });
 }
 
 function renderCcdcList() {
@@ -9842,10 +10036,6 @@ async function openCcdcForm(maCcPrefill, loaiPrefill) {
       if (res && res.success) _dmCongCu = res.data || [];
     })()
   ]);
-  // Datalist Mã CC
-  document.getElementById('dl-ma-cc').innerHTML = (_dmCongCu||[]).map(function(c){
-    return '<option value="'+esc(c.ma_cong_cu)+'">'+esc(c.ten_cong_cu||'')+'</option>';
-  }).join('');
   // Dropdown Người nhận
   document.getElementById('ccdc-nguoi-nhan').innerHTML = '<option value="">— Chọn người —</option>'
     + (_khoUsersList||[]).map(function(u){
@@ -9860,8 +10050,41 @@ async function openCcdcForm(maCcPrefill, loaiPrefill) {
   document.getElementById('ccdc-ghi-chu').value    = '';
   document.getElementById('ccdc-cc-info').textContent = '';
   document.getElementById('ccdc-modal').style.display = 'flex';
-  onCcdcLoaiChange();
+  onCcdcLoaiChange(); // sẽ tự rebuild datalist theo loại
   if (maCcPrefill) onCcdcMaCcInput(document.getElementById('ccdc-ma-cc'));
+}
+
+// Filter công cụ theo loại GD — chỉ hiện CC phù hợp với state machine
+//   CAP_PHAT   → 'Trong kho'                                 (E2)
+//   THU_HOI    → 'Đang sử dụng' / 'Đang sửa' / 'Đang BD định kỳ'  (E3 / E7 / E9a)
+//   HONG       → 'Đang sử dụng'                              (E4 — NV báo hỏng)
+//   SUA_CHUA   → 'Hỏng' / 'Đang sử dụng'                     (E5 — duyệt sửa, có thể skip qua Hỏng)
+//   BD_DINH_KY → 'Trong kho' / 'Đang sử dụng'                (E6a/b — bảo dưỡng định kỳ)
+//   MAT        → tất cả trừ Thanh lý + Mất
+//   THANH_LY   → 'Hỏng' / 'Trong kho' (hết KH) / 'Đang sửa' (sửa không được)
+//   TIM_THAY   → 'Mất' (recovery)
+function _ccdcFilterCcByLoai(loai) {
+  return (_dmCongCu||[]).filter(function(c){
+    var st = _normalizeCcStatus(c.trang_thai);
+    if (loai === 'CAP_PHAT')   return st === 'Trong kho';
+    if (loai === 'THU_HOI')    return st === 'Đang sử dụng' || st === 'Đang sửa' || st === 'Đang BD định kỳ';
+    if (loai === 'HONG')       return st === 'Đang sử dụng';
+    if (loai === 'SUA_CHUA' || loai === 'BAO_DUONG') return st === 'Hỏng' || st === 'Đang sử dụng' || st === 'Trong kho';
+    if (loai === 'BD_DINH_KY') return st === 'Trong kho' || st === 'Đang sử dụng';
+    if (loai === 'MAT')        return st !== 'Thanh lý' && st !== 'Mất';
+    if (loai === 'THANH_LY')   return st === 'Hỏng' || st === 'Trong kho' || st === 'Đang sửa';
+    if (loai === 'TIM_THAY')   return st === 'Mất';
+    return true;
+  });
+}
+
+function _ccdcRebuildDatalist() {
+  var loai = document.getElementById('ccdc-loai-gd').value;
+  var list = _ccdcFilterCcByLoai(loai);
+  document.getElementById('dl-ma-cc').innerHTML = list.map(function(c){
+    var nguoi = c.nguoi_giu ? ' · '+c.nguoi_giu : '';
+    return '<option value="'+esc(c.ma_cong_cu)+'">'+esc(c.ten_cong_cu||'')+nguoi+'</option>';
+  }).join('');
 }
 
 function hideCcdcModal() { document.getElementById('ccdc-modal').style.display = 'none'; }
@@ -9886,16 +10109,36 @@ function onCcdcLoaiChange() {
   var loai = document.getElementById('ccdc-loai-gd').value;
   var lbl  = document.getElementById('ccdc-nguoi-label');
   var sel  = document.getElementById('ccdc-nguoi-nhan');
-  // CAP_PHAT bắt buộc người nhận; THU_HOI/BAO_DUONG/MAT/HONG ko bắt buộc nhưng vẫn cho chọn
   if (loai === 'CAP_PHAT') {
     lbl.textContent = 'Người nhận *';
     sel.required = true;
+  } else if (loai === 'BD_DINH_KY') {
+    lbl.textContent = 'Đơn vị BD * (gõ tên hoặc chọn)';
+    sel.required = false; // dùng input riêng nếu cần — tạm cho free
   } else if (loai === 'THU_HOI') {
     lbl.textContent = 'Người trả (tùy chọn)';
+    sel.required = false;
+  } else if (loai === 'TIM_THAY') {
+    lbl.textContent = 'Người tìm thấy (tùy chọn)';
+    sel.required = false;
+  } else if (loai === 'THANH_LY') {
+    lbl.textContent = 'Người duyệt thanh lý (tùy chọn)';
     sel.required = false;
   } else {
     lbl.textContent = 'Người liên quan (tùy chọn)';
     sel.required = false;
+  }
+  // Rebuild datalist Mã CC theo loại — chỉ hiện CC phù hợp
+  _ccdcRebuildDatalist();
+  // Nếu CC đang chọn không còn match filter mới → clear
+  var maEl = document.getElementById('ccdc-ma-cc');
+  var ma = String(maEl.value||'').trim();
+  if (ma) {
+    var allowed = _ccdcFilterCcByLoai(loai).some(function(c){ return c.ma_cong_cu === ma; });
+    if (!allowed) {
+      maEl.value = '';
+      document.getElementById('ccdc-cc-info').textContent = '';
+    }
   }
 }
 
@@ -9951,8 +10194,10 @@ async function loadBaoTriList() {
   var from   = document.getElementById('bt-from').value || '';
   var to     = document.getElementById('bt-to').value   || '';
   var search = document.getElementById('bt-search').value || '';
+  var loaiF  = document.getElementById('bt-loai-filter').value || '';
+  var ttF    = document.getElementById('bt-tt-filter').value   || '';
   var tbody  = document.getElementById('bt-list-rows');
-  tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   // Lazy load DM Công cụ cho datalist
   if (!_dmCongCu.length) {
     var ccRes = await apiGet({ action:'getDmCongCu' });
@@ -9962,36 +10207,36 @@ async function loadBaoTriList() {
     return '<option value="'+esc(c.ma_cong_cu)+'">'+esc(c.ten_cong_cu||'')+'</option>';
   }).join('');
   try {
-    var res = await apiGet({ action:'getBaoTriList', ma_cc:maCC, from:from, to:to, search:search });
+    var res = await apiGet({ action:'getBaoTriList', ma_cc:maCC, from:from, to:to, search:search, loai_bt:loaiF, trang_thai:ttF });
     if (res && res.success) {
       _btList = res.data || [];
       renderBtStats();
       renderBtList();
     } else {
-      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--error-text);padding:20px;text-align:center">Lỗi: '+esc(res&&res.error||'unknown')+'</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="color:var(--error-text);padding:20px;text-align:center">Lỗi: '+esc(res&&res.error||'unknown')+'</td></tr>';
     }
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--error-text);padding:20px;text-align:center">Lỗi: '+esc(e.message)+'</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="color:var(--error-text);padding:20px;text-align:center">Lỗi: '+esc(e.message)+'</td></tr>';
   }
 }
 
 function renderBtStats() {
   var total = _btList.length;
   var totalCost = _btList.reduce(function(s,r){ return s + (r.chi_phi_sc||0); }, 0);
+  var dangSua = _btList.filter(function(r){ return r.trang_thai_phieu === 'DANG_SUA'; }).length;
   var ccSet = {}; _btList.forEach(function(r){ if (r.ma_cc) ccSet[r.ma_cc] = 1; });
-  var maxR = _btList.reduce(function(m,r){ return (r.chi_phi_sc||0) > (m && m.chi_phi_sc || 0) ? r : m; }, null);
   document.getElementById('bt-stats').innerHTML =
-      _kstat({ label:'Tổng phiếu sửa',  value:total,                       icon:'🔧', color:'slate' })
-    + _kstat({ label:'Số CC được sửa',  value:Object.keys(ccSet).length,   icon:'🛠', color:'blue' })
-    + _kstat({ label:'Tổng chi phí',    value:totalCost.toLocaleString('vi-VN'), sub:'đồng', icon:'💰', color:'orange' })
-    + _kstat({ label:'Phiếu cao nhất',  value:(maxR ? (maxR.chi_phi_sc||0).toLocaleString('vi-VN') : '0'), sub:'đồng', icon:'⚡', color:'red' });
+      _kstat({ label:'Tổng phiếu',      value:total,                              icon:'🔧', color:'slate' })
+    + _kstat({ label:'Đang sửa',        value:dangSua,                            icon:'⏳', color:'orange' })
+    + _kstat({ label:'Số CC được sửa',  value:Object.keys(ccSet).length,          icon:'🛠', color:'blue' })
+    + _kstat({ label:'Tổng chi phí',    value:totalCost.toLocaleString('vi-VN'),  sub:'đồng', icon:'💰', color:'green' });
 }
 
 function renderBtList() {
   var tbody = document.getElementById('bt-list-rows');
   document.getElementById('bt-count').textContent = _btList.length + ' phiếu';
   if (!_btList.length) {
-    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">🔧</div><div class="empty-state-title">Chưa có phiếu sửa nào</div><div class="empty-state-sub">Bấm <b>+ Tạo phiếu sửa</b> để ghi nhận lần sửa chữa.</div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">🔧</div><div class="empty-state-title">Chưa có phiếu nào</div><div class="empty-state-sub">Bấm <b>+ Tạo phiếu sửa</b> để ghi nhận lần sửa chữa hoặc BD định kỳ.</div></div></td></tr>';
     return;
   }
   var dash = '<span style="color:var(--gray-300)">—</span>';
@@ -10002,37 +10247,71 @@ function renderBtList() {
       : dash;
     var hdCell = r.hinh_anh_hd
       ? (r.hinh_anh_hd.indexOf('http') === 0
-          ? '<img src="'+esc(r.hinh_anh_hd)+'" style="width:32px;height:32px;object-fit:cover;border-radius:4px;cursor:zoom-in" onclick="openLightbox(\''+esc(r.hinh_anh_hd)+'\',\''+esc(r.ma_phieu_sua)+'\')">'
-          : '<button onclick="viewAppSheetImage(\''+esc(r.hinh_anh_hd)+'\',\''+esc(r.ma_phieu_sua)+'\')" title="Click xem ảnh" style="border:none;background:var(--gray-100);width:32px;height:32px;border-radius:4px;cursor:pointer;font-size:16px";color:var(--gray-500)><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"/><polyline points=\"21 15 16 10 5 21\"/></svg></button>')
+          ? '<img src="'+esc(r.hinh_anh_hd)+'" style="width:28px;height:28px;object-fit:cover;border-radius:4px;cursor:zoom-in" onclick="openLightbox(\''+esc(r.hinh_anh_hd)+'\',\''+esc(r.ma_phieu_sua)+'\')">'
+          : '<button onclick="viewAppSheetImage(\''+esc(r.hinh_anh_hd)+'\',\''+esc(r.ma_phieu_sua)+'\')" title="Click xem ảnh" style="border:none;background:var(--gray-100);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:14px";color:var(--gray-500)><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"/><polyline points=\"21 15 16 10 5 21\"/></svg></button>')
       : dash;
+    var loaiCfg = BT_LOAI_LABELS[r.loai_bt] || BT_LOAI_LABELS.SUA_CHUA;
+    var loaiBadge = '<span class="badge" style="background:'+loaiCfg.bg+';color:'+loaiCfg.color+';font-weight:600;font-size:10px">'+loaiCfg.icon+' '+loaiCfg.label+'</span>';
+    var ttCfg = BT_TT_LABELS[r.trang_thai_phieu] || BT_TT_LABELS.HOAN_THANH;
+    var ttBadge = '<span class="badge" style="background:'+ttCfg.bg+';color:'+ttCfg.color+';font-weight:600;font-size:10px">'+ttCfg.label+'</span>';
+    var actBtns = '<button class="btn btn-sm" onclick="openBaoTriForm(null,\''+esc(r.ma_phieu_sua)+'\')">'+(r.trang_thai_phieu==='DANG_SUA'?'Mở':'Xem')+'</button>'
+      + ' <button class="btn btn-sm btn-red" onclick="deleteBaoTri(\''+esc(r.ma_phieu_sua)+'\')">Xoá</button>';
     return '<tr style="'+bg+'">'
       + '<td style="text-align:left"><a href="#" onclick="openBaoTriForm(null,\''+esc(r.ma_phieu_sua)+'\');return false" style="color:var(--blue);font-weight:600;text-decoration:none">'+esc(r.ma_phieu_sua)+'</a></td>'
-      + '<td>'+esc(r.ngay_sua)+'</td>'
+      + '<td style="font-size:11px">'+esc(r.ngay_sua)+'</td>'
+      + '<td>'+loaiBadge+'</td>'
+      + '<td>'+ttBadge+'</td>'
       + '<td style="text-align:left"><b>'+esc(r.ma_cc)+'</b><div style="color:var(--gray);font-size:11px">'+esc(r.ten_cc||'')+'</div></td>'
       + '<td style="text-align:left;color:var(--gray-700);font-size:12px;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.noi_dung_sua||'')+'">'+esc(r.noi_dung_sua||'')+'</td>'
       + '<td style="text-align:left;font-size:11px;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.don_vi_sua||'')+'">'+(r.don_vi_sua?esc(r.don_vi_sua):dash)+'</td>'
       + '<td style="text-align:right">'+cpCell+'</td>'
       + '<td>'+hdCell+'</td>'
-      + '<td><button class="btn btn-sm" onclick="openBaoTriForm(null,\''+esc(r.ma_phieu_sua)+'\')">Sửa</button> <button class="btn btn-sm btn-red" onclick="deleteBaoTri(\''+esc(r.ma_phieu_sua)+'\')">Xoá</button></td>'
+      + '<td>'+actBtns+'</td>'
       + '</tr>';
   }).join('');
 }
 
+// Trạng thái phiếu BT mapping
+var BT_TT_LABELS = {
+  DANG_SUA:        { label: 'Đang sửa',         bg: '#FFEDD5', color: '#9A3412' },
+  HOAN_THANH:      { label: 'Hoàn thành',       bg: '#DCFCE7', color: '#166534' },
+  SUA_KHONG_DUOC:  { label: 'Sửa không được',   bg: '#FEE2E2', color: '#991B1B' }
+};
+var BT_LOAI_LABELS = {
+  SUA_CHUA:    { label: 'Sửa chữa',     bg:'#FFEDD5', color:'#9A3412', icon:'🔧' },
+  BD_DINH_KY:  { label: 'BD định kỳ',   bg:'#FEF3C7', color:'#92400E', icon:'🔄' }
+};
+
 async function openBaoTriForm(maCcPrefill, maPhieu) {
-  // Load DM_CongCu cho datalist
-  if (!_dmCongCu.length) {
-    var ccRes = await apiGet({ action:'getDmCongCu' });
-    if (ccRes && ccRes.success) _dmCongCu = ccRes.data || [];
-  }
+  // Load DM_CongCu + users (để load người nhận khi GIAO_NV) song song
+  await Promise.all([
+    _loadKhoUsersList(),
+    (_dmCongCu.length ? Promise.resolve() : (async function(){
+      var ccRes = await apiGet({ action:'getDmCongCu' });
+      if (ccRes && ccRes.success) _dmCongCu = ccRes.data || [];
+    })())
+  ]);
   document.getElementById('dl-ma-cc').innerHTML = (_dmCongCu||[]).map(function(c){
     return '<option value="'+esc(c.ma_cong_cu)+'">'+esc(c.ten_cong_cu||'')+'</option>';
   }).join('');
+  // Dropdown người nhận sau sửa
+  document.getElementById('bt-close-nguoi').innerHTML = '<option value="">— Chọn người —</option>'
+    + (_khoUsersList||[]).map(function(u){
+        return '<option value="'+esc(u.username)+'">'+esc(u.fullname||u.username)+(u.title?' — '+esc(u.title):'')+'</option>';
+      }).join('');
+
+  // Reset close section về VE_KHO + ẩn
+  document.querySelectorAll('input[name="bt-ket-qua"]').forEach(function(r){ r.checked = (r.value === 'VE_KHO'); });
+  document.getElementById('bt-close-ghichu').value = '';
+  document.getElementById('bt-close-nguoi-wrap').style.display = 'none';
+  document.getElementById('bt-close-section').style.display = 'none';
+  document.getElementById('bt-close-btn').style.display = 'none';
 
   if (maPhieu) {
     var r = (_btList||[]).find(function(x){ return x.ma_phieu_sua === maPhieu; });
     if (!r) { toast('Không tìm thấy phiếu', 'err'); return; }
     _btEditing = maPhieu;
-    document.getElementById('bt-modal-title').textContent = 'Sửa phiếu: ' + maPhieu;
+    document.getElementById('bt-modal-title').textContent = 'Phiếu: ' + maPhieu;
     document.getElementById('bt-ma-phieu').value    = maPhieu;
     document.getElementById('bt-ngay').value        = r.ngay_iso || '';
     document.getElementById('bt-ma-cc-form').value  = r.ma_cc || '';
@@ -10042,10 +10321,22 @@ async function openBaoTriForm(maCcPrefill, maPhieu) {
     document.getElementById('bt-hinh-anh').value    = r.hinh_anh_hd || '';
     document.getElementById('bt-ghi-chu').value     = r.ghi_chu || '';
     _khoRenderImgPreview('bt-img-preview', r.hinh_anh_hd && r.hinh_anh_hd.indexOf('http') === 0 ? r.hinh_anh_hd : '');
+    // Loại phiếu
+    var loaiBT = r.loai_bt || 'SUA_CHUA';
+    document.querySelectorAll('input[name="bt-loai"]').forEach(function(x){ x.checked = (x.value === loaiBT); });
+    // Trạng thái badge + show close section nếu DANG_SUA
+    var ttPhieu = r.trang_thai_phieu || 'HOAN_THANH';
+    _btRenderTrangThaiBadge(ttPhieu);
+    if (ttPhieu === 'DANG_SUA') {
+      document.getElementById('bt-close-section').style.display = 'block';
+      document.getElementById('bt-close-btn').style.display = '';
+    }
     onBtMaCcInput(document.getElementById('bt-ma-cc-form'));
+    onBtLoaiChange();
   } else {
     _btEditing = null;
     document.getElementById('bt-modal-title').textContent = 'Tạo phiếu sửa chữa';
+    document.getElementById('bt-tt-badge').innerHTML = '';
     document.getElementById('bt-ma-phieu').value    = '';
     document.getElementById('bt-ngay').value        = new Date().toISOString().substring(0,10);
     document.getElementById('bt-ma-cc-form').value  = maCcPrefill || '';
@@ -10055,10 +10346,40 @@ async function openBaoTriForm(maCcPrefill, maPhieu) {
     document.getElementById('bt-hinh-anh').value    = '';
     document.getElementById('bt-ghi-chu').value     = '';
     _khoRenderImgPreview('bt-img-preview', '');
+    // Default: Sửa chữa
+    document.querySelectorAll('input[name="bt-loai"]').forEach(function(x){ x.checked = (x.value === 'SUA_CHUA'); });
     if (maCcPrefill) onBtMaCcInput(document.getElementById('bt-ma-cc-form'));
     else document.getElementById('bt-cc-info').textContent = '';
+    onBtLoaiChange();
   }
   document.getElementById('bt-modal').style.display = 'flex';
+}
+
+function _btRenderTrangThaiBadge(tt) {
+  var cfg = BT_TT_LABELS[tt] || { label: tt, bg:'#F1F5F9', color:'#64748B' };
+  document.getElementById('bt-tt-badge').innerHTML = '<span class="badge" style="background:'+cfg.bg+';color:'+cfg.color+';font-weight:600;padding:4px 10px;font-size:11px">'+cfg.label+'</span>';
+}
+
+function onBtLoaiChange() {
+  var loai = (document.querySelector('input[name="bt-loai"]:checked')||{}).value || 'SUA_CHUA';
+  if (loai === 'BD_DINH_KY') {
+    document.getElementById('bt-ngay-label').textContent = 'Ngày bắt đầu BD *';
+    document.getElementById('bt-noi-dung-label').textContent = 'Nội dung BD *';
+    document.getElementById('bt-don-vi-label').textContent = 'Đơn vị BD';
+    document.getElementById('bt-noi-dung').placeholder = 'VD: Bảo dưỡng định kỳ 6 tháng, vệ sinh + tra dầu...';
+    document.getElementById('bt-don-vi').placeholder = 'VD: Tự bảo dưỡng, Hãng Makita...';
+  } else {
+    document.getElementById('bt-ngay-label').textContent = 'Ngày bắt đầu sửa *';
+    document.getElementById('bt-noi-dung-label').textContent = 'Nội dung sửa *';
+    document.getElementById('bt-don-vi-label').textContent = 'Đơn vị sửa';
+    document.getElementById('bt-noi-dung').placeholder = 'VD: Thay ruột máy khoan, sửa motor kéo dây...';
+    document.getElementById('bt-don-vi').placeholder = 'VD: Cửa hàng XYZ, Bảo hành hãng...';
+  }
+}
+
+function onBtKetQuaChange() {
+  var kq = (document.querySelector('input[name="bt-ket-qua"]:checked')||{}).value || 'VE_KHO';
+  document.getElementById('bt-close-nguoi-wrap').style.display = (kq === 'GIAO_NV') ? '' : 'none';
 }
 
 function hideBtModal() { document.getElementById('bt-modal').style.display = 'none'; }
@@ -10115,6 +10436,7 @@ async function saveBaoTri() {
   if (!maCC) { toast('Thiếu Mã công cụ', 'err'); return; }
   var noiDung = String(document.getElementById('bt-noi-dung').value||'').trim();
   if (!noiDung) { toast('Thiếu Nội dung sửa', 'err'); return; }
+  var loaiBT = (document.querySelector('input[name="bt-loai"]:checked')||{}).value || 'SUA_CHUA';
   var btn = document.getElementById('bt-save-btn');
   btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
   try {
@@ -10129,15 +10451,56 @@ async function saveBaoTri() {
       don_vi_sua:    document.getElementById('bt-don-vi').value,
       chi_phi_sc:    chiPhiRaw ? parseInt(chiPhiRaw) : 0,
       hinh_anh_hd:   document.getElementById('bt-hinh-anh').value,
-      ghi_chu:       document.getElementById('bt-ghi-chu').value
+      ghi_chu:       document.getElementById('bt-ghi-chu').value,
+      loai_bt:       loaiBT
     });
     if (res && res.success) {
-      toast('Đã lưu phiếu '+res.ma_phieu_sua+'!', 2000);
+      var msg = _btEditing ? ('Đã cập nhật phiếu '+res.ma_phieu_sua) : ('Đã tạo phiếu '+res.ma_phieu_sua+' · CC chuyển sang '+(loaiBT==='BD_DINH_KY'?'Đang BD định kỳ':'Đang sửa'));
+      toast(msg, 2500);
       hideBtModal();
       loadBaoTriList();
+      // Refresh DM Công cụ cache vì state vừa đổi
+      _dmCongCu = [];
     } else toast('Lỗi: '+(res&&res.error||'unknown'), 'err');
   } catch(e) { toast('Lỗi: '+e.message, 'err'); }
   finally { btn.disabled = false; btn.textContent = 'Lưu'; }
+}
+
+// Đóng phiếu sửa — gọi backend closeBaoTriPhieu, tạo GD CCDC tương ứng
+async function closeBaoTriPhieu() {
+  if (!_btEditing) { toast('Phiếu chưa lưu', 'err'); return; }
+  var ketQua = (document.querySelector('input[name="bt-ket-qua"]:checked')||{}).value || 'VE_KHO';
+  var nguoiNhan = '';
+  if (ketQua === 'GIAO_NV') {
+    nguoiNhan = document.getElementById('bt-close-nguoi').value;
+    if (!nguoiNhan) { toast('Giao cho NV phải chọn người nhận', 'err'); return; }
+  }
+  var msgConfirm = ({
+    VE_KHO:         'Đóng phiếu và trả CC về kho?',
+    GIAO_NV:        'Đóng phiếu và giao CC cho '+nguoiNhan+'?',
+    SUA_KHONG_DUOC: 'Đóng phiếu — CC sẽ chuyển sang Thanh lý. Tiếp tục?'
+  })[ketQua];
+  if (!confirm(msgConfirm)) return;
+
+  var btn = document.getElementById('bt-close-btn');
+  btn.disabled = true; btn.textContent = '⏳ Đang đóng...';
+  try {
+    var res = await apiPost({
+      action:       'closeBaoTriPhieu',
+      username:     state.user && state.user.username || '',
+      ma_phieu_sua: _btEditing,
+      ket_qua:      ketQua,
+      nguoi_nhan:   nguoiNhan,
+      ghi_chu:      document.getElementById('bt-close-ghichu').value
+    });
+    if (res && res.success) {
+      toast('Đã đóng phiếu! ('+ketQua+')', 2500);
+      hideBtModal();
+      loadBaoTriList();
+      _dmCongCu = []; // refresh cache
+    } else toast('Lỗi: '+(res&&res.error||'unknown'), 'err');
+  } catch(e) { toast('Lỗi: '+e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '✓ Đóng phiếu'; }
 }
 
 async function deleteBaoTri(maPhieu) {
@@ -11028,9 +11391,11 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
           <select id="ccdc-loai-gd" onchange="onCcdcLoaiChange()">
             <option value="CAP_PHAT">Cấp phát</option>
             <option value="THU_HOI">Thu hồi</option>
-            <option value="BAO_DUONG">Mang đi bảo dưỡng</option>
-            <option value="MAT">Báo mất</option>
             <option value="HONG">Báo hỏng</option>
+            <option value="BD_DINH_KY">BD định kỳ</option>
+            <option value="MAT">Báo mất</option>
+            <option value="THANH_LY">Thanh lý</option>
+            <option value="TIM_THAY">Tìm thấy</option>
           </select>
         </div>
       </div>
@@ -11274,15 +11639,26 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
 <!-- BẢO TRÌ MODAL -->
 <div id="bt-modal" class="kho-modal" onclick="if(event.target===this)hideBtModal()">
   <div class="kho-card">
-    <div class="kho-head"><h3 id="bt-modal-title">Tạo phiếu sửa chữa</h3><button class="kho-x" onclick="hideBtModal()">×</button></div>
+    <div class="kho-head">
+      <h3 id="bt-modal-title">Tạo phiếu sửa chữa</h3>
+      <span id="bt-tt-badge" style="margin-left:10px"></span>
+      <button class="kho-x" onclick="hideBtModal()">×</button>
+    </div>
     <div class="kho-body">
+      <div class="kho-fg">
+        <label>Loại phiếu *</label>
+        <div style="display:flex;gap:var(--sp-2)" id="bt-loai-wrap">
+          <label class="chip-toggle"><input type="radio" name="bt-loai" value="SUA_CHUA" checked onchange="onBtLoaiChange()"> 🔧 Sửa chữa (do hỏng)</label>
+          <label class="chip-toggle"><input type="radio" name="bt-loai" value="BD_DINH_KY" onchange="onBtLoaiChange()"> 🔄 BD định kỳ</label>
+        </div>
+      </div>
       <div class="kho-grid-2">
         <div class="kho-fg">
           <label>Mã phiếu</label>
           <input id="bt-ma-phieu" readonly placeholder="(tự sinh khi lưu)" style="background:var(--gray-50)">
         </div>
         <div class="kho-fg">
-          <label>Ngày sửa *</label>
+          <label id="bt-ngay-label">Ngày bắt đầu sửa *</label>
           <input id="bt-ngay" type="date">
         </div>
       </div>
@@ -11292,12 +11668,12 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
         <div id="bt-cc-info" style="font-size:11px;color:var(--gray);margin-top:4px"></div>
       </div>
       <div class="kho-fg">
-        <label>Nội dung sửa *</label>
+        <label id="bt-noi-dung-label">Nội dung sửa *</label>
         <textarea id="bt-noi-dung" rows="2" placeholder="VD: Thay ruột máy khoan, sửa motor kéo dây..."></textarea>
       </div>
       <div class="kho-grid-2">
         <div class="kho-fg">
-          <label>Đơn vị sửa</label>
+          <label id="bt-don-vi-label">Đơn vị sửa</label>
           <input id="bt-don-vi" placeholder="VD: Cửa hàng XYZ, Bảo hành hãng...">
         </div>
         <div class="kho-fg">
@@ -11319,8 +11695,33 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
         <label>Ghi chú</label>
         <textarea id="bt-ghi-chu" rows="2" placeholder="Ghi chú thêm..."></textarea>
       </div>
+
+      <!-- ĐÓNG PHIẾU SECTION — chỉ hiện khi phiếu DANG_SUA -->
+      <div id="bt-close-section" style="display:none;border-top:1px solid var(--gray-200);margin-top:var(--sp-3);padding-top:var(--sp-3)">
+        <div class="sec-div" style="font-size:12px;font-weight:700;color:var(--success-text);margin-bottom:var(--sp-2)">✓ Kết phiếu sửa</div>
+        <div class="kho-fg">
+          <label>Kết quả *</label>
+          <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap">
+            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="VE_KHO" onchange="onBtKetQuaChange()" checked> 📦 Trả về kho</label>
+            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="GIAO_NV" onchange="onBtKetQuaChange()"> 👷 Giao cho NV</label>
+            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="SUA_KHONG_DUOC" onchange="onBtKetQuaChange()"> 🗑 Sửa không được (Thanh lý)</label>
+          </div>
+        </div>
+        <div class="kho-fg" id="bt-close-nguoi-wrap" style="display:none">
+          <label>Người nhận *</label>
+          <select id="bt-close-nguoi"><option value="">— Chọn người —</option></select>
+        </div>
+        <div class="kho-fg">
+          <label>Ghi chú đóng phiếu</label>
+          <input id="bt-close-ghichu" placeholder="VD: Sửa xong, máy chạy ổn định...">
+        </div>
+      </div>
     </div>
-    <div class="kho-foot"><button class="btn" onclick="hideBtModal()">Huỷ</button><button class="btn btn-blue" id="bt-save-btn" onclick="saveBaoTri()">Lưu</button></div>
+    <div class="kho-foot">
+      <button class="btn" onclick="hideBtModal()">Huỷ</button>
+      <button class="btn" id="bt-close-btn" onclick="closeBaoTriPhieu()" style="display:none;background:var(--success-text);color:#fff;border-color:var(--success-text)">✓ Đóng phiếu</button>
+      <button class="btn btn-blue" id="bt-save-btn" onclick="saveBaoTri()">Lưu</button>
+    </div>
   </div>
 </div>
 
