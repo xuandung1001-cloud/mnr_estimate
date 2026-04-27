@@ -8372,7 +8372,16 @@ async function refreshQuotaGauge() {
   if (!box) return;
   try {
     var res = await apiGet({ action: 'getQuotaStatus', _t: Date.now() });
-    if (!res || typeof res.used !== 'number') return;
+    // Route chưa deploy mới → backend trả {error: 'Unknown action: ...'} → hiện cảnh báo
+    if (!res || typeof res.used !== 'number') {
+      var dotErr = document.getElementById('tb-quota-dot');
+      var txtErr = document.getElementById('tb-quota-text');
+      if (dotErr) dotErr.style.background = 'var(--gray-400)';
+      if (txtErr) txtErr.textContent = '? /20k';
+      box.style.display = 'flex';
+      box.title = '⚠ Backend chưa deploy version mới — vào GAS UI → Deploy → New version';
+      return;
+    }
     var used = res.used, limit = res.limit || 20000, remain = res.remaining;
     var pct = used / limit;
     var dot = document.getElementById('tb-quota-dot');
