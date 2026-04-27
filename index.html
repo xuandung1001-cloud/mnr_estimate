@@ -851,6 +851,11 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </button>
       <div class="tb-title" id="tb-title">Nhập Báo Giá mới</div>
       <div style="flex:1"></div>
+      <div id="tb-quota" title="Quota Drive UrlFetch hôm nay (reset 0h đêm)" onclick="refreshQuotaGauge()"
+        style="display:none;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--gray-50);border:1px solid var(--gray-200);font-size:var(--text-xs);font-weight:600;color:var(--gray-600);cursor:pointer;flex-shrink:0;margin-right:8px;user-select:none">
+        <span id="tb-quota-dot" style="width:8px;height:8px;border-radius:50%;background:var(--green)"></span>
+        <span id="tb-quota-text">— /20k</span>
+      </div>
       <div style="position:relative;width:340px;max-width:38vw;flex-shrink:0">
         <input id="global-search" class="fi" placeholder="Tìm container, mã VT, mã CC..." autocomplete="off"
           style="width:100%;height:32px;padding-left:10px;padding-right:42px;font-size:var(--text-sm)"
@@ -1977,6 +1982,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <span id="pkform-title" style="font-size:14px;font-weight:700;color:var(--gray-900)"></span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-sm" id="pkform-scan-btn" onclick="openScanner('phieukho')" title="Quét tem VT vào phiếu" style="background:#FFEDD5;border-color:#F97316;color:#9A3412;font-weight:600">📷 Quét VT</button>
               <button class="btn btn-sm" id="pkform-print-btn" onclick="printPhieuKhoCurrent()" style="display:none">In phiếu</button>
               <button class="btn btn-sm btn-red" id="pkform-delete-btn" onclick="deletePhieuKhoCurrent()" style="display:none">Xoá phiếu</button>
               <button class="btn btn-blue" id="pkform-save-btn" onclick="savePhieuKhoForm()">Lưu phiếu</button>
@@ -2079,8 +2085,9 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         </div>
         <!-- MOBILE STICKY ACTION BAR — chỉ hiện trên mobile, fixed bottom -->
         <div id="pkform-mobile-actions" style="display:none">
-          <button class="btn btn-red" id="pkform-mob-delete" onclick="deletePhieuKhoCurrent()" style="display:none;flex:0 0 80px">Xoá</button>
-          <button class="btn" id="pkform-mob-print" onclick="printPhieuKhoCurrent()" style="display:none;flex:0 0 70px">In</button>
+          <button class="btn btn-red" id="pkform-mob-delete" onclick="deletePhieuKhoCurrent()" style="display:none;flex:0 0 64px">Xoá</button>
+          <button class="btn" id="pkform-mob-print" onclick="printPhieuKhoCurrent()" style="display:none;flex:0 0 56px">In</button>
+          <button class="btn" onclick="openScanner('phieukho')" style="flex:0 0 96px;background:#FFEDD5;border-color:#F97316;color:#9A3412;font-weight:700">📷 Quét</button>
           <button class="btn btn-blue" onclick="savePhieuKhoForm()">Lưu phiếu</button>
         </div>
       </div>
@@ -2644,21 +2651,30 @@ function _estCacheClearAll() {
   } catch(e) {}
 }
 
-// Hover-prefetch: gọi sau 200ms nếu chuột vẫn ở row, skip nếu đã có cache
+// Hover-prefetch: gọi sau 500ms nếu chuột vẫn ở row, skip nếu đã có cache
+// Tiết kiệm quota: max 2 prefetch chạy song song; bỏ qua nếu đã prefetch trong session
+var _estPrefetchedInSession = {};
+var _estInflightCount = 0;
 function prefetchEstDetail(contNo, estDate) {
   var k = _estCacheKey(contNo, estDate);
-  if (_estMemCache[k] || _estInflight[k]) return; // có rồi hoặc đang fetch
-  if (_estCacheGet(contNo, estDate)) return; // localStorage hit
+  if (_estMemCache[k] || _estInflight[k]) return;
+  if (_estCacheGet(contNo, estDate)) return;
+  if (_estPrefetchedInSession[k]) return; // đã prefetch trong session, đừng spam
+  if (_estInflightCount >= 2) return;     // tránh đốt quota khi scroll nhanh
   clearTimeout(_estPrefetchTimers[k]);
   _estPrefetchTimers[k] = setTimeout(function() {
     if (_estMemCache[k] || _estInflight[k]) return;
+    if (_estCacheGet(contNo, estDate)) return;
+    if (_estInflightCount >= 2) return;
     _estInflight[k] = true;
+    _estPrefetchedInSession[k] = true;
+    _estInflightCount++;
     apiGet({ action: 'getEstimates', container_no: contNo, est_date: estDate || '' })
       .then(function(res) {
         if (res && res.success && res.data) _estCacheSet(contNo, estDate, res.data);
       })
-      .finally(function() { delete _estInflight[k]; });
-  }, 200);
+      .finally(function() { delete _estInflight[k]; _estInflightCount = Math.max(0, _estInflightCount - 1); });
+  }, 500);
 }
 function cancelPrefetchEstDetail(contNo, estDate) {
   var k = _estCacheKey(contNo, estDate);
@@ -3028,6 +3044,8 @@ async function loadInitialData() {
     }
     // Schedule auto-fetch tỷ giá USD lúc 7h sáng mỗi ngày
     scheduleDailyRateUpdate();
+    // Quota gauge: hiện trên topbar, auto refresh 5 phút
+    try { startQuotaGaugeAutoRefresh(); } catch(_) {}
   } catch(e) {
     console.error('Data load error:', e);
     if (_expEl) _expEl.textContent = _expOrig;
@@ -6543,22 +6561,39 @@ function previewRefNos() {
   apiGet({ action: 'countPhotos', cont_list: conts.join(','), carrier: carrier, loai_anh: loaiAnh })
     .then(function(res) {
       if (!res || !res.success) return;
+      // Build danh sách cont count=0 cần heal
+      var needHeal = [];
       (res.counts || []).forEach(function(item) {
         var el = document.getElementById('pic-count-' + item.cont);
         if (el) {
           el.textContent = item.count + ' ảnh';
           el.style.color = item.count > 0 ? 'var(--blue)' : 'var(--red)';
           el.style.fontWeight = item.count > 0 ? '600' : 'normal';
-          // Smart Heal: count=0 → thử scan Drive trực tiếp (DriveApp, 0 UrlFetch)
-          if (item.count === 0) tryHealCont(carrier, loaiAnh, item.cont, el);
+          if (item.count === 0) needHeal.push({ cont: item.cont, el: el });
         }
       });
+      // Smart Heal: CHỈ heal max 3 cont để tránh đốt UrlFetch quota
+      // Nếu nhiều cont count=0 → hint user chạy syncPhotoIndexFull thay vì auto-spam
+      if (needHeal.length > 3) {
+        toast('⚠ ' + needHeal.length + ' cont chưa có index. Chạy syncPhotoIndexFull (GAS Editor) trước khi Export để tiết kiệm quota Drive.', 6000);
+        needHeal = needHeal.slice(0, 3); // chỉ heal 3 cont đầu tiên
+      }
+      // Sequential — không song song để tránh burst quota
+      _healSequential(needHeal, carrier, loaiAnh);
     })
     .catch(function() {});
 }
 
+// Heal tuần tự — đợi cont này xong mới sang cont tiếp; throttle 500ms giữa các call
+async function _healSequential(needHeal, carrier, loaiAnh) {
+  for (var i = 0; i < needHeal.length; i++) {
+    await tryHealCont(carrier, loaiAnh, needHeal[i].cont, needHeal[i].el);
+    if (i < needHeal.length - 1) await new Promise(function(r){ setTimeout(r, 500); });
+  }
+}
+
 // Smart Heal: tự sync photo_index cho 1 cont khi countPhotos trả 0
-// Throttle 1 lần/cont/session để không spam
+// Throttle: 1 lần/cont/session để không spam khi user F5 hoặc đổi tab
 async function tryHealCont(carrier, loaiAnh, contNo, el) {
   var key = 'healed_' + carrier + '_' + loaiAnh + '_' + contNo;
   if (sessionStorage.getItem(key)) return;
@@ -6721,8 +6756,21 @@ async function doExportPictures() {
     clearInterval(_exportTimer);
     document.getElementById('pic-progress').style.display = 'none';
     document.getElementById('pic-export-btn').disabled = false;
-    toast('Lỗi: ' + e.message, 4000);
+    var msg = _friendlyQuotaError(e.message);
+    toast(msg, 8000);
   }
+}
+
+// Detect Google API quota errors → trả message tiếng Việt rõ ràng
+function _friendlyQuotaError(rawMsg) {
+  var s = String(rawMsg||'');
+  if (s.indexOf('vượt quá hạn mức') >= 0 || s.indexOf('quota') >= 0 || s.indexOf('rate limit') >= 0) {
+    return '⛔ Hết quota Google Drive/UrlFetch hôm nay. Quota reset lúc 0h đêm. Đừng bấm thêm — đợi qua đêm rồi chạy syncPhotoIndexFull trước khi Export.';
+  }
+  if (s.indexOf('Dịch vụ bị lỗi') >= 0 || s.indexOf('Service is unavailable') >= 0) {
+    return '⚠ Drive service đang gặp sự cố tạm thời. Đợi 5 phút thử lại, hoặc chạy syncPhotoIndexFull trước khi Export.';
+  }
+  return 'Lỗi: ' + s;
 }
 
 
@@ -8315,6 +8363,40 @@ async function loadUsdRate(force) {
       }
     }
   } catch(e) {}
+}
+
+// ── QUOTA GAUGE — show Drive UrlFetch quota usage in topbar ──
+var _quotaTimer = null;
+async function refreshQuotaGauge() {
+  var box = document.getElementById('tb-quota');
+  if (!box) return;
+  try {
+    var res = await apiGet({ action: 'getQuotaStatus', _t: Date.now() });
+    if (!res || typeof res.used !== 'number') return;
+    var used = res.used, limit = res.limit || 20000, remain = res.remaining;
+    var pct = used / limit;
+    var dot = document.getElementById('tb-quota-dot');
+    var txt = document.getElementById('tb-quota-text');
+    var color = pct < 0.5 ? 'var(--green)' : pct < 0.8 ? 'var(--amber)' : 'var(--red)';
+    if (dot) dot.style.background = color;
+    if (txt) {
+      var k = used >= 1000 ? (used/1000).toFixed(1) + 'k' : used;
+      txt.textContent = k + '/' + (limit/1000) + 'k';
+    }
+    box.style.display = 'flex';
+    box.title = 'Quota Drive: ' + used + '/' + limit + ' (còn ' + remain + ', click để refresh)';
+    // Cảnh báo 1 lần khi vượt 80%
+    if (pct >= 0.8 && !window._quotaWarned) {
+      window._quotaWarned = true;
+      try { toast('⚠ Quota Drive còn ' + remain + ' req. Hạn chế xuất ảnh đến 0h đêm.', 8000); } catch(_) {}
+    }
+    if (pct < 0.5) window._quotaWarned = false;
+  } catch(e) {}
+}
+function startQuotaGaugeAutoRefresh() {
+  refreshQuotaGauge();
+  if (_quotaTimer) clearInterval(_quotaTimer);
+  _quotaTimer = setInterval(refreshQuotaGauge, 5 * 60 * 1000); // 5 phút
 }
 
 // Schedule auto-fetch tỷ giá USD lúc 7h sáng mỗi ngày
@@ -10730,8 +10812,22 @@ var _scnInstance = null;   // Html5Qrcode instance
 var _scnTorchOn  = false;
 var _scnLastCode = null;   // tránh trigger 2 lần liên tiếp cùng mã
 var _scnLastTs   = 0;
+var _scnMode     = 'default'; // 'default' | 'phieukho' (continuous scan to fill form)
+var _scnPhieuCount = 0;
 
-async function openScanner() {
+async function openScanner(mode) {
+  _scnMode = mode || 'default';
+  _scnPhieuCount = 0;
+  // Update header + hint theo mode
+  var hdr = document.querySelector('#scn-modal .scn-header h3');
+  var hint = document.querySelector('#scn-modal .scn-hint');
+  if (_scnMode === 'phieukho') {
+    if (hdr)  hdr.textContent = '📷 Quét VT vào phiếu';
+    if (hint) hint.innerHTML = 'Quét tem VT → tự thêm vào phiếu (SL=1).<br>Quét cùng mã 2 lần → <b>SL +1</b>.';
+  } else {
+    if (hdr)  hdr.textContent = '📷 Quét Mã Vạch';
+    if (hint) hint.innerHTML = 'Quét tem mã VT/CC → tự mở chi tiết.<br>Hỗ trợ <b>Code 128 · QR · EAN · UPC</b>';
+  }
   if (typeof Html5Qrcode === 'undefined') {
     toast('Thư viện scanner chưa tải xong, thử lại sau 2s', 'err');
     return;
@@ -10793,6 +10889,10 @@ function onScanSuccess(decoded) {
 }
 
 function lookupAndOpen(code) {
+  // Mode "phieukho": continuous scan → fill thẳng dòng phiếu, KHÔNG đóng scanner
+  if (_scnMode === 'phieukho') {
+    return _scnFillPhieuLine(code);
+  }
   var vt = (_dmVatTu||[]).find(function(x){ return x.ma_vt === code; });
   if (vt) {
     closeScanner();
@@ -10810,6 +10910,60 @@ function lookupAndOpen(code) {
   toast('Mã "'+code+'" không có trong DM Vật tư hoặc DM Công cụ', 'err');
 }
 
+// Quét trong form Phiếu N/X — thêm dòng / tăng SL liên tục, scanner KHÔNG đóng
+function _scnFillPhieuLine(code) {
+  var vt = (_dmVatTu||[]).find(function(x){ return x.ma_vt === code; });
+  if (!vt) {
+    document.getElementById('scn-status').textContent = '❌ Không có "' + code + '" trong DM Vật tư';
+    return;
+  }
+  try { if (navigator.vibrate) navigator.vibrate(80); } catch(_){}
+
+  var rows = document.querySelectorAll('#pkf-lines tr');
+  // Nếu đã có dòng với mã này → tăng SL +1 (không thêm dòng mới)
+  for (var i = 0; i < rows.length; i++) {
+    var existingMa = String(rows[i].querySelector('.pkf-mavt').value||'').trim().toUpperCase();
+    if (existingMa === code) {
+      var slInp = rows[i].querySelector('.pkf-soluong');
+      var newSL = (parseFloat(slInp.value) || 0) + 1;
+      slInp.value = newSL;
+      onPkfQtyOrPriceChange(slInp);
+      _scnPhieuCount++;
+      document.getElementById('scn-status').textContent = '✓ +1 ' + vt.ten_vat_tu + ' (SL: ' + newSL + ') · Đã quét: ' + _scnPhieuCount;
+      return;
+    }
+  }
+
+  // Chưa có → tìm dòng cuối rỗng hoặc thêm dòng mới
+  var targetTr = null;
+  if (rows.length) {
+    var lastTr = rows[rows.length - 1];
+    if (!String(lastTr.querySelector('.pkf-mavt').value||'').trim()) targetTr = lastTr;
+  }
+  if (!targetTr) {
+    addPkfLine();
+    rows = document.querySelectorAll('#pkf-lines tr');
+    targetTr = rows[rows.length - 1];
+  }
+
+  // Fill mã + sync mobile card
+  targetTr.querySelector('.pkf-mavt').value = code;
+  var idx = targetTr.dataset.idx;
+  var card = document.querySelector('#pkf-lines-cards .pkf-line-card[data-idx="'+idx+'"]');
+  if (card) card.querySelector('.pkf-mavt-m').value = code;
+  lookupPkfVt(targetTr);
+
+  // Default SL = 1
+  var slInp = targetTr.querySelector('.pkf-soluong');
+  if (!slInp.value) {
+    slInp.value = '1';
+    onPkfQtyOrPriceChange(slInp);
+  }
+
+  _scnPhieuCount++;
+  document.getElementById('scn-status').textContent = '✓ ' + vt.ten_vat_tu + ' (SL: 1) · Đã quét: ' + _scnPhieuCount + ' — Quét tiếp...';
+}
+
 function manualScanLookup() {
   var code = (document.getElementById('scn-manual-input').value||'').trim().toUpperCase();
   if (!code) return;
@@ -10824,6 +10978,12 @@ async function closeScanner() {
   }
   _scnTorchOn = false;
   document.getElementById('scn-modal').classList.remove('active');
+  // Tổng kết khi đóng scanner mode phiếu kho
+  if (_scnMode === 'phieukho' && _scnPhieuCount > 0) {
+    toast('✓ Đã quét ' + _scnPhieuCount + ' lần — kiểm tra SL từng dòng rồi Lưu', 3000);
+  }
+  _scnMode = 'default';
+  _scnPhieuCount = 0;
 }
 
 async function checkTorchSupport() {
