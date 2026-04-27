@@ -355,23 +355,28 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 .login-footer span{font-size:var(--text-xs);color:var(--gray-500);cursor:pointer;transition:color .15s}
 .login-footer span:hover{color:var(--amber-text);text-decoration:underline}
 @media (max-width:680px){
-  .login-card{flex-direction:column;min-height:auto;max-width:420px;border-radius:14px}
-  /* Brand panel: collapse thành thin header bar — logo + title 1 hàng, ko sub text */
-  .login-brand{flex:0 0 auto;padding:14px 18px;flex-direction:row;align-items:center;gap:12px}
-  .login-illustration{width:38px;height:38px;margin:0;flex-shrink:0}
-  .login-brand-title{font-size:16px;margin-bottom:0}
+  .login-card{flex-direction:column;min-height:auto;max-width:440px;border-radius:14px}
+  /* Brand panel: collapse thin row — logo + title side-by-side */
+  .login-brand{flex:0 0 auto;padding:12px 16px;align-items:stretch}
+  .login-brand > div:first-child{display:flex;flex-direction:row;align-items:center;gap:12px;flex:1}
+  .login-illustration{width:36px !important;height:36px !important;margin:0;flex-shrink:0}
+  .login-brand-title{font-size:16px;margin-bottom:0;line-height:1.2}
   .login-brand-sub,.login-brand-foot{display:none}
-  /* Form: padding rộng hơn + input cao 48px (touch target chuẩn iOS) */
-  .login-form{padding:20px}
-  .login-form-title{font-size:20px}
-  .login-form-sub{margin-bottom:18px}
-  .login-input{padding:13px 14px;font-size:16px;border-radius:10px}
-  .login-btn{padding:14px;font-size:15px;border-radius:10px;margin-top:8px}
+  .login-brand::before,.login-brand::after{display:none}
+  /* Form: padding rộng + input cao 48px (touch target iOS chuẩn) + font 16px tránh auto-zoom */
+  .login-form{padding:24px 20px}
+  .login-form-title{font-size:22px;margin-bottom:4px}
+  .login-form-sub{font-size:13px;margin-bottom:22px}
+  .login-label{font-size:11px;margin-bottom:6px}
+  .login-input{padding:14px;font-size:16px;border-radius:10px;border-width:1.5px}
+  .login-btn{padding:15px;font-size:16px;border-radius:10px;margin-top:10px;letter-spacing:.02em}
 }
 @media (max-width:480px){
-  /* Tắt particle canvas trên màn rất nhỏ — tiết kiệm CPU + đỡ rối */
+  /* Tắt particle canvas trên màn rất nhỏ — tiết kiệm pin + đỡ rối */
   #login-particles{display:none}
-  .login-card{box-shadow:0 10px 30px -8px rgba(0,0,0,.4)}
+  #login-screen{background:linear-gradient(135deg,#1E293B 0%,#0F172A 100%);padding:0}
+  .login-card{box-shadow:none;border-radius:0;height:100vh;max-width:100vw;border:none}
+  .login-form{justify-content:flex-start;padding-top:36px}
 }
 
 /* TOAST */
@@ -456,28 +461,35 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
   .pkf-lines-table{display:none}
   .pkf-lines-cards{display:block}
   .pkf-lines-cards-total{display:flex!important}
-  /* PK Form mobile: header buttons full-width row, label/input bigger */
-  #screen-pkform > .card{padding:12px 12px 16px}
-  #screen-pkform .pkf-grid .kho-fg label{font-size:11px;color:var(--gray-700);font-weight:700}
-  #screen-pkform .pkf-grid .fi,#screen-pkform .pkf-grid select.fi{height:42px;font-size:15px;padding:0 12px}
-  #screen-pkform .chip-toggle{height:42px;padding:0 14px;font-size:14px}
-  /* Header row: stack title + buttons */
-  #pkform-title{font-size:13px;font-weight:700}
+  /* PK Form mobile: card sát viền, padding nhỏ, dành chỗ cho sticky action bar */
+  #screen-pkform > .card{padding:12px 12px 80px;margin-bottom:0;border-radius:0;border-left:0;border-right:0}
+  #screen-pkform .pkf-grid .kho-fg label{font-size:10px;color:var(--gray-700);font-weight:700;letter-spacing:.05em}
+  #screen-pkform .pkf-grid .fi,#screen-pkform .pkf-grid select.fi{height:44px;font-size:15px;padding:0 12px;border-radius:8px;border-width:1.5px}
+  #screen-pkform .chip-toggle{height:44px;padding:0 16px;font-size:14px;border-radius:8px;border-width:1.5px}
+  /* Header row trên cùng: tiêu đề bự, nút Quay lại nhỏ */
+  #screen-pkform > .card > div:first-child{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)}
+  #pkform-title{font-size:15px;font-weight:700;color:var(--amber-text)}
+  /* Header buttons trong card: ẩn (move xuống sticky bar) */
+  #pkform-print-btn,#pkform-delete-btn,#pkform-save-btn{display:none !important}
   /* Sec divider compact */
-  #screen-pkform .sec-div{font-size:12px;padding:8px 0;margin-bottom:8px}
-  /* Line cards: rộng + touch target lớn hơn */
-  .pkf-line-card{padding:14px 12px 12px}
-  .pkf-line-card label{font-size:11px;color:var(--gray-700);font-weight:700;margin-bottom:4px}
-  .pkf-line-card input,.pkf-line-card select{padding:10px 10px;font-size:15px;border-radius:8px}
-  .pkf-line-card-num{font-size:11px;font-weight:700;background:var(--amber-bg);color:var(--amber-text);padding:2px 8px;border-radius:10px}
-  .pkf-line-card-del{width:32px;height:32px;font-size:18px}
-  .pkf-lines-cards-total{padding:14px 16px;font-size:15px;border-radius:10px}
+  #screen-pkform .sec-div{font-size:11px;padding:8px 0;margin-bottom:8px;font-weight:700;color:var(--amber-text);border-bottom-color:var(--amber-border)}
+  /* Line cards: bự, nổi bật STT */
+  .pkf-line-card{padding:16px 12px 12px;border-radius:10px;border-color:var(--gray-300);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .pkf-line-card label{font-size:10px;color:var(--gray-600);font-weight:700;margin-bottom:5px;letter-spacing:.04em}
+  .pkf-line-card input,.pkf-line-card select{padding:11px 12px;font-size:15px;border-radius:8px;border-width:1.5px}
+  .pkf-line-card-num{font-size:11px;font-weight:700;background:var(--amber);color:var(--amber-text);padding:3px 10px;border-radius:12px;top:10px;left:12px}
+  .pkf-line-card-del{width:36px;height:36px;font-size:20px;top:8px;right:8px}
+  .pkf-lines-cards-total{padding:16px 20px;font-size:16px;border-radius:10px;margin-top:12px;box-shadow:0 2px 6px rgba(245,158,11,.2)}
+  /* STICKY ACTION BAR: chỉ hiện trên mobile khi PK form active */
+  #screen-pkform.active #pkform-mobile-actions{
+    display:flex !important;position:fixed;bottom:0;left:0;right:0;height:64px;padding:10px 12px;gap:8px;z-index:51;align-items:center;background:#fff;border-top:1px solid var(--gray-200);box-shadow:0 -4px 12px rgba(0,0,0,.08);
+  }
+  #pkform-mobile-actions .btn{height:44px;font-size:14px;font-weight:600;border-radius:10px}
+  #pkform-mobile-actions .btn-blue{flex:1}
 }
 @media(max-width:480px){
-  /* Phone nhỏ — header form khít hơn nữa */
-  #screen-pkform > .card{padding:10px}
   #screen-pkform .pkf-grid{gap:10px;margin-bottom:10px}
-  #pkform-title{display:block;width:100%;text-align:left;margin-top:4px}
+  #pkform-title{font-size:14px}
 }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1820,6 +1832,12 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <span>TỔNG CỘNG</span>
             <strong id="pkf-total-mobile-val">0 đ</strong>
           </div>
+        </div>
+        <!-- MOBILE STICKY ACTION BAR — chỉ hiện trên mobile, fixed bottom -->
+        <div id="pkform-mobile-actions" style="display:none">
+          <button class="btn btn-red" id="pkform-mob-delete" onclick="deletePhieuKhoCurrent()" style="display:none;flex:0 0 80px">Xoá</button>
+          <button class="btn" id="pkform-mob-print" onclick="printPhieuKhoCurrent()" style="display:none;flex:0 0 70px">In</button>
+          <button class="btn btn-blue" onclick="savePhieuKhoForm()">💾 Lưu phiếu</button>
         </div>
       </div>
 
@@ -8431,10 +8449,12 @@ function _fillPkForm(header, lines) {
     addPkfLine();
   }
   calcPkfTotal();
-  // Show Print + Delete khi đang sửa phiếu cũ
+  // Show Print + Delete khi đang sửa phiếu cũ (cả desktop header + mobile sticky bar)
   var hasMa = !!(_pkfState && _pkfState.ma_phieu);
   document.getElementById('pkform-print-btn').style.display  = hasMa ? 'inline-flex' : 'none';
   document.getElementById('pkform-delete-btn').style.display = hasMa ? 'inline-flex' : 'none';
+  document.getElementById('pkform-mob-print').style.display  = hasMa ? 'inline-flex' : 'none';
+  document.getElementById('pkform-mob-delete').style.display = hasMa ? 'inline-flex' : 'none';
 }
 
 function printPhieuKhoCurrent() {
