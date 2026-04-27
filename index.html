@@ -10282,6 +10282,21 @@ var BT_LOAI_LABELS = {
   BD_DINH_KY:  { label: 'BD định kỳ',   bg:'#FEF3C7', color:'#92400E', icon:'🔄' }
 };
 
+// Compute mã phiếu BT kế tiếp client-side (PS_<YYYY>_<NNNN>) — backend regen lúc save → race-safe
+function _btComputeNextMaPhieu() {
+  var year = new Date().getFullYear();
+  var prefix = 'PS_' + year + '_';
+  var maxSeq = 0;
+  (_btList||[]).forEach(function(r){
+    var ma = String(r.ma_phieu_sua||'');
+    if (ma.indexOf(prefix) === 0) {
+      var seq = parseInt(ma.substring(prefix.length)) || 0;
+      if (seq > maxSeq) maxSeq = seq;
+    }
+  });
+  return prefix + String(maxSeq + 1).padStart(4, '0');
+}
+
 async function openBaoTriForm(maCcPrefill, maPhieu) {
   // Load DM_CongCu + users (để load người nhận khi GIAO_NV) song song
   await Promise.all([
@@ -10337,7 +10352,11 @@ async function openBaoTriForm(maCcPrefill, maPhieu) {
     _btEditing = null;
     document.getElementById('bt-modal-title').textContent = 'Tạo phiếu sửa chữa';
     document.getElementById('bt-tt-badge').innerHTML = '';
-    document.getElementById('bt-ma-phieu').value    = '';
+    // Pre-compute mã phiếu kế tiếp (backend sẽ regen lúc save — race-safe)
+    if (!(_btList||[]).length) {
+      try { var btRes = await apiGet({ action:'getBaoTriList' }); if (btRes&&btRes.success) _btList = btRes.data||[]; } catch(_){}
+    }
+    document.getElementById('bt-ma-phieu').value    = _btComputeNextMaPhieu();
     document.getElementById('bt-ngay').value        = new Date().toISOString().substring(0,10);
     document.getElementById('bt-ma-cc-form').value  = maCcPrefill || '';
     document.getElementById('bt-noi-dung').value    = '';
@@ -11305,6 +11324,8 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
 .kho-img-row .kho-img-preview img{box-shadow:var(--shadow-xs)}
 .kho-img-row .kho-img-input{flex:1}
 .kho-img-row label.btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 var(--sp-3)}
+/* Mã CC inputs: uppercase chỉ áp với value user gõ, placeholder giữ case gốc */
+#ccdc-ma-cc::placeholder,#bt-ma-cc-form::placeholder,#ccdc-ma-cc::-webkit-input-placeholder,#bt-ma-cc-form::-webkit-input-placeholder{text-transform:none;font-weight:400;color:var(--gray-400)}
 @media (max-width:600px){.kho-grid-2{grid-template-columns:1fr}.kho-card{max-height:100vh;height:100vh;border-radius:0;width:100vw;max-width:100vw}}
 </style>
 
