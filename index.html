@@ -1537,9 +1537,10 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <option value="">Tất cả Carrier</option>
             </select>
             <input class="fi" id="trf-search" placeholder="Tìm Component, Dmg Type, Rep Type..." oninput="_filtTariff()" style="flex:1;min-width:200px">
-            <button class="btn btn-sm btn-green" onclick="runSetupHeaders()" title="Thêm các cột mới vào Google Sheet nếu thiếu">
-              ⚙️ Setup Cột Sheet
+            <button class="btn btn-sm btn-blue" onclick="document.getElementById('tariff-file').click()">
+              + Import file Tariff
             </button>
+            <input type="file" id="tariff-file" accept=".xlsx,.xls" style="display:none" onchange="handleTariffFile(this)">
           </div>
 
           <!-- Import preview (ẩn mặc định) -->
@@ -8012,8 +8013,8 @@ function krRenderNxt() {
         + '<td>'+esc(r.ten_vt)+'</td>'
         + '<td class="ctr" style="color:var(--gray-600)">'+esc(r.don_vi)+'</td>'
         + '<td class="num">'+_krFmtQty(r.ton_dau_ky)+'</td>'
-        + '<td class="num kr-cell-pos">'+(r.nhap_ky ? '+'+_krFmtQty(r.nhap_ky) : '—')+'</td>'
-        + '<td class="num kr-cell-neg">'+(r.xuat_ky ? '−'+_krFmtQty(r.xuat_ky) : '—')+'</td>'
+        + '<td class="num kr-cell-pos">'+(r.nhap_ky ? _krFmtQty(r.nhap_ky) : '—')+'</td>'
+        + '<td class="num kr-cell-neg">'+(r.xuat_ky ? _krFmtQty(r.xuat_ky) : '—')+'</td>'
         + '<td class="num" style="font-weight:700">'+_krFmtQty(r.ton_cuoi_ky)+'</td>'
         + '<td class="num" style="color:var(--gray-600)">'+(r.don_gia_wac ? _krFmt(r.don_gia_wac) : '—')+'</td>'
         + '<td class="num kr-cell-money">'+(r.gia_tri_ton ? _krFmt(r.gia_tri_ton) : '—')+'</td>'
@@ -8210,8 +8211,8 @@ function krRenderSoKho(d) {
       + '<td class="code">'+esc(r.ma_phieu)+'</td>'
       + '<td class="ctr"><span class="'+bdg+'">'+r.loai+'</span></td>'
       + '<td style="color:var(--gray-700)">'+esc(r.doi_tuong || '—')+'</td>'
-      + '<td class="num kr-cell-pos">'+(r.sl_nhap ? '+'+_krFmtQty(r.sl_nhap) : '')+'</td>'
-      + '<td class="num kr-cell-neg">'+(r.sl_xuat ? '−'+_krFmtQty(r.sl_xuat) : '')+'</td>'
+      + '<td class="num kr-cell-pos">'+(r.sl_nhap ? _krFmtQty(r.sl_nhap) : '')+'</td>'
+      + '<td class="num kr-cell-neg">'+(r.sl_xuat ? _krFmtQty(r.sl_xuat) : '')+'</td>'
       + '<td class="num" style="color:var(--gray-600)">'+(r.don_gia ? _krFmt(r.don_gia) : '—')+'</td>'
       + '<td class="num">'+(r.thanh_tien ? _krFmt(r.thanh_tien) : '—')+'</td>'
       + '<td class="num kr-cell-bal">'+_krFmtQty(r.ton_sau)+'</td>'
