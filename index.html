@@ -658,7 +658,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 <!-- MODAL ĐỔI MẬT KHẨU -->
 <div id="modal-changepwd" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:12px;padding:28px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.12)">
-    <div style="font-size:15px;font-weight:700;color:#1A1A1A;margin-bottom:4px">Đổi mật khẩu</div>
+    <div style="font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:4px">Đổi mật khẩu</div>
     <div style="font-size:11px;color:#999;margin-bottom:18px">Nhập thông tin để đổi mật khẩu mới</div>
     <div class="login-field">
       <label class="login-label">Username</label>
@@ -981,7 +981,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           </div>
           <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
             <button class="btn btn-sm" onclick="addReviseRow()">+ Thêm dòng</button>
-            <button class="btn btn-sm" id="btn-compare" onclick="toggleCompare()" style="background:#f0fdf4;color:#15803d;border-color:#86efac;display:none">So sánh thay đổi</button>
+            <button class="btn btn-sm" id="btn-compare" onclick="toggleCompare()" style="background:#f0fdf4;color:var(--success-text);border-color:#86efac;display:none">So sánh thay đổi</button>
           </div>
           <div class="tbl-wrap">
             <table id="rev-table" style="table-layout:fixed">
@@ -1061,7 +1061,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           </div>
           <!-- COMPARE PANEL -->
           <div id="rev-compare-panel" style="display:none;margin-top:12px">
-            <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+            <div style="font-size:12px;font-weight:600;color:var(--gray-900);margin-bottom:8px;display:flex;align-items:center;gap:12px">
               So sánh thay đổi
               <span style="font-size:10px;font-weight:400;display:flex;gap:10px;align-items:center">
                 <span style="background:#fefce8;border:1px solid #fbbf24;padding:1px 7px;border-radius:3px">🟡 Sửa giá trị</span>
@@ -1153,7 +1153,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         <div class="stats-row" id="tracking-stats"></div>
         <div class="card">
           <div class="filter-bar">
-            <input class="fi" id="trk-search" placeholder="Tìm Equipment No, Ref No..." oninput="filterTracking()" style="flex:1;min-width:160px">
+            <input class="fi" id="trk-search" placeholder="Tìm Equipment No, Ref No..." oninput="_filtTracking()" style="flex:1;min-width:160px">
             <select class="fi" id="trk-status" onchange="filterTracking()" style="width:200px">
               <option value="">Tất cả trạng thái</option>
               <option>Approved</option>
@@ -1212,7 +1212,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         <div class="stats-row" id="sum-stats"></div>
         <div class="card">
           <div class="filter-bar">
-            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No, PO Number..." oninput="filterSummary()" style="flex:1;min-width:160px">
+            <input class="fi" id="sum-search" placeholder="Tìm Equipment No, Ref No, PO Number..." oninput="_filtSummary()" style="flex:1;min-width:160px">
             <select class="fi" id="sum-carrier" onchange="filterSummary()" style="width:120px">
               <option value="">Tất cả Carrier</option>
             </select>
@@ -1301,7 +1301,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       <div class="screen" id="screen-stock">
         <div class="card">
           <div class="filter-bar">
-            <input class="fi" id="stk-search" placeholder="Tìm Container No, Carrier, Size..." oninput="filterStock()" style="flex:1">
+            <input class="fi" id="stk-search" placeholder="Tìm Container No, Carrier, Size..." oninput="_filtStock()" style="flex:1">
             <select class="fi" id="stk-size" onchange="filterStock()" style="width:110px">
               <option value="">Tất cả Size</option>
             </select>
@@ -1310,7 +1310,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             </select>
             <button class="btn btn-sm" onclick="document.getElementById('stock-file').click()">Upload TOS file</button>
             <input type="file" id="stock-file" accept=".xlsx,.xls" style="display:none" onchange="handleStockUpload(this)">
-            <button class="btn btn-sm btn-red" onclick="confirmResetStock()">Reset Stock</button>
           </div>
           <div id="stk-info" style="font-size:11px;color:var(--gray);margin-bottom:8px"></div>
           <div class="tbl-wrap" style="max-height:calc(100vh - 180px);overflow-y:auto">
@@ -1342,7 +1341,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 </tr>
               </thead>
               <tbody id="stk-rows">
-                <tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1515,7 +1514,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div style="display:flex;align-items:center;gap:12px">
               <button onclick="backToDashboard()" class="btn btn-sm" style="display:flex;align-items:center;gap:4px">← Quay lại</button>
-              <span id="trend-table-title" style="font-size:13px;font-weight:600;color:#1A1A1A"></span>
+              <span id="trend-table-title" style="font-size:13px;font-weight:600;color:var(--gray-900)"></span>
             </div>
             <span id="trend-table-sub" style="font-size:11px;color:var(--gray)"></span>
           </div>
@@ -1537,7 +1536,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <select class="fi" id="trf-carrier" onchange="filterTariff()" style="width:140px">
               <option value="">Tất cả Carrier</option>
             </select>
-            <input class="fi" id="trf-search" placeholder="Tìm Component, Dmg Type, Rep Type..." oninput="filterTariff()" style="flex:1;min-width:200px">
+            <input class="fi" id="trf-search" placeholder="Tìm Component, Dmg Type, Rep Type..." oninput="_filtTariff()" style="flex:1;min-width:200px">
             <button class="btn btn-sm btn-green" onclick="runSetupHeaders()" title="Thêm các cột mới vào Google Sheet nếu thiếu">
               ⚙️ Setup Cột Sheet
             </button>
@@ -2253,6 +2252,67 @@ window.addEventListener('load', function() {
   } catch(e) {}
 });
 
+// Global esc() helper — chống XSS khi render dữ liệu vào HTML.
+// Phải define sớm vì các hàm render (Tracking/Summary/Stock/Revise) dùng inline.
+/**
+ * Escape giá trị cho HTML context (text content, attribute value).
+ * Chống XSS khi inject server data vào template literal.
+ * @param {*} v - Bất kỳ giá trị nào (null/undefined → '').
+ * @returns {string} String đã escape 5 ký tự nguy hiểm: & < > " '
+ */
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.esc = esc;
+
+/**
+ * Escape giá trị nhúng vào JS string literal trong onclick="fn('...')".
+ * Dùng \xNN hex để safe trong CẢ JS string literal LẪN HTML attribute
+ * — không cần esc() thêm. Phòng quote injection từ data DB.
+ * @param {*} v - Bất kỳ giá trị nào (null/undefined → '').
+ * @returns {string} String đã escape các ký tự đặc biệt JS+HTML.
+ */
+function jsEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, '\\x27')
+    .replace(/"/g, '\\x22')
+    .replace(/&/g, '\\x26')
+    .replace(/</g, '\\x3c')
+    .replace(/>/g, '\\x3e')
+    .replace(/\r?\n/g, '\\n');
+}
+window.jsEsc = jsEsc;
+
+/**
+ * Wrap fn để chỉ chạy 1 lần sau `wait`ms kể từ lần gọi cuối.
+ * Dùng cho filter inputs (Tracking/Summary/Stock/Tariff) — tránh
+ * re-render bảng nghìn dòng mỗi keystroke.
+ * @param {Function} fn - Hàm sẽ được debounced.
+ * @param {number} [wait=200] - Delay (ms). Default 200.
+ * @returns {Function} Wrapped function.
+ */
+function debounce(fn, wait) {
+  var t;
+  return function() {
+    var ctx = this, args = arguments;
+    clearTimeout(t);
+    t = setTimeout(function() { fn.apply(ctx, args); }, wait || 200);
+  };
+}
+// Debounced filter wrappers — gọi từ oninput để tránh re-render mỗi keystroke (200ms = FILTER_DEBOUNCE_MS).
+// Wrap an arrow vì filterX() khai báo phía dưới (function declarations hoist OK).
+// Chú ý: FILTER_DEBOUNCE_MS define ở CONSTANTS block bên dưới — khi wrappers chạy lần đầu (lúc oninput) const đã có giá trị.
+var _filtTracking = debounce(function() { filterTracking(); }, 200);
+var _filtSummary  = debounce(function() { filterSummary();  }, 200);
+var _filtStock    = debounce(function() { filterStock();    }, 200);
+var _filtTariff   = debounce(function() { filterTariff();   }, 200);
+
 // STATE
 let state = {
   user: null,
@@ -2267,10 +2327,23 @@ let state = {
   ovmData: []
 };
 
+// ===================== CONSTANTS =====================
+// Network
+const FETCH_TIMEOUT_MS    = 30000;        // Default API timeout
+const FETCH_TIMEOUT_LONG  = 300000;       // Export operations (5 phút)
+const RETRY_BACKOFF_MS    = 2000;         // Delay trước retry GAS 429/500
+// UI
+const FILTER_DEBOUNCE_MS  = 200;          // Search input debounce
+const TOAST_DEFAULT_MS    = 2500;         // Toast hiển thị default
+const PHOTO_PREFETCH_MS   = 200;          // Hover-prefetch delay (estimate detail)
+// Render
+const TARIFF_RENDER_LIMIT = 500;          // Tariff table chỉ render 500 dòng đầu
+const STOCK_RENDER_LIMIT  = 200;          // Stock table chỉ render 200 dòng đầu
+
 // ===================== API =====================
 async function _fetchWithTimeout(url, opts, timeout) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeout || 30000);
+  const timer = setTimeout(() => ctrl.abort(), timeout || FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, { ...opts, signal: ctrl.signal });
     clearTimeout(timer);
@@ -2285,10 +2358,10 @@ async function apiGet(params, _retry) {
   if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng', data: [] }; }
   const url = API + '?' + new URLSearchParams(params);
   try {
-    const res = await _fetchWithTimeout(url, {}, 30000);
+    const res = await _fetchWithTimeout(url, {}, FETCH_TIMEOUT_MS);
     // Auto retry khi GAS lỗi 429/500
     if ((res.status === 429 || res.status >= 500) && !_retry) {
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, RETRY_BACKOFF_MS));
       return apiGet(params, true);
     }
     const text = await res.text();
@@ -2302,7 +2375,7 @@ async function apiGet(params, _retry) {
     }
   } catch(e) {
     if (e.name === 'AbortError') {
-      if (!_retry) { await new Promise(r => setTimeout(r, 2000)); return apiGet(params, true); }
+      if (!_retry) { await new Promise(r => setTimeout(r, RETRY_BACKOFF_MS)); return apiGet(params, true); }
       toast('⏱ Kết nối quá chậm, vui lòng thử lại!', 4000);
       return { success: false, error: 'Request timeout', data: [] };
     }
@@ -2314,10 +2387,10 @@ async function apiGet(params, _retry) {
 async function apiPost(data, _retry) {
   if (!navigator.onLine) { _showOfflineBanner(); return { success: false, error: 'Không có kết nối mạng' }; }
   try {
-    const res = await _fetchWithTimeout(API, { method: 'POST', body: JSON.stringify(data) }, 30000);
+    const res = await _fetchWithTimeout(API, { method: 'POST', body: JSON.stringify(data) }, FETCH_TIMEOUT_MS);
     // Auto retry khi GAS lỗi 429/500
     if ((res.status === 429 || res.status >= 500) && !_retry) {
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, RETRY_BACKOFF_MS));
       return apiPost(data, true);
     }
     const text = await res.text();
@@ -2331,7 +2404,7 @@ async function apiPost(data, _retry) {
     }
   } catch(e) {
     if (e.name === 'AbortError') {
-      if (!_retry) { await new Promise(r => setTimeout(r, 2000)); return apiPost(data, true); }
+      if (!_retry) { await new Promise(r => setTimeout(r, RETRY_BACKOFF_MS)); return apiPost(data, true); }
       toast('⏱ Kết nối quá chậm, vui lòng thử lại!', 4000);
       return { success: false, error: 'Request timeout' };
     }
@@ -2393,14 +2466,15 @@ function globalSearch(q) {
       return;
     }
 
-    var ACTION_COLOR = { 'Repaired':'#16a34a','Approved':'#16a34a','Rejected':'#dc2626','Repair Pending':'#0369a1','Sent for Approval':'#7c3aed','Partially Approved':'#d97706','Partially Approved - Revised':'#d97706','Pending':'#888' };
+    // Hex literal — alpha-append pattern (color + '22') yêu cầu raw hex.
+    var ACTION_COLOR = { 'Repaired':'#16a34a','Approved':'#16a34a','Rejected':'#dc2626','Repair Pending':'#0369a1','Sent for Approval':'#7c3aed','Partially Approved':'#d97706','Partially Approved - Revised':'#d97706','Pending':'#64748b' };
     var html = results.slice(0, 8).map(function(r) {
-      var color = ACTION_COLOR[r.status] || '#888';
+      var color = ACTION_COLOR[r.status] || '#64748b';
       var item = document.createElement('div');
       item.style.cssText = 'padding:9px 14px;cursor:pointer;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px';
-      item.innerHTML = '<div style="flex:1"><div style="font-weight:600;font-size:12px">' + r.cont + '</div>'
-        + '<div style="font-size:11px;color:#999">' + (r.carrier||'') + ' · ' + (r.est_date||'') + (r.ref ? ' · ' + r.ref : '') + '</div></div>'
-        + '<span style="background:' + color + '22;color:' + color + ';padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap">' + (r.status||'') + '</span>';
+      item.innerHTML = '<div style="flex:1"><div style="font-weight:600;font-size:12px">' + esc(r.cont) + '</div>'
+        + '<div style="font-size:11px;color:#999">' + esc(r.carrier||'') + ' · ' + esc(r.est_date||'') + (r.ref ? ' · ' + esc(r.ref) : '') + '</div></div>'
+        + '<span style="background:' + color + '22;color:' + color + ';padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap">' + esc(r.status||'') + '</span>';
       item.onmouseover = function(){ this.style.background='#f9fafb'; };
       item.onmouseout  = function(){ this.style.background=''; };
       item.onclick = (function(cont, estDate){ return function(){ globalSearchSelect(cont, estDate); }; })(r.cont, r.est_date);
@@ -2437,7 +2511,7 @@ async function _withRetry(fn) {
   var res = await fn();
   var skipRetry = ['Không có kết nối mạng', 'Request timeout'];
   if (!res.success && res.error && !skipRetry.includes(res.error)) {
-    await new Promise(function(r){ setTimeout(r, 2000); });
+    await new Promise(function(r){ setTimeout(r, RETRY_BACKOFF_MS); });
     res = await fn();
   }
   return res;
@@ -2628,11 +2702,11 @@ function renderTrendTable(type) {
     var pctHtml = '<span style="color:#888">—</span>';
     if (i > 0 && d.vals[i-1] > 0) {
       var pct = Math.round((noVat - d.vals[i-1]) / d.vals[i-1] * 100);
-      var color = pct >= 0 ? '#16a34a' : '#dc2626';
+      var color = pct >= 0 ? 'var(--success-text)' : 'var(--error-text)';
       var sign  = pct >= 0 ? '+' : '';
       pctHtml = '<span style="color:'+color+';font-weight:600">'+sign+pct+'%</span>';
     } else if (i > 0 && d.vals[i-1] === 0 && noVat > 0) {
-      pctHtml = '<span style="color:#16a34a;font-weight:600">New</span>';
+      pctHtml = '<span style="color:var(--success-text);font-weight:600">New</span>';
     }
 
     var bg = i % 2 === 1 ? 'background:#FAFAFA' : '';
@@ -2676,7 +2750,7 @@ function _showOfflineBanner() {
   if (!b) {
     b = document.createElement('div');
     b.id = 'offline-banner';
-    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:8px 16px;font-size:12px;font-weight:600;text-align:center;background:#dc2626;color:#fff;';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:8px 16px;font-size:12px;font-weight:600;text-align:center;background:var(--error-text);color:#fff;';
     b.innerHTML = '⚠ Mất kết nối mạng — Vui lòng kiểm tra internet';
     document.body.appendChild(b);
   }
@@ -2851,12 +2925,12 @@ async function loadInitialData() {
   // Set today date
   document.getElementById('est-date').value = todayStr();
 
-  // Init year selector for report
+  // Init year selector for report — build string trước rồi gán 1 lần (tránh re-parse DOM mỗi iteration).
   const yr = document.getElementById('rpt-year');
   const y = new Date().getFullYear();
-  for (let i = y; i >= y-3; i--) {
-    yr.innerHTML += `<option value="${i}">${i}</option>`;
-  }
+  var yrOpts = '';
+  for (let i = y; i >= y-3; i--) yrOpts += `<option value="${i}">${i}</option>`;
+  yr.innerHTML = yrOpts;
   const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
   document.getElementById('rpt-month').value = MONTH_NAMES[new Date().getMonth()];
 
@@ -2875,10 +2949,10 @@ async function loadInitialData() {
     if (fetchPromises.length > 0) {
       var fetchResults = await Promise.all(fetchPromises);
       var _fi = 0;
-      if (!cachedTariff) { var _tr = fetchResults[_fi++]; if (_tr && _tr.success) { state.tariff = _tr.data; _cacheSet('mnr_tariff', state.tariff); } }
+      if (!cachedTariff) { var _tr = fetchResults[_fi++]; if (_tr && _tr.success) { state.tariff = _tr.data; _cacheSet('mnr_tariff', state.tariff); _invalidateTariffIndex(); } }
       if (!cachedStock)  { var _sr = fetchResults[_fi++]; if (_sr && _sr.success) { state.stock  = _sr.data; _cacheSet('mnr_stock',  state.stock);  } }
     }
-    if (cachedTariff) state.tariff = cachedTariff;
+    if (cachedTariff) { state.tariff = cachedTariff; _invalidateTariffIndex(); }
     if (cachedStock)  state.stock  = cachedStock;
   } catch(e) { console.error('Tariff/Stock load error:', e); }
 
@@ -2952,6 +3026,13 @@ function nav(screen, el) {
   screenEl.classList.add('active');
   // Toggle no-scroll cho #content khi vào kho-screen (cần để inner tbl-wrap scroll)
   contentEl.classList.toggle('content-no-scroll', screenEl.classList.contains('kho-screen'));
+
+  // Reset transient state khi rời màn để tránh memory leak / state stale.
+  // Chỉ reset khi rời CHÍNH màn liên quan (không reset khi nav vào lại nó).
+  if (screen !== 'pictures') { window._lastExportCtx = null; window._lastActualCount = 0; }
+  if (screen !== 'report' && screen !== 'trend-table') { window._trendData = null; window._weekData = null; }
+  if (screen !== 'estimate') { window._estPhotosData = null; }
+  if (screen !== 'bulk') { bulkFilteredConts = []; }
 
   const configs = {
     estimate: { title: 'Nhập Báo Giá mới', actions: [
@@ -3156,12 +3237,12 @@ function loadEstPhotos(contNo, carrier) {
 
       // Render grid với placeholder, load ảnh song song
       grid.innerHTML = photos.map(function(p, idx) {
-        var fb1 = 'https://drive.google.com/thumbnail?id=' + p.id + '&sz=w300';
-        var fb2 = 'https://drive.google.com/uc?export=view&id=' + p.id;
+        var fb1 = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(p.id) + '&sz=w300';
+        var fb2 = 'https://drive.google.com/uc?export=view&id=' + encodeURIComponent(p.id);
         return '<div class="est-photo-item" data-idx="' + idx + '" style="position:relative;aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:#1a1a1a;cursor:zoom-in">'
-          + '<img data-src="' + p.thumb + '" data-fb1="' + fb1 + '" data-fb2="' + fb2 + '"'
+          + '<img data-src="' + esc(p.thumb) + '" data-fb1="' + esc(fb1) + '" data-fb2="' + esc(fb2) + '"'
           + ' style="width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s">'
-          + '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</div>'
+          + '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.name) + '</div>'
           + '</div>';
       }).join('');
 
@@ -3298,6 +3379,57 @@ function getLenRange(t) {
   return 999;
 }
 
+/**
+ * Tariff index — bucket by `carrier||repair_type||unit` (3 trường exact match).
+ * Giảm lookup từ O(n=5000+) xuống O(bucket=20-200). Lazy build,
+ * invalidate khi reload state.tariff.
+ *
+ * Cách dùng:
+ *   var bucket = _getTariffBucket(carrier, repType, unit);
+ *   var match = bucket.filter(t => ...remaining filters...);
+ *
+ * Khi state.tariff được assign mới → phải gọi _invalidateTariffIndex().
+ * @type {Map<string, Array>|null}
+ */
+var _tariffIdx = null;
+
+/** Build Map index từ state.tariff. Auto-skip rows thiếu repair_type hoặc unit. */
+function _buildTariffIndex() {
+  _tariffIdx = new Map();
+  (state.tariff || []).forEach(function(t) {
+    var rt = String(t.repair_type || '').toUpperCase().trim();
+    var un = String(t.unit || '').toUpperCase().trim();
+    var ca = String(t.carrier || '').toUpperCase().trim();
+    if (!rt || !un) return;
+    var key = ca + '||' + rt + '||' + un;
+    var arr = _tariffIdx.get(key);
+    if (!arr) { arr = []; _tariffIdx.set(key, arr); }
+    arr.push(t);
+  });
+}
+/** Mark index dirty — phải gọi sau mỗi `state.tariff = ...`. */
+function _invalidateTariffIndex() { _tariffIdx = null; }
+
+/**
+ * Lấy candidate bucket cho tariff lookup.
+ * Gộp 2 nhóm: tariff khớp carrier user + tariff không có carrier (always-match).
+ * Caller cần filter thêm size_type/damage_location/component/damage_type/length/width/limit_qty.
+ * @param {string} carrier  - Carrier user (uppercase trim).
+ * @param {string} repType  - Repair type (uppercase trim).
+ * @param {string} unit     - Unit (uppercase trim).
+ * @returns {Array} Array tariff rows (subset của state.tariff). Empty nếu key không hợp lệ.
+ */
+function _getTariffBucket(carrier, repType, unit) {
+  if (!_tariffIdx) _buildTariffIndex();
+  var ca = String(carrier || '').toUpperCase().trim();
+  var rt = String(repType || '').toUpperCase().trim();
+  var un = String(unit || '').toUpperCase().trim();
+  if (!rt || !un) return state.tariff || []; // chưa đủ key → fallback full scan (sẽ filter loại sau)
+  var withCarrier = ca ? (_tariffIdx.get(ca + '||' + rt + '||' + un) || []) : [];
+  var noCarrier   =      (_tariffIdx.get(   '||' + rt + '||' + un) || []);
+  return ca ? withCarrier.concat(noCarrier) : noCarrier;
+}
+
 function lookupTariff(row) {
   // Lấy giá trị từ header form
   const carrier = document.getElementById('carrier').value.trim().toUpperCase();
@@ -3330,8 +3462,8 @@ function lookupTariff(row) {
 
 
 
-  const _allMatches = state.tariff.filter(t => {
-    // A - Carrier: exact match (nếu có carrier trong tariff)
+  const _allMatches = _getTariffBucket(carrier, repType, unit).filter(t => {
+    // A - Carrier: exact match (nếu có carrier trong tariff) — bucket đã narrow nhưng giữ check
     if (carrier && t.carrier) {
       if (t.carrier.toUpperCase() !== carrier) return false;
     }
@@ -3564,26 +3696,26 @@ function makeReviseRow(i, r) {
   const rem = r ? (r.app_remark_details || '') : '';
   tr.innerHTML = `
     <td>${i+1}</td>
-    <td><input value="${dl}" placeholder="IXXX" onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
-    <td><input value="${co}" placeholder="MCO"  onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
-    <td><input value="${dt}" placeholder="DY"   onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
-    <td><input value="${rt}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
-    <td><input value="${len}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
-    <td><input value="${wid}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
-    <td style="text-align:center"><input list="dl-unit" value="${uni}" placeholder="QTY" onblur="validateField(this,['QTY','CMT']);lookupRevise(this.closest('tr'))" style="text-align:center;text-transform:uppercase"></td>
-    <td style="text-align:center"><input value="${qty}" type="number" min="0" step="0.01" onblur="lookupRevise(this.closest('tr'))" style="text-align:center"></td>
-    <td class="td-auto"><span class="rv-h">${h}</span></td>
-    <td class="td-auto"><span class="rv-m">${m}</span></td>
-    <td class="td-auto"><span class="rv-l">${l}</span></td>
-    <td style="text-align:right;color:var(--gray);font-size:11px"><span class="rv-e">${est}</span></td>
-    <td class="td-total"><span class="rv-t">${tot}</span></td>
-    <td style="text-align:center"><input list="dl-resp" value="${rsp}" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','PO','S','SU','T','U','V','W'])" style="text-align:center;text-transform:uppercase"></td>
+    <td><input value="${esc(dl)}" placeholder="IXXX" onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
+    <td><input value="${esc(co)}" placeholder="MCO"  onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
+    <td><input value="${esc(dt)}" placeholder="DY"   onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
+    <td><input value="${esc(rt)}" placeholder="WP"   onblur="lookupRevise(this.closest('tr'))" style="text-transform:uppercase"></td>
+    <td><input value="${esc(len)}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td><input value="${esc(wid)}" type="number" min="0" onblur="lookupRevise(this.closest('tr'))"></td>
+    <td style="text-align:center"><input list="dl-unit" value="${esc(uni)}" placeholder="QTY" onblur="validateField(this,['QTY','CMT']);lookupRevise(this.closest('tr'))" style="text-align:center;text-transform:uppercase"></td>
+    <td style="text-align:center"><input value="${esc(qty)}" type="number" min="0" step="0.01" onblur="lookupRevise(this.closest('tr'))" style="text-align:center"></td>
+    <td class="td-auto"><span class="rv-h">${esc(h)}</span></td>
+    <td class="td-auto"><span class="rv-m">${esc(m)}</span></td>
+    <td class="td-auto"><span class="rv-l">${esc(l)}</span></td>
+    <td style="text-align:right;color:var(--gray);font-size:11px"><span class="rv-e">${esc(est)}</span></td>
+    <td class="td-total"><span class="rv-t">${esc(tot)}</span></td>
+    <td style="text-align:center"><input list="dl-resp" value="${esc(rsp)}" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','PO','S','SU','T','U','V','W'])" style="text-align:center;text-transform:uppercase"></td>
     <td><select style="font-size:11px;border:none;background:transparent;width:100%;color:#1a202c" onchange="onReviseStatusChange(this)">
       <option ${sta==='Partially Approved'?'selected':''}>Partially Approved</option>
       <option ${sta==='Approved'?'selected':''}>Approved</option>
       <option ${sta==='Rejected'?'selected':''}>Rejected</option>
     </select></td>
-    <td><input placeholder="Ghi chú..." value="${rem}"></td>
+    <td><input placeholder="Ghi chú..." value="${esc(rem)}"></td>
     <td style="text-align:center"><button onclick="this.closest('tr').remove();updateReviseNumbers();calcReviseTotal()" style="border:none;background:none;color:#fc8181;cursor:pointer;font-size:14px">×</button></td>
   `;
   return tr;
@@ -3687,14 +3819,21 @@ function renderCompare() {
     var o = String(orig||'—'); var a = String(app||'—');
     var cx = center ? 'text-align:center;' : '';
     // cls: 'auto' = td-auto style, 'total' = td-total style, 'est' = grey right
-    var baseCls = cls === 'auto' ? 'background:var(--green-light);color:var(--green);text-align:right;'
-                : cls === 'total' ? 'background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right;'
-                : cls === 'est' ? 'text-align:right;color:var(--gray);font-size:11px;'
-                : cx;
+    // Map cls → base style + bg override khi diff. Thay chain ternary cho dễ maintain.
+    var BASE_BY_CLS = {
+      auto:  'background:var(--green-light);color:var(--green);text-align:right;',
+      total: 'background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right;',
+      est:   'text-align:right;color:var(--gray);font-size:11px;'
+    };
+    var DIFF_BG_BY_CLS = {
+      auto:  'background:#d1fae5;',
+      total: 'background:#FDF6E8;'
+    };
+    var baseCls = BASE_BY_CLS[cls] || cx;
     if (isDeleted) return '<td style="' + baseCls + 'text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
     if (String(orig||'').trim() !== String(app||'').trim()) {
-      var bgOverride = cls === 'auto' ? 'background:#d1fae5;' : cls === 'total' ? 'background:#FDF6E8;' : 'background:#fef9c3;';
-      return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;font-size:10px;color:#6b7280">' + o + '</span><br><span style="font-weight:600;color:#dc2626">' + a + '</span></td>';
+      var bgOverride = DIFF_BG_BY_CLS[cls] || 'background:#fef9c3;';
+      return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;font-size:10px;color:#6b7280">' + o + '</span><br><span style="font-weight:600;color:var(--error-text)">' + a + '</span></td>';
     }
     return '<td style="' + baseCls + '">' + a + '</td>';
   }
@@ -3767,22 +3906,22 @@ function renderCompare() {
       var rvL = tr.querySelector('.rv-l'); var rvT = tr.querySelector('.rv-t');
       var g = function(i){ return inputs[i] ? inputs[i].value : ''; };
       rows.push('<tr style="background:#f0fdf4">'
-        + '<td style="color:#15803d;font-weight:600">+</td>'
-        + '<td style="color:#15803d;font-weight:500">' + g(0) + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + g(1) + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + g(2) + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + g(3) + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + g(4) + '</td>'
-        + '<td style="color:#15803d;font-weight:500">' + g(5) + '</td>'
-        + '<td style="color:#15803d;text-align:center">' + g(6) + '</td>'
-        + '<td style="color:#15803d;text-align:center">' + g(7) + '</td>'
+        + '<td style="color:var(--success-text);font-weight:600">+</td>'
+        + '<td style="color:var(--success-text);font-weight:500">' + g(0) + '</td>'
+        + '<td style="color:var(--success-text);font-weight:500">' + g(1) + '</td>'
+        + '<td style="color:var(--success-text);font-weight:500">' + g(2) + '</td>'
+        + '<td style="color:var(--success-text);font-weight:500">' + g(3) + '</td>'
+        + '<td style="color:var(--success-text);font-weight:500">' + g(4) + '</td>'
+        + '<td style="color:var(--success-text);font-weight:500">' + g(5) + '</td>'
+        + '<td style="color:var(--success-text);text-align:center">' + g(6) + '</td>'
+        + '<td style="color:var(--success-text);text-align:center">' + g(7) + '</td>'
         + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvH?rvH.textContent:'—') + '</td>'
         + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvM?rvM.textContent:'—') + '</td>'
         + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvL?rvL.textContent:'—') + '</td>'
         + '<td style="text-align:right;color:var(--gray);font-size:11px">—</td>'
         + '<td style="background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right">' + (rvT?rvT.textContent:'—') + '</td>'
-        + '<td style="color:#15803d;text-align:center">' + g(8) + '</td>'
-        + '<td style="color:#64748b;font-style:italic"></td>'
+        + '<td style="color:var(--success-text);text-align:center">' + g(8) + '</td>'
+        + '<td style="color:var(--gray-500);font-style:italic"></td>'
         + '<td></td>'
         + '</tr>');
     }
@@ -3826,7 +3965,7 @@ function lookupRevise(row) {
   
   
 
-  const allMatches = state.tariff.filter(function(t) {
+  const allMatches = _getTariffBucket(carrier, repType, unit).filter(function(t) {
     if (carrier && t.carrier && t.carrier.toUpperCase() !== carrier) return false;
     if (!inList(t.size_type, szType)) return false;
     if (!inList(t.damage_location, dmgLoc)) return false;
@@ -4151,7 +4290,7 @@ function renderOvmPreview() {
       <div class="stat-label">Tổng dòng</div><div class="stat-value" style="font-size:18px">${_ovmData.length}</div>
     </div>
     ${sentCount ? `<div class="stat-card" style="padding:8px 12px">
-      <div class="stat-label">Sent for Approval</div><div class="stat-value" style="font-size:18px;color:#1A1A1A">${sentCount}</div>
+      <div class="stat-label">Sent for Approval</div><div class="stat-value" style="font-size:18px;color:var(--gray-900)">${sentCount}</div>
     </div>` : ''}
     ${appCount ? `<div class="stat-card" style="padding:8px 12px">
       <div class="stat-label">Approved</div><div class="stat-value" style="font-size:18px;color:var(--green)">${appCount}</div>
@@ -4183,18 +4322,18 @@ function renderOvmPreview() {
     var diffClr  = diff === 0 ? '' : (diff > 0 ? 'color:var(--green)' : 'color:var(--red)');
     var rowBg    = !r.in_tracking ? 'background:var(--red-light)' : r.will_skip ? 'opacity:0.5' : '';
     var refCell  = r.new_status === 'Sent for Approval'
-      ? `<td style="font-family:monospace;font-size:10px;color:var(--blue)">${r.ref_no||'—'}</td>`
+      ? `<td style="font-family:monospace;font-size:10px;color:var(--blue)">${esc(r.ref_no||'—')}</td>`
       : `<td style="color:var(--gray);font-size:10px">—</td>`;
     return `<tr style="${rowBg}">
       <td>${i+1}</td>
-      <td style="font-family:monospace">${r.cont_no}</td>
+      <td style="font-family:monospace">${esc(r.cont_no)}</td>
       ${refCell}
       <td style="text-align:right">${r.est_total ? num(r.est_total) : '—'}</td>
       <td style="text-align:right">${r.ovm_total ? num(r.ovm_total) : '—'}</td>
       <td style="text-align:right;${diffClr}">${diffStr}</td>
       <td>${r.in_tracking ? badge(r.new_status) : '—'}</td>
-      <td style="font-size:11px">${r.app_date||'—'}</td>
-      <td style="font-size:10px;color:var(--gray)">${r.note}</td>
+      <td style="font-size:11px">${esc(r.app_date||'—')}</td>
+      <td style="font-size:10px;color:var(--gray)">${esc(r.note)}</td>
     </tr>`;
   }).join('');
 
@@ -4600,14 +4739,20 @@ function _renderEstDetail(detailTr, estData) {
       var appV = hasApp ? parseFloat(e.app_total_approved).toFixed(2) : '—';
       var diff = hasApp ? parseFloat(e.app_total_approved) - parseFloat(e.total_cost||0) : null;
       var diffStr = diff !== null ? ((diff > 0 ? '+' : '') + diff.toFixed(2)) : '—';
-      var diffColor = diff === null ? '#888' : (Math.abs(diff) < 0.01 ? '#15803d' : '#dc2626');
-      var stBadge = e.approval_status ? '<span style="background:'
-        + (e.approval_status==='Approved'?'#dcfce7;color:#15803d'
-          :e.approval_status==='Partially Approved'||e.approval_status==='Partially Approved - Revised'?'#fef9c3;color:#854d0e'
-          :e.approval_status==='Rejected'?'#fee2e2;color:#991b1b'
-          :'#f1f5f9;color:#64748b')
-        + ';font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500">' + e.approval_status + '</span>' : '—';
-      var _appOrEst = function(a, b){ return (a !== undefined && a !== null && a !== '') ? a : ((b !== undefined && b !== null && b !== '') ? b : '—'); };
+      var diffColor = diff === null ? '#888' : (Math.abs(diff) < 0.01 ? 'var(--success-text)' : 'var(--error-text)');
+      // Status → badge style map (thay thế chain ternary cho dễ đọc + dễ sửa).
+      var ST_STYLE = {
+        'Approved':                     '#dcfce7;color:var(--success-text)',
+        'Partially Approved':           '#fef9c3;color:#854d0e',
+        'Partially Approved - Revised': '#fef9c3;color:#854d0e',
+        'Rejected':                     '#fee2e2;color:#991b1b'
+      };
+      var stStyle = ST_STYLE[e.approval_status] || '#f1f5f9;color:var(--gray-500)';
+      var stBadge = e.approval_status
+        ? '<span style="background:' + stStyle + ';font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500">' + esc(e.approval_status) + '</span>'
+        : '—';
+      var _hasVal = function(v) { return v !== undefined && v !== null && v !== ''; };
+      var _appOrEst = function(a, b) { return _hasVal(a) ? a : (_hasVal(b) ? b : '—'); };
       return '<tr style="background:' + (i%2===0?'#fff':'#f8fafc') + '">'
         + '<td style="padding:3px 8px;text-align:center;color:#888">' + (i+1) + '</td>'
         + '<td style="padding:3px 8px">' + _appOrEst(e.app_damage_location, e.damage_location) + '</td>'
@@ -4618,8 +4763,8 @@ function _renderEstDetail(detailTr, estData) {
         + '<td style="padding:3px 8px;text-align:center">' + _appOrEst(e.app_width, e.width) + '</td>'
         + '<td style="padding:3px 8px;text-align:center">' + _appOrEst(e.app_unit, e.unit) + '</td>'
         + '<td style="padding:3px 8px;text-align:center">' + _appOrEst(e.app_quantity, e.quantity) + '</td>'
-        + '<td style="padding:3px 8px;text-align:right;color:#64748b">' + (parseFloat(e.total_cost||0)>0 ? estV : '—') + '</td>'
-        + '<td style="padding:3px 8px;text-align:right;color:#15803d;font-weight:500">' + appV + '</td>'
+        + '<td style="padding:3px 8px;text-align:right;color:var(--gray-500)">' + (parseFloat(e.total_cost||0)>0 ? estV : '—') + '</td>'
+        + '<td style="padding:3px 8px;text-align:right;color:var(--success-text);font-weight:500">' + appV + '</td>'
         + '<td style="padding:3px 8px;text-align:right;color:' + diffColor + '">' + diffStr + '</td>'
         + '<td style="padding:3px 8px">' + stBadge + '</td>'
         + '<td style="padding:3px 8px;color:#888;font-size:10px">' + (e.app_remark_details||'') + '</td>'
@@ -4641,27 +4786,27 @@ function _renderEstDetail(detailTr, estData) {
       + '<col style="width:130px"><col style="width:auto">'
       + '</colgroup>'
       + '<thead><tr style="background:#e8f0fe">'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">STT</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Dmg Loc</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Component</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Dmg Type</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Rep Type</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Length</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Width</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Unit</th>'
-      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:#1A1A1A">Qty</th>'
-      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#64748b">Total Est.</th>'
-      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#15803d">App Total</th>'
-      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:#1A1A1A">Diff</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Status</th>'
-      + '<th style="padding:4px 8px;font-weight:500;color:#1A1A1A">Remark</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:var(--gray-900)">STT</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:var(--gray-900)">Dmg Loc</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:var(--gray-900)">Component</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:var(--gray-900)">Dmg Type</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:var(--gray-900)">Rep Type</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:var(--gray-900)">Length</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:var(--gray-900)">Width</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:var(--gray-900)">Unit</th>'
+      + '<th style="padding:4px 8px;text-align:center;font-weight:500;color:var(--gray-900)">Qty</th>'
+      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:var(--gray-500)">Total Est.</th>'
+      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:var(--success-text)">App Total</th>'
+      + '<th style="padding:4px 8px;text-align:right;font-weight:500;color:var(--gray-900)">Diff</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:var(--gray-900)">Status</th>'
+      + '<th style="padding:4px 8px;font-weight:500;color:var(--gray-900)">Remark</th>'
       + '</tr></thead>'
       + '<tbody>' + rows + '</tbody>'
       + '<tfoot><tr style="background:#e8f0fe;font-weight:600">'
-      + '<td colspan="9" style="padding:4px 8px;text-align:right;color:#1A1A1A">Total:</td>'
-      + '<td style="padding:4px 8px;text-align:right;color:#64748b">' + totEst.toFixed(2) + '</td>'
-      + '<td style="padding:4px 8px;text-align:right;color:#15803d">' + totApp.toFixed(2) + '</td>'
-      + '<td style="padding:4px 8px;text-align:right;color:' + (Math.abs(totDiff)<0.01?'#15803d':'#dc2626') + '">'
+      + '<td colspan="9" style="padding:4px 8px;text-align:right;color:var(--gray-900)">Total:</td>'
+      + '<td style="padding:4px 8px;text-align:right;color:var(--gray-500)">' + totEst.toFixed(2) + '</td>'
+      + '<td style="padding:4px 8px;text-align:right;color:var(--success-text)">' + totApp.toFixed(2) + '</td>'
+      + '<td style="padding:4px 8px;text-align:right;color:' + (Math.abs(totDiff)<0.01?'var(--success-text)':'var(--error-text)') + '">'
       + (totDiff>0?'+':'') + totDiff.toFixed(2) + '</td>'
       + '<td colspan="2"></td></tr></tfoot>'
       + '</table></div>'
@@ -4698,26 +4843,33 @@ function renderTrackingTable(data) {
     tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map((r, i) => `
+  tbody.innerHTML = data.map((r, i) => {
+    var cont = jsEsc(r.container_no || '');
+    var estD = jsEsc(r.est_date || '');
+    var seq  = jsEsc(r.seq || '');
+    var canRevise = (r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised');
+    var reviseTotal = parseFloat(r.revise_total) || 0;
+    return `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${r.container_no||''}', '${r.est_date||''}')" onmouseenter="prefetchEstDetail('${r.container_no||''}', '${r.est_date||''}')" onmouseleave="cancelPrefetchEstDetail('${r.container_no||''}', '${r.est_date||''}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline">${r.container_no||''}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
-      <td>${r.carrier||''}</td>
-      <td>${r.size||''}</td>
-      <td>${formatDate(r.est_date)}</td>
+      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${cont}', '${estD}')" onmouseenter="prefetchEstDetail('${cont}', '${estD}')" onmouseleave="cancelPrefetchEstDetail('${cont}', '${estD}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline">${esc(r.container_no||'')}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
+      <td>${esc(r.carrier||'')}</td>
+      <td>${esc(r.size||'')}</td>
+      <td>${esc(formatDate(r.est_date))}</td>
       <td style="text-align:right">${num(r.total_cost)}</td>
-      <td style="color:var(--blue);text-align:center">${r.ref_number||'—'}</td>
-      <td>${formatDate(r.approved_date)||'—'}</td>
+      <td style="color:var(--blue);text-align:center">${esc(r.ref_number||'—')}</td>
+      <td>${esc(formatDate(r.approved_date)||'—')}</td>
       <td style="text-align:right;${r.total_approved?'color:var(--green);font-weight:500':'color:var(--gray)'}">${r.total_approved?num(r.total_approved):'—'}</td>
-      <td style="text-align:right;${parseFloat(r.revise_total)>0?'color:#A06010;font-weight:500':'color:var(--gray)'}">${parseFloat(r.revise_total)>0?num(r.revise_total):'—'}</td>
+      <td style="text-align:right;${reviseTotal>0?'color:#A06010;font-weight:500':'color:var(--gray)'}">${reviseTotal>0?num(reviseTotal):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
-      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
-      <td style="text-align:center">${r.po_number||'—'}</td>
-      <td>${formatDate(r.po_date)||'—'}</td>
-      <td style="padding:2px 4px"><input class="trk-remark-input" value="${(r.remarks1||r.remarks2||'').replace(/"/g,'&quot;')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRemark(this,'${r.container_no}','${r.est_date||''}')"></td>
-      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${r.container_no}','${r.est_date}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${(r.approval_status === 'Partially Approved' || r.approval_status === 'Partially Approved - Revised') ? `<button onclick="goRevise('${r.container_no}','${r.est_date}')" class="btn btn-sm" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600">Revise</button>` : ''}</td>
+      <td style="padding:2px 4px"><input class="trk-date-input" value="${esc(formatDate(r.repair_date)||'')}" placeholder="" onblur="saveTrackingRepairDate(this,'${seq}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" title="Click để nhập ngày sửa chữa"></td>
+      <td style="text-align:center">${esc(r.po_number||'—')}</td>
+      <td>${esc(formatDate(r.po_date)||'—')}</td>
+      <td style="padding:2px 4px"><input class="trk-remark-input" value="${esc(r.remarks1||r.remarks2||'')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${cont}','${estD}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'"></td>
+      <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${cont}','${estD}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${cont}','${estD}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${canRevise ? `<button onclick="goRevise('${cont}','${estD}')" class="btn btn-sm" style="background:#FFF3CD;border-color:#D4A800;color:#7A5500;font-weight:600">Revise</button>` : ''}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 
@@ -4733,8 +4885,8 @@ function renderSummary() {
 
   document.getElementById('sum-stats').innerHTML = `
     <div class="stat-card" style="background:#FEFAF0;border-left:3px solid #F5C842">
-      <div class="stat-label" style="color:#1A1A1A">Tổng containers có PO</div>
-      <div class="stat-value" style="color:#1A1A1A">${total}</div>
+      <div class="stat-label" style="color:var(--gray-900)">Tổng containers có PO</div>
+      <div class="stat-value" style="color:var(--gray-900)">${total}</div>
     </div>
     <div class="stat-card" style="background:linear-gradient(135deg,#ede9fe,#f5f3ff);border-left:3px solid #8b5cf6">
       <div class="stat-label" style="color:#6d28d9">Số Carrier</div>
@@ -4745,14 +4897,17 @@ function renderSummary() {
       <div class="stat-value" style="color:#713f12;font-size:16px">${totalCost.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     </div>
     <div class="stat-card" style="background:linear-gradient(135deg,#dcfce7,#f0fdf4);border-left:3px solid #4ade80">
-      <div class="stat-label" style="color:#15803d">Total Approved (USD)</div>
+      <div class="stat-label" style="color:var(--success-text)">Total Approved (USD)</div>
       <div class="stat-value" style="color:#14532d;font-size:16px">${totalApp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     </div>
   `;
 
-  document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
-  document.getElementById('rpt-carrier').innerHTML = carriers.map(c => `<option value="${c}">${c}</option>`).join('');
-  if (!document.getElementById('rpt-carrier').value) document.getElementById('rpt-carrier').value = 'MSC';
+  document.getElementById('sum-carrier').innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${esc(c)}</option>`).join('');
+  // rpt-carrier: preserve selection nếu user đã chọn, fallback MSC.
+  var rptCar = document.getElementById('rpt-carrier');
+  var prevRpt = rptCar.value;
+  rptCar.innerHTML = carriers.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  rptCar.value = (prevRpt && carriers.indexOf(prevRpt) >= 0) ? prevRpt : 'MSC';
 
   filterSummary();
 }
@@ -4794,31 +4949,37 @@ function filterSummary() {
 function renderSummaryTable(data) {
   const tbody = document.getElementById('sum-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="17" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map((r, i) => `
+  tbody.innerHTML = data.map((r, i) => {
+    var cont = jsEsc(r.container_no || '');
+    var estD = jsEsc(r.est_date || '');
+    var seq  = jsEsc(r.seq || '');
+    var rmk  = r.remarks2 || r.remarks1 || '';
+    return `
     <tr>
       <td>${i+1}</td>
-      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${r.container_no||''}', '${r.est_date||''}')" onmouseenter="prefetchEstDetail('${r.container_no||''}', '${r.est_date||''}')" onmouseleave="cancelPrefetchEstDetail('${r.container_no||''}', '${r.est_date||''}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline">${r.container_no||''}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
-      <td>${r.carrier||''}</td>
-      <td>${r.size||''}</td>
-      <td>${formatDate(r.est_date)}</td>
-      <td style="color:var(--blue)">${r.ref_number||'—'}</td>
-      <td>${formatDate(r.approved_date)||'—'}</td>
-      <td style="padding:2px 4px"><input class="trk-date-input" value="${formatDate(r.repair_date)||''}" placeholder="" onblur="saveTrackingRepairDate(this,'${r.seq||''}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" onblur="this.style.borderBottomColor='transparent';this.style.background='transparent';saveTrackingRepairDate(this,'${r.seq||''}')" title="Click để nhập ngày sửa chữa"></td>
-      <td style="text-align:center">${r.po_number||'—'}</td>
-      <td>${formatDate(r.po_date)||'—'}</td>
+      <td style="text-align:center;cursor:pointer" onclick="toggleEstDetail(this.closest('tr'), '${cont}', '${estD}')" onmouseenter="prefetchEstDetail('${cont}', '${estD}')" onmouseleave="cancelPrefetchEstDetail('${cont}', '${estD}')" title="Click để xem chi tiết"><span style="color:var(--blue);text-decoration:underline">${esc(r.container_no||'')}</span>${r.special_flag === 'Termite Attack' ? ' <span style="background:#fff1f2;color:#be123c;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600">🪲</span>' : ''}</td>
+      <td>${esc(r.carrier||'')}</td>
+      <td>${esc(r.size||'')}</td>
+      <td>${esc(formatDate(r.est_date))}</td>
+      <td style="color:var(--blue)">${esc(r.ref_number||'—')}</td>
+      <td>${esc(formatDate(r.approved_date)||'—')}</td>
+      <td style="padding:2px 4px"><input class="trk-date-input" value="${esc(formatDate(r.repair_date)||'')}" placeholder="" onblur="saveTrackingRepairDate(this,'${seq}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;font-size:11px;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" title="Click để nhập ngày sửa chữa"></td>
+      <td style="text-align:center">${esc(r.po_number||'—')}</td>
+      <td>${esc(formatDate(r.po_date)||'—')}</td>
       <td style="text-align:right">${num(r.labour_hours)}</td>
       <td style="text-align:right">${num(r.labour_cost)}</td>
       <td style="text-align:right">${num(r.material_cost)}</td>
       <td style="text-align:right">${num(r.total_cost)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green);font-weight:500">${r.total_approved?num(r.total_approved):'—'}</td>
       <td>${badge(r.approval_status)}</td>
-      <td style="text-align:center;font-size:10.5px;color:var(--gray)" title="${r.updated_at||''}">${fmtUpdatedAt(r.updated_at)}</td>
-      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${(r.remarks2||r.remarks1||'').replace(/"/g,'&quot;')}">${r.remarks2||r.remarks1||'—'}</td>
+      <td style="text-align:center;font-size:10.5px;color:var(--gray)" title="${esc(r.updated_at||'')}">${esc(fmtUpdatedAt(r.updated_at))}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${esc(rmk)}">${esc(rmk||'—')}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   // Totals
   const totCost = data.reduce((s,r) => s+(parseFloat(r.total_cost)||0), 0);
@@ -4826,7 +4987,7 @@ function renderSummaryTable(data) {
   const totEl = document.getElementById('sum-totals');
   totEl.style.display = 'flex';
   totEl.innerHTML = `
-    <span style="font-size:11px;color:var(--gray)">Total Cost: <strong style="color:#1A1A1A">${num(totCost)}</strong></span>
+    <span style="font-size:11px;color:var(--gray)">Total Cost: <strong style="color:var(--gray-900)">${num(totCost)}</strong></span>
     <span style="font-size:11px;color:var(--gray)">Total Approved: <strong style="color:var(--green)">${num(totApp)}</strong></span>
     <span style="font-size:11px;color:var(--gray)">Chênh lệch: <strong style="color:${totCost-totApp>0?'var(--amber)':'var(--green)'}">${num(totCost-totApp)}</strong></span>
   `;
@@ -4888,7 +5049,7 @@ function exportSummary() {
 
 // ===================== STOCK =====================
 async function renderStock() {
-  document.getElementById('stk-rows').innerHTML = '<tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('stk-rows').innerHTML = '<tr><td colspan="15" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   document.getElementById('stk-info').textContent = 'Đang tải...';
 
   // Dùng cache nếu đã có, không fetch lại
@@ -4947,38 +5108,50 @@ function filterStock() {
 function renderStockTable(data) {
   const tbody = document.getElementById('stk-rows');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map((r, i) => `
+  // Chỉ render STOCK_RENDER_LIMIT dòng đầu để tránh lag DOM (filter để thu hẹp).
+  var display = data.slice(0, STOCK_RENDER_LIMIT);
+  function fmtMfg(v) {
+    if (!v) return '';
+    var s = String(v);
+    var m = s.match(/(\d{4})-(\d{2})/);
+    return m ? m[2] + '/' + m[1] : (s.length > 7 ? s.substring(0, 7) : s);
+  }
+  function fmtYardDate(v) {
+    if (!v) return '';
+    var s = String(v);
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return m[3] + '/' + m[2] + '/' + m[1];
+    var m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m2) return m2[1].padStart(2,'0') + '/' + m2[2].padStart(2,'0') + '/' + m2[3];
+    return s.split('T')[0] || s;
+  }
+  tbody.innerHTML = display.map((r, i) => `
     <tr>
-      <td>${r.seq||i+1}</td>
-      <td>${r.carrier||''}</td>
-      <td style="text-align:center">${r.equipment_no||''}</td>
-      <td>${r.size_type||''}</td>
-      <td>${r.size_type_iso||''}</td>
-      <td>${(function(v){if(!v)return '';var s=String(v);var m=s.match(/(\d{4})-(\d{2})/);return m?m[2]+'/'+m[1]:(s.length>7?s.substring(0,7):s);})(r.manufactured_date)}</td>
-      <td>${r.grade||''}</td>
-      <td>${r.trang_thai_container||'—'}</td>
-      <td>${r.fe||''}</td>
-      <td style="text-align:center">${r.yard_location||''}</td>
-      <td style="text-align:right">${r.so_ngay_luu_bai||''}</td>
-      <td>${(function(v){if(!v)return '';var s=String(v);var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[3]+'/'+m[2]+'/'+m[1];var m2=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m2)return m2[1].padStart(2,'0')+'/'+m2[2].padStart(2,'0')+'/'+m2[3];return s.split('T')[0]||s;})(r.date_in_yard)}</td>
-      <td>${r.loai_hang||''}</td>
-      <td>${r.container_status ? `<span class="badge b-gr">${r.container_status}</span>` : '—'}</td>
-      <td style="text-align:center">${r.remarks||''}</td>
+      <td>${esc(r.seq||(i+1))}</td>
+      <td>${esc(r.carrier||'')}</td>
+      <td style="text-align:center">${esc(r.equipment_no||'')}</td>
+      <td>${esc(r.size_type||'')}</td>
+      <td>${esc(r.size_type_iso||'')}</td>
+      <td>${esc(fmtMfg(r.manufactured_date))}</td>
+      <td>${esc(r.grade||'')}</td>
+      <td>${esc(r.trang_thai_container||'—')}</td>
+      <td>${esc(r.fe||'')}</td>
+      <td style="text-align:center">${esc(r.yard_location||'')}</td>
+      <td style="text-align:right">${esc(r.so_ngay_luu_bai||'')}</td>
+      <td>${esc(fmtYardDate(r.date_in_yard))}</td>
+      <td>${esc(r.loai_hang||'')}</td>
+      <td>${r.container_status ? `<span class="badge b-gr">${esc(r.container_status)}</span>` : '—'}</td>
+      <td style="text-align:center">${esc(r.remarks||'')}</td>
     </tr>
   `).join('');
-  if (data.length > 200) {
-    tbody.innerHTML += `<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:8px">... và ${data.length-200} containers khác. Dùng filter để thu hẹp kết quả.</td></tr>`;
+  if (data.length > STOCK_RENDER_LIMIT) {
+    tbody.innerHTML += `<tr><td colspan="15" style="text-align:center;color:var(--gray);padding:8px">... và ${data.length-STOCK_RENDER_LIMIT} containers khác. Dùng filter để thu hẹp kết quả.</td></tr>`;
   }
 }
 
-function confirmResetStock() {
-  if (confirm('Xoá toàn bộ dữ liệu kho? Hành động này không thể hoàn tác!')) {
-    toast('Đã reset stock!', 2000);
-  }
-}
 
 // ===================== BULK =====================
 function setBulkMode(mode, el) {
@@ -5084,22 +5257,22 @@ async function loadBulk() {
       tbody.innerHTML = data.map(function(r, i) { return `
         <tr>
           <td>${i+1}</td>
-          <td style='text-align:center'>${r.equipment_number||''}</td>
-          <td>${r.estimate_datetime ? r.estimate_datetime.split(' ')[0] : '—'}</td>
-          <td>${r.carrier||''}</td>
-          <td style="text-align:center">${r.app_damage_location||'—'}</td>
-          <td style="text-align:center">${r.app_component||'—'}</td>
-          <td>${r.app_damage_type||'—'}</td>
-          <td>${r.app_repair_type||'—'}</td>
-          <td>${r.app_length||'—'}</td>
-          <td>${r.app_width||'—'}</td>
-          <td style="text-align:center">${r.app_unit||'—'}</td>
-          <td style="text-align:center">${r.app_quantity||'—'}</td>
+          <td style='text-align:center'>${esc(r.equipment_number||'')}</td>
+          <td>${esc(r.estimate_datetime ? r.estimate_datetime.split(' ')[0] : '—')}</td>
+          <td>${esc(r.carrier||'')}</td>
+          <td style="text-align:center">${esc(r.app_damage_location||'—')}</td>
+          <td style="text-align:center">${esc(r.app_component||'—')}</td>
+          <td>${esc(r.app_damage_type||'—')}</td>
+          <td>${esc(r.app_repair_type||'—')}</td>
+          <td>${esc(r.app_length||'—')}</td>
+          <td>${esc(r.app_width||'—')}</td>
+          <td style="text-align:center">${esc(r.app_unit||'—')}</td>
+          <td style="text-align:center">${esc(r.app_quantity||'—')}</td>
           <td style="text-align:right">${r.app_labour_hours?num(r.app_labour_hours):'—'}</td>
           <td style="text-align:right">${r.app_labour_cost?num(r.app_labour_cost):'—'}</td>
           <td style="text-align:right">${r.app_material_cost?num(r.app_material_cost):'—'}</td>
           <td style="text-align:right;color:var(--blue);font-weight:600">${r.app_total_approved?num(r.app_total_approved):'—'}</td>
-          <td style="text-align:center">${r.app_responsible_party||'—'}</td>
+          <td style="text-align:center">${esc(r.app_responsible_party||'—')}</td>
           <td>${badge(r.approval_status)}</td>
         </tr>
       `; }).join('');
@@ -5135,22 +5308,22 @@ async function loadBulk() {
     tbody.innerHTML = data.map(function(r, i) { return `
       <tr>
         <td>${i+1}</td>
-        <td style='text-align:center'>${r.equipment_number||''}</td>
-        <td>${r.estimate_datetime ? r.estimate_datetime.toString().split(' ')[0] : '—'}</td>
-        <td>${r.carrier||''}</td>
-        <td style='text-align:center'>${r.damage_location||'—'}</td>
-        <td style='text-align:center'>${r.component||'—'}</td>
-        <td>${r.damage_type||'—'}</td>
-        <td>${r.repair_type||'—'}</td>
-        <td>${r.length||'—'}</td>
-        <td>${r.width||'—'}</td>
-        <td>${r.unit||'—'}</td>
-        <td>${r.quantity||'—'}</td>
+        <td style='text-align:center'>${esc(r.equipment_number||'')}</td>
+        <td>${esc(r.estimate_datetime ? r.estimate_datetime.toString().split(' ')[0] : '—')}</td>
+        <td>${esc(r.carrier||'')}</td>
+        <td style='text-align:center'>${esc(r.damage_location||'—')}</td>
+        <td style='text-align:center'>${esc(r.component||'—')}</td>
+        <td>${esc(r.damage_type||'—')}</td>
+        <td>${esc(r.repair_type||'—')}</td>
+        <td>${esc(r.length||'—')}</td>
+        <td>${esc(r.width||'—')}</td>
+        <td>${esc(r.unit||'—')}</td>
+        <td>${esc(r.quantity||'—')}</td>
         <td style="text-align:right">${r.labour_hours?num(r.labour_hours):'—'}</td>
         <td style="text-align:right">${r.labour_cost?num(r.labour_cost):'—'}</td>
         <td style="text-align:right">${r.material_cost?num(r.material_cost):'—'}</td>
         <td style="text-align:right">${r.total_cost?num(r.total_cost):'—'}</td>
-        <td>${r.responsible_party||'—'}</td>
+        <td>${esc(r.responsible_party||'—')}</td>
         <td>${badge(r.approval_status)}</td>
       </tr>
     `; }).join('');
@@ -6146,7 +6319,7 @@ function genSummaryReport() {
       <tbody>
         ${rows.map(r => `
           <tr>
-            <td>${r.stt}</td><td>${r.carrier}</td>
+            <td>${r.stt}</td><td>${esc(r.carrier)}</td>
             <td style="text-align:right">${r.qty}</td>
             <td style="text-align:right">${num(r.vat10)}</td>
             <td style="text-align:right">${num(r.vat8)}</td>
@@ -6211,16 +6384,16 @@ function genDetailedReport() {
         ${filtered.map((r,i) => `
           <tr>
             <td>${i+1}</td>
-            <td>${r.container_no||''}</td>
-            <td>${r.size||''}</td>
-            <td>${formatDate(r.est_date)}</td>
-            <td style="color:var(--blue)">${r.ref_number||'—'}</td>
-            <td>${formatDate(r.approved_date)||'—'}</td>
-            <td>${formatDate(r.repair_date)||'—'}</td>
-            <td style="text-align:center">${r.po_number||'—'}</td>
-            <td>${formatDate(r.po_date)||'—'}</td>
+            <td>${esc(r.container_no||'')}</td>
+            <td>${esc(r.size||'')}</td>
+            <td>${esc(formatDate(r.est_date))}</td>
+            <td style="color:var(--blue)">${esc(r.ref_number||'—')}</td>
+            <td>${esc(formatDate(r.approved_date)||'—')}</td>
+            <td>${esc(formatDate(r.repair_date)||'—')}</td>
+            <td style="text-align:center">${esc(r.po_number||'—')}</td>
+            <td>${esc(formatDate(r.po_date)||'—')}</td>
             <td style="text-align:right;color:var(--green);font-weight:500">${num(r.total_approved)}</td>
-            <td style="color:var(--gray);font-size:11px">${r.remarks1||r.remarks2||'—'}</td>
+            <td style="color:var(--gray);font-size:11px">${esc(r.remarks1||r.remarks2||'—')}</td>
           </tr>
         `).join('')}
         <tr style="background:var(--blue-light);font-weight:600">
@@ -6298,12 +6471,12 @@ function previewRefNos() {
     var refPart = (trk && trk.ref_number) ? trk.ref_number + '_' : '';
     var sample  = _picMode + '_' + contNo + '_' + refPart + '001.jpg';
     var refClr  = ref === '—' ? 'color:var(--amber)' : 'color:var(--green)';
-    return `<tr id="pic-prev-row-${contNo}">
+    return `<tr id="pic-prev-row-${esc(contNo)}">
       <td>${i+1}</td>
-      <td style="font-family:monospace">${contNo}</td>
-      <td style="font-family:monospace;${refClr}">${ref}</td>
-      <td style="text-align:right;color:var(--gray)" id="pic-count-${contNo}">...</td>
-      <td style="font-family:monospace;font-size:10px;color:var(--gray)">${sample}</td>
+      <td style="font-family:monospace">${esc(contNo)}</td>
+      <td style="font-family:monospace;${refClr}">${esc(ref)}</td>
+      <td style="text-align:right;color:var(--gray)" id="pic-count-${esc(contNo)}">...</td>
+      <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(sample)}</td>
     </tr>`;
   }).join('');
   preview.style.display = 'block';
@@ -6370,45 +6543,6 @@ function fillContFromBulk() {
   previewRefNos();
 }
 
-async function doSyncPhotoIndex(fullSync) {
-  var statusEl  = document.getElementById('pic-index-status');
-  var btnDelta  = document.getElementById('btn-sync-delta');
-  var btnFull   = document.getElementById('btn-sync-full');
-  btnDelta.disabled = btnFull.disabled = true;
-
-  var action = fullSync ? 'syncPhotoIndexFull' : 'syncPhotoIndex';
-  var attempt = 0;
-
-  async function runOnce() {
-    attempt++;
-    statusEl.textContent = fullSync
-      ? ('⏳ Đang đồng bộ đầy đủ... lần ' + attempt + ' (mỗi lần tối đa 4.5 phút)')
-      : '⏳ Đang đồng bộ nhanh (7 ngày gần nhất)...';
-    try {
-      var res = await apiGet({ action: action });
-      if (!res || !res.success) {
-        statusEl.textContent = 'Lỗi: ' + (res && res.error ? res.error : 'Không có phản hồi');
-        return;
-      }
-      if (fullSync && res.done === false) {
-        // Chưa xong, cần chạy lại
-        statusEl.textContent = 'Đang xử lý: ' + (res.checkpoint || '...') + ' — tự chạy lại sau 5 giây...';
-        setTimeout(runOnce, 5000);
-        return;
-      }
-      statusEl.textContent = 'Đồng bộ xong lúc ' + (res.synced_at || '') + ' — cập nhật ' + (res.updated || 0) + ' cont, tổng ' + (res.total || 0) + ' entries.';
-      toast('Đồng bộ index ảnh thành công!', 2500);
-    } catch(e) {
-      statusEl.textContent = 'Lỗi kết nối: ' + e.message;
-    } finally {
-      if (!statusEl.textContent.includes('tự chạy lại')) {
-        btnDelta.disabled = btnFull.disabled = false;
-      }
-    }
-  }
-  runOnce();
-}
-
 async function doExportPictures() {
   var carrier  = document.getElementById('pic-carrier').value;
   var contList = parseContList();
@@ -6457,7 +6591,7 @@ async function doExportPictures() {
         loai_anh:  loaiAnh,
         folder_id: ''
       })
-    }, 300000).then(function(r) { return r.json(); });
+    }, FETCH_TIMEOUT_LONG).then(function(r) { return r.json(); });
 
     if (!res || !res.success) throw new Error(res && res.error ? res.error : 'Export thất bại');
 
@@ -6493,10 +6627,10 @@ async function doExportPictures() {
         : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
       return `<tr>
         <td>${i+1}</td>
-        <td style="font-family:monospace">${r.cont}</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
+        <td style="font-family:monospace">${esc(r.cont)}</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.ref||'—')}</td>
         <td style="text-align:right">${countDisplay} ảnh</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.sample_name)}</td>
       </tr>`;
     }).join('');
 
@@ -6575,19 +6709,11 @@ async function editEstimate(containerNo, estDate) {
     var ni = document.querySelector('.nav-item[onclick*="estimate"]');
     if (ni) ni.classList.add('active');
     document.getElementById('screen-estimate').classList.add('active');
-    document.getElementById('tb-title').textContent = 'Chỉnh sửa — ' + containerNo;
-    var tbEl = document.getElementById('tb-actions');
-    tbEl.innerHTML = '';
-    var btnCancel = document.createElement('button');
-    btnCancel.className = 'btn btn-sm';
-    btnCancel.textContent = 'Hu\u1ef7';
-    btnCancel.onclick = function() { cancelEditEstimate(); };
-    var btnSave = document.createElement('button');
-    btnSave.className = 'btn btn-sm btn-blue';
-    btnSave.textContent = 'L\u01b0u ch\u1ec9nh s\u1eeda';
-    btnSave.onclick = function() { saveEditEstimate(containerNo, estDate); };
-    tbEl.appendChild(btnCancel);
-    tbEl.appendChild(btnSave);
+    // D\u00f9ng setTopbar render v\u00e0o sticky #screen-actions (#tb-actions l\u00e0 hidden legacy).
+    setTopbar('Ch\u1ec9nh s\u1eeda \u2014 ' + containerNo, [
+      { label: 'Hu\u1ef7', fn: 'cancelEditEstimate()' },
+      { label: 'L\u01b0u ch\u1ec9nh s\u1eeda', cls: 'btn-blue', fn: "saveEditEstimate('" + jsEsc(containerNo) + "','" + jsEsc(estDate || '') + "')" }
+    ]);
     document.getElementById('eq-no').value       = containerNo;
     document.getElementById('size-type').value   = first.size_type || '';
     document.getElementById('carrier').value     = first.carrier   || '';
@@ -6742,7 +6868,7 @@ function formatDate(d) {
   if (typeof d === 'string' && d.includes('/')) return d;
   const dt = new Date(d);
   if (isNaN(dt)) return d || '';
-  return dt.toLocaleDateString('vi-VN');
+  return dt.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 }
 
 // Format updated_at: hỗ trợ ISO "2026-04-20T10:11:33.000Z" + dd/MM/yyyy HH:mm:ss
@@ -6782,7 +6908,7 @@ function parseReportDate(val) {
 }
 
 function todayStr() {
-  return new Date().toLocaleDateString('vi-VN');
+  return new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 }
 
 function badge(status) {
@@ -6888,6 +7014,7 @@ async function refreshCache() {
     if (tariffRes && tariffRes.success) {
       state.tariff = tariffRes.data;
       _cacheSet('mnr_tariff', state.tariff);
+      _invalidateTariffIndex();
     }
     if (stockRes && stockRes.success) {
       state.stock = stockRes.data;
@@ -6926,21 +7053,21 @@ function renderTariffTable(data) {
     return;
   }
 
-  // Chỉ render 500 dòng để tránh lag
-  const display = data.slice(0, 500);
+  // Chỉ render TARIFF_RENDER_LIMIT dòng để tránh lag
+  const display = data.slice(0, TARIFF_RENDER_LIMIT);
   tbody.innerHTML = display.map((r, i) => `
     <tr>
       <td>${i+1}</td>
-      <td>${r.carrier||''}</td>
-      <td style="font-size:10px">${r.size_type||''}</td>
-      <td style="text-align:center">${r.damage_location||''}</td>
-      <td style="text-align:center">${r.component||''}</td>
-      <td>${r.damage_type||''}</td>
-      <td>${r.repair_type||''}</td>
-      <td style="text-align:right">${r.length||''}</td>
-      <td style="text-align:right">${r.weight||''}</td>
-      <td>${r.unit||''}</td>
-      <td style="text-align:right">${r.limit_qty||''}</td>
+      <td>${esc(r.carrier||'')}</td>
+      <td style="font-size:10px">${esc(r.size_type||'')}</td>
+      <td style="text-align:center">${esc(r.damage_location||'')}</td>
+      <td style="text-align:center">${esc(r.component||'')}</td>
+      <td>${esc(r.damage_type||'')}</td>
+      <td>${esc(r.repair_type||'')}</td>
+      <td style="text-align:right">${esc(r.length||'')}</td>
+      <td style="text-align:right">${esc(r.weight||'')}</td>
+      <td>${esc(r.unit||'')}</td>
+      <td style="text-align:right">${esc(r.limit_qty||'')}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green)">${num(r.hour)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green)">${num(r.material)}</td>
       <td style="text-align:right;background:var(--green-light);color:var(--green)">${num(r.labour)}</td>
@@ -6948,8 +7075,8 @@ function renderTariffTable(data) {
     </tr>
   `).join('');
 
-  const footer = data.length > 500
-    ? `Hiển thị 500 / ${data.length} dòng — dùng filter để thu hẹp kết quả`
+  const footer = data.length > TARIFF_RENDER_LIMIT
+    ? `Hiển thị ${TARIFF_RENDER_LIMIT} / ${data.length} dòng — dùng filter để thu hẹp kết quả`
     : `Tổng ${data.length} dòng`;
   document.getElementById('trf-footer').textContent = footer;
 }
@@ -7022,7 +7149,7 @@ async function confirmTariff() {
     if (res.success) {
       // Reload tariff
       const tariffRes = await apiGet({ action: 'getTariff' });
-      if (tariffRes.success) state.tariff = tariffRes.data;
+      if (tariffRes.success) { state.tariff = tariffRes.data; _invalidateTariffIndex(); }
       renderTariffScreen();
       cancelTariff();
       toast('Import thành công! ' + res.message + ' · Tổng: ' + state.tariff.length + ' dòng', 4000);
@@ -7133,8 +7260,8 @@ function renderPermBadges(role, permissions) {
   if (!allowed.length) return '<span style="color:var(--gray);font-size:11px">— Chưa gán —</span>';
   return allowed.map(s => {
     const label = SCREEN_LABELS[s] || s;
-    const color = SCREEN_GROUP_COLOR[s] || '#64748b';
-    return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;margin:2px 3px 2px 0;border-radius:11px;background:${color}1A;border:1px solid ${color}66;font-size:11px;font-weight:600;color:#1A1A1A;white-space:nowrap">
+    const color = SCREEN_GROUP_COLOR[s] || 'var(--gray-500)';
+    return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;margin:2px 3px 2px 0;border-radius:11px;background:${color}1A;border:1px solid ${color}66;font-size:11px;font-weight:600;color:var(--gray-900);white-space:nowrap">
       <span style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></span>${esc(label)}
     </span>`;
   }).join('');
@@ -7244,6 +7371,7 @@ function renderActLog() {
 
   document.getElementById('log-count').textContent = rows.length + ' bản ghi';
 
+  // Hex literal — alpha-append pattern (color + '22') yêu cầu raw hex, không dùng var().
   var ACTION_COLOR = {
     'Tạo Estimate':       '#16a34a',
     'Revise Estimate':    '#d97706',
@@ -7257,13 +7385,13 @@ function renderActLog() {
     : rows.map(function(r, i) {
         var color = ACTION_COLOR[r.action] || '#64748b';
         return '<tr style="background:' + (i%2===0?'#fff':'var(--bg)') + '">'
-          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;color:var(--gray);text-align:center">' + r.timestamp + '</td>'
-          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;text-align:center">' + (r.username||'—') + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;color:var(--gray);text-align:center">' + esc(r.timestamp) + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;text-align:center">' + esc(r.username||'—') + '</td>'
           + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">'
-          +   '<span style="background:' + color + '22;color:' + color + ';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">' + (r.action||'—') + '</span>'
+          +   '<span style="background:' + color + '22;color:' + color + ';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">' + esc(r.action||'—') + '</span>'
           + '</td>'
-          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-family:monospace;font-size:12px;text-align:center">' + (r.container_no||'—') + '</td>'
-          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gray);font-size:11px;text-align:center">' + (r.detail||'—') + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-family:monospace;font-size:12px;text-align:center">' + esc(r.container_no||'—') + '</td>'
+          + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gray);font-size:11px;text-align:center">' + esc(r.detail||'—') + '</td>'
           + '</tr>';
       }).join('');
 
@@ -7279,21 +7407,28 @@ async function renderUsers() {
     if (!res.success) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">${res.error||'Không có quyền'}</td></tr>`; return; }
     const data = res.data || [];
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray);padding:20px">Chưa có user nào</td></tr>'; return; }
-    tbody.innerHTML = data.map((u, i) => `
+    tbody.innerHTML = data.map((u, i) => {
+      var un = jsEsc(u.username);
+      var fn = jsEsc(u.fullname || '');
+      var ex = jsEsc(u.expiry || '');
+      var rl = jsEsc(u.role || 'user');
+      var pm = jsEsc(u.permissions || '');
+      var tt = jsEsc(u.title || '');
+      return `
       <tr>
         <td>${i+1}</td>
-        <td style="font-weight:600;text-align:left">${u.username}</td>
-        <td style="text-align:left">${u.fullname||'—'}</td>
-        <td style="text-align:left">${u.title||'—'}</td>
-        <td>${u.expiry||'—'}</td>
-        <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${u.role||'user'}</span></td>
+        <td style="font-weight:600;text-align:left">${esc(u.username)}</td>
+        <td style="text-align:left">${esc(u.fullname||'—')}</td>
+        <td style="text-align:left">${esc(u.title||'—')}</td>
+        <td>${esc(u.expiry||'—')}</td>
+        <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${esc(u.role||'user')}</span></td>
         <td style="text-align:left;line-height:1.8">${renderPermBadges(u.role, u.permissions)}</td>
         <td style="text-align:left">
-          <button onclick="showEditUserModal('${u.username}','${(u.fullname||'').replace(/'/g,'\`')}','${u.expiry||''}','${u.role||'user'}','${u.permissions||''}','${(u.title||'').replace(/'/g,'\`')}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
-          <button onclick="doDeleteUser('${u.username}')" class="btn btn-sm btn-red">Xoá</button>
+          <button onclick="showEditUserModal('${un}','${fn}','${ex}','${rl}','${pm}','${tt}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
+          <button onclick="doDeleteUser('${un}')" class="btn btn-sm btn-red">Xoá</button>
         </td>
       </tr>
-    `).join('');
+    `;}).join('');
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi: ${e.message}</td></tr>`;
   }
@@ -7448,10 +7583,10 @@ async function doExportRetry() {
         : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
       return `<tr>
         <td>${i+1}</td>
-        <td style="font-family:monospace">${r.cont}</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.ref||'—'}</td>
+        <td style="font-family:monospace">${esc(r.cont)}</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.ref||'—')}</td>
         <td style="text-align:right">${countDisplay} ảnh</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${r.sample_name}</td>
+        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.sample_name)}</td>
       </tr>`;
     }).join('');
 
@@ -7459,7 +7594,7 @@ async function doExportRetry() {
     var extra = document.createElement('div');
     extra.innerHTML = `
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:12px;font-weight:600;color:#1A1A1A;margin-bottom:8px">Kết quả xuất bổ sung — ${retryCopied} ảnh</div>
+        <div style="font-size:12px;font-weight:600;color:var(--gray-900);margin-bottom:8px">Kết quả xuất bổ sung — ${retryCopied} ảnh</div>
         ${stillNotFound}
         ${retryRows ? `<div class="tbl-wrap" style="margin-top:8px"><table>
           <thead><tr><th>STT</th><th>Container</th><th>Ref No</th><th style="text-align:right">Số ảnh</th><th>Tên file mẫu</th></tr></thead>
@@ -7568,12 +7703,13 @@ function renderPhotoGrid() {
   }
   document.getElementById('ph-empty').style.display = 'none';
   grid.innerHTML = photos.map(function(p, idx) {
-    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:#1A1A1A;cursor:pointer;height:180px" onclick="openPhotoLightbox(${idx})">
-      <img data-src="${p.thumb}" data-fallback="https://drive.google.com/thumbnail?id=${p.id}&sz=w400"
+    var pid = jsEsc(p.id);
+    return `<div style="position:relative;border-radius:8px;overflow:hidden;background:var(--gray-900);cursor:pointer;height:180px" onclick="openPhotoLightbox(${idx})">
+      <img data-src="${esc(p.thumb)}" data-fallback="https://drive.google.com/thumbnail?id=${esc(encodeURIComponent(p.id))}&sz=w400"
         src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         style="width:100%;height:100%;object-fit:contain;display:block">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:6px 6px 4px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-      <button onclick="event.stopPropagation();deletePhotoScreen('${p.id}',${idx})"
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:6px 6px 4px;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+      <button onclick="event.stopPropagation();deletePhotoScreen('${pid}',${idx})"
         style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,0.85);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;line-height:22px;text-align:center;padding:0">×</button>
     </div>`;
   }).join('');
@@ -8174,10 +8310,10 @@ function renderInventoryReport() {
   // CSS styles cho các loại dòng
   const styles = {
     total:     'background:#fffde7;font-weight:700;color:#1a202c',
-    sub:       'background:#fff;font-weight:400;color:#1A1A1A',
+    sub:       'background:#fff;font-weight:400;color:var(--gray-900)',
     italic:    'background:#fff;font-style:italic;color:#4a5568;font-weight:400',
     separator: 'background:#f1f5f9;height:10px',
-    plain:     'background:#fff;font-weight:400;color:#1A1A1A',
+    plain:     'background:#fff;font-weight:400;color:var(--gray-900)',
   };
   const tdStyle = 'padding:4px 7px;border:1px solid #d1d5db;text-align:center;white-space:nowrap';
   const tdLabel = 'padding:4px 8px;border:1px solid #d1d5db;text-align:left;white-space:nowrap';
@@ -8368,10 +8504,7 @@ function exportInventoryExcel() {
   }
 }
 
-// Global esc() helper — dùng bởi renderPermBadges (chống XSS khi render label phân quyền)
-if (typeof esc === 'undefined') {
-  window.esc = function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
-}
+// (esc() đã define ở đầu file)
 
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — KHO MASTER (DM Vật tư + DM Công cụ + DS Nhân viên)
