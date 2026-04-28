@@ -7354,20 +7354,55 @@ const SCREEN_GROUP_COLOR = {
   tariff:'#a78bfa', users:'#a78bfa', actlog:'#a78bfa',
   inventory:'#a78bfa', photos:'#a78bfa'
 };
-function renderPermBadges(role, permissions) {
+
+// ── App Quản lý rỗng (cross-app permissions, lưu cột permissions_qlr) ──
+const QLR_SCREENS = [
+  'barges','voyages',
+  'kanban','gantt',
+  'survey','report','slxd','tonbai','yardmap','seal',
+  'users','actlog'
+];
+const DEFAULT_QLR_PERMS = 'barges,voyages,kanban,survey,report,slxd,tonbai,yardmap,seal'; // users/actlog/gantt ẩn mặc định
+const QLR_SCREEN_LABELS = {
+  barges:'Quản lý sà lan', voyages:'Kế hoạch sà lan',
+  kanban:'Theo dõi tiến độ', gantt:'Sơ đồ Gantt',
+  survey:'BC Survey', report:'BC ca', slxd:'Sản lượng XD', tonbai:'Tồn bãi',
+  yardmap:'Sơ đồ bãi 3D', seal:'Quản lý Seal',
+  users:'Quản lý User', actlog:'Nhật ký'
+};
+const QLR_SCREEN_GROUP_COLOR = {
+  barges:'#3b82f6', voyages:'#3b82f6',
+  kanban:'#06b6d4', gantt:'#06b6d4',
+  survey:'#10b981', report:'#10b981', slxd:'#10b981', tonbai:'#10b981',
+  yardmap:'#10b981', seal:'#10b981',
+  users:'#ef4444', actlog:'#ef4444'
+};
+function renderPermBadges(role, permissions, permissionsQlr) {
   if (role === 'admin') {
     return '<span class="badge b-wa" style="font-size:10px">Tất cả màn hình</span>';
   }
-  const permsStr = permissions && String(permissions).trim() ? String(permissions) : DEFAULT_USER_PERMS;
-  const allowed = permsStr.split(',').map(s=>s.trim()).filter(Boolean);
-  if (!allowed.length) return '<span style="color:var(--gray);font-size:11px">— Chưa gán —</span>';
-  return allowed.map(s => {
-    const label = SCREEN_LABELS[s] || s;
-    const color = SCREEN_GROUP_COLOR[s] || 'var(--gray-500)';
+  function makeBadge(label, color) {
     return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;margin:2px 3px 2px 0;border-radius:11px;background:${color}1A;border:1px solid ${color}66;font-size:11px;font-weight:600;color:var(--gray-900);white-space:nowrap">
       <span style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></span>${esc(label)}
     </span>`;
-  }).join('');
+  }
+  // App MNR
+  const mnrStr = permissions && String(permissions).trim() ? String(permissions) : DEFAULT_USER_PERMS;
+  const mnrList = mnrStr.split(',').map(s=>s.trim()).filter(Boolean);
+  // App Quản lý rỗng
+  const qlrStr  = permissionsQlr && String(permissionsQlr).trim() ? String(permissionsQlr) : '';
+  const qlrList = qlrStr.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!mnrList.length && !qlrList.length) return '<span style="color:var(--gray);font-size:11px">— Chưa gán —</span>';
+  let html = '';
+  if (mnrList.length) {
+    html += '<div style="font-size:10px;color:var(--gray-500);font-weight:700;margin:2px 0 4px;letter-spacing:.05em">▸ MNR</div>';
+    html += mnrList.map(s => makeBadge(SCREEN_LABELS[s] || s, SCREEN_GROUP_COLOR[s] || 'var(--gray-500)')).join('');
+  }
+  if (qlrList.length) {
+    html += '<div style="font-size:10px;color:var(--gray-500);font-weight:700;margin:6px 0 4px;letter-spacing:.05em">▸ QLR</div>';
+    html += qlrList.map(s => makeBadge(QLR_SCREEN_LABELS[s] || s, QLR_SCREEN_GROUP_COLOR[s] || 'var(--gray-500)')).join('');
+  }
+  return html;
 }
 
 function applyPermissions(role, permissions) {
@@ -7383,7 +7418,9 @@ function applyPermissions(role, permissions) {
 function onUserRoleChange() {
   const role = document.getElementById('u-role').value;
   const block = document.getElementById('u-perms-block');
+  const qlrBlock = document.getElementById('u-qlr-perms-block');
   block.style.display = role === 'admin' ? 'none' : 'block';
+  if (qlrBlock) qlrBlock.style.display = role === 'admin' ? 'none' : 'block';
 }
 
 function setPermCheckboxes(permsStr) {
@@ -7399,6 +7436,30 @@ function getPermCheckboxes() {
     const cb = document.getElementById('perm-' + s);
     return cb && cb.checked;
   }).join(',');
+}
+
+// QLR permissions checkboxes (id prefix: qperm-)
+function setQlrPermCheckboxes(permsStr) {
+  const perms = permsStr ? permsStr.split(',').map(s=>s.trim()) : [];
+  QLR_SCREENS.forEach(s => {
+    const cb = document.getElementById('qperm-' + s);
+    if (cb) cb.checked = perms.includes(s);
+  });
+}
+function getQlrPermCheckboxes() {
+  return QLR_SCREENS.filter(s => {
+    const cb = document.getElementById('qperm-' + s);
+    return cb && cb.checked;
+  }).join(',');
+}
+window.permQlrSelectAll = function(){ setQlrPermCheckboxes(QLR_SCREENS.join(',')); _syncQlrChkHighlight(); };
+window.permQlrClearAll  = function(){ setQlrPermCheckboxes(''); _syncQlrChkHighlight(); };
+window.permQlrDefault   = function(){ setQlrPermCheckboxes(DEFAULT_QLR_PERMS); _syncQlrChkHighlight(); };
+function _syncQlrChkHighlight() {
+  document.querySelectorAll('#u-qlr-perms-block .u-chk').forEach(function(lbl){
+    var cb = lbl.querySelector('input[type="checkbox"]');
+    if (cb) lbl.classList.toggle('sel', cb.checked);
+  });
 }
 function showChangePwdModal() {
   document.getElementById('cpwd-user').value = '';
@@ -7517,6 +7578,7 @@ async function renderUsers() {
       var rl = jsEsc(u.role || 'user');
       var pm = jsEsc(u.permissions || '');
       var tt = jsEsc(u.title || '');
+      var pq = jsEsc(u.permissions_qlr || '');
       return `
       <tr>
         <td>${i+1}</td>
@@ -7525,9 +7587,9 @@ async function renderUsers() {
         <td style="text-align:left">${esc(u.title||'—')}</td>
         <td>${esc(u.expiry||'—')}</td>
         <td><span class="badge ${u.role==='admin'?'b-wa':'b-gr'}">${esc(u.role||'user')}</span></td>
-        <td style="text-align:left;line-height:1.8">${renderPermBadges(u.role, u.permissions)}</td>
+        <td style="text-align:left;line-height:1.8">${renderPermBadges(u.role, u.permissions, u.permissions_qlr)}</td>
         <td style="text-align:left">
-          <button onclick="showEditUserModal('${un}','${fn}','${ex}','${rl}','${pm}','${tt}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
+          <button onclick="showEditUserModal('${un}','${fn}','${ex}','${rl}','${pm}','${tt}','${pq}')" class="btn btn-sm" style="margin-right:4px">Sửa</button>
           <button onclick="doDeleteUser('${un}')" class="btn btn-sm btn-red">Xoá</button>
         </td>
       </tr>
@@ -7548,12 +7610,15 @@ function showAddUserModal() {
   document.getElementById('u-expiry').value = '31/12/2026';
   document.getElementById('u-role').value = 'user';
   document.getElementById('u-perms-block').style.display = 'block';
+  document.getElementById('u-qlr-perms-block').style.display = 'block';
   setPermCheckboxes(DEFAULT_USER_PERMS);
+  setQlrPermCheckboxes(DEFAULT_QLR_PERMS);
+  _syncQlrChkHighlight();
   document.getElementById('modal-user-error').style.display = 'none';
   document.getElementById('modal-user').style.display = 'flex';
 }
 
-function showEditUserModal(username, fullname, expiry, role, perms, title) {
+function showEditUserModal(username, fullname, expiry, role, perms, title, permsQlr) {
   document.getElementById('modal-user-title').textContent = 'Chỉnh sửa User';
   document.getElementById('u-username').value = username;
   document.getElementById('u-username').disabled = true;
@@ -7565,7 +7630,10 @@ function showEditUserModal(username, fullname, expiry, role, perms, title) {
   document.getElementById('u-role').value = role;
   const isAdmin = role === 'admin';
   document.getElementById('u-perms-block').style.display = isAdmin ? 'none' : 'block';
+  document.getElementById('u-qlr-perms-block').style.display = isAdmin ? 'none' : 'block';
   setPermCheckboxes(perms || DEFAULT_USER_PERMS);
+  setQlrPermCheckboxes(permsQlr !== undefined && permsQlr !== '' ? permsQlr : DEFAULT_QLR_PERMS);
+  _syncQlrChkHighlight();
   document.getElementById('modal-user-error').style.display = 'none';
   document.getElementById('modal-user').style.display = 'flex';
 }
@@ -7600,7 +7668,8 @@ async function doSaveUser() {
       admin_username: state.user.username,
       admin_key: state.user.key || '',
       username, key, fullname, title, expiry: expiryISO, role,
-      permissions: role === 'admin' ? 'all' : getPermCheckboxes()
+      permissions:     role === 'admin' ? 'all' : getPermCheckboxes(),
+      permissions_qlr: role === 'admin' ? 'all' : getQlrPermCheckboxes()
     });
     if (res.success) {
       hideUserModal();
@@ -11379,10 +11448,10 @@ async function reopenKkDetail() {
         </div>
       </div>
 
-      <!-- PHÂN QUYỀN -->
+      <!-- PHÂN QUYỀN — App MNR -->
       <div id="u-perms-block" class="u-section">
         <div class="u-section-title" style="justify-content:space-between">
-          <span>🔐 Màn hình được phép truy cập</span>
+          <span>🏗 App MNR — Màn hình được phép truy cập</span>
           <div class="u-perms-toolbar">
             <button type="button" onclick="permSelectAll()">Chọn tất cả</button>
             <button type="button" onclick="permClearAll()">Bỏ chọn</button>
@@ -11435,6 +11504,54 @@ async function reopenKkDetail() {
           </div>
         </div>
 
+      </div>
+
+      <!-- PHÂN QUYỀN — App Quản lý rỗng (cross-app, lưu cột permissions_qlr) -->
+      <div id="u-qlr-perms-block" class="u-section">
+        <div class="u-section-title" style="justify-content:space-between">
+          <span>🚢 App Quản lý rỗng — Màn hình được phép truy cập</span>
+          <div class="u-perms-toolbar">
+            <button type="button" onclick="permQlrSelectAll()">Chọn tất cả</button>
+            <button type="button" onclick="permQlrClearAll()">Bỏ chọn</button>
+            <button type="button" onclick="permQlrDefault()">Mặc định</button>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#3b82f6"></span>Quản lý</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="qperm-barges" value="barges"> Quản lý sà lan</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-voyages" value="voyages"> Kế hoạch sà lan</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#06b6d4"></span>Theo dõi</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="qperm-kanban" value="kanban"> Theo dõi tiến độ</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-gantt" value="gantt"> Sơ đồ Gantt</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#10b981"></span>Báo cáo</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="qperm-survey" value="survey"> BC Survey</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-report" value="report"> BC ca</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-slxd" value="slxd"> Sản lượng XD</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-tonbai" value="tonbai"> Tồn bãi</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-yardmap" value="yardmap"> Sơ đồ bãi 3D</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-seal" value="seal"> Quản lý Seal</label>
+          </div>
+        </div>
+
+        <div class="u-perms-group">
+          <div class="u-perms-label"><span class="dot" style="background:#ef4444"></span>Hệ thống</div>
+          <div class="u-perms-grid">
+            <label class="u-chk"><input type="checkbox" id="qperm-users" value="users"> Quản lý User</label>
+            <label class="u-chk"><input type="checkbox" id="qperm-actlog" value="actlog"> Nhật ký hoạt động</label>
+          </div>
+        </div>
       </div>
 
       <div id="modal-user-error" class="alert alert-err" style="display:none;margin-top:10px"></div>
