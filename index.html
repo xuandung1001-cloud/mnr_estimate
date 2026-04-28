@@ -2043,6 +2043,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <col style="width:130px">
                 <col>
                 <col style="width:55px">
+                <col style="width:75px">
                 <col style="width:70px">
                 <col style="width:110px">
                 <col style="width:120px">
@@ -2056,6 +2057,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th style="text-align:left">Mã VT</th>
                   <th style="text-align:left">Tên vật tư</th>
                   <th>ĐVT</th>
+                  <th>Tồn HT</th>
                   <th>SL</th>
                   <th style="text-align:right">Đơn giá</th>
                   <th style="text-align:right">Thành tiền</th>
@@ -2067,7 +2069,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <tbody id="pkf-lines"></tbody>
               <tfoot>
                 <tr style="background:var(--gray-50);font-weight:700">
-                  <td colspan="6" style="text-align:right;color:var(--gray-900)">TỔNG CỘNG</td>
+                  <td colspan="7" style="text-align:right;color:var(--gray-900)">TỔNG CỘNG</td>
                   <td style="text-align:right;color:var(--gray-900);font-size:14px" id="pkf-total">0</td>
                   <td colspan="3"></td>
                 </tr>
@@ -9549,10 +9551,12 @@ async function openPhieuKhoForm(loaiGD, maPhieu) {
         return '<option value="'+esc(u.username)+'">'+esc(u.fullname||u.username)+(u.title?' — '+esc(u.title):'')+'</option>';
       }).join('');
 
-  // Load DM Vật tư + WAC prices song song (luôn refresh prices vì có thể vừa save phiếu xong)
-  var promises = [apiGet({ action: 'getAvgVatTuPrices', _t: Date.now() })];
-  if (!_dmVatTu.length) promises.push(apiGet({ action: 'getDmVatTu' }));
-  var results = await Promise.all(promises);
+  // Load DM Vật tư + WAC prices song song — luôn refresh để có ton_hien_tai mới nhất
+  // (sau khi vừa save phiếu khác, tồn kho đã thay đổi)
+  var results = await Promise.all([
+    apiGet({ action: 'getAvgVatTuPrices', _t: Date.now() }),
+    apiGet({ action: 'getDmVatTu',         _t: Date.now() })
+  ]);
   if (results[0] && results[0].success) _pkfAvgPrices = results[0].data || {};
   if (results[1] && results[1].success) _dmVatTu = results[1].data || [];
   _buildPkfDatalist();
@@ -9639,11 +9643,12 @@ function onPkfLoaiChange() {
     if (isXuat) {
       dg.readOnly = true; dg.title = 'Tự tính theo WAC từ tồn kho';
       if (dgM) { dgM.readOnly = true; dgM.title = 'Tự tính theo WAC'; }
-      lookupPkfVt(tr);
     } else {
       dg.readOnly = false; dg.title = '';
       if (dgM) { dgM.readOnly = false; dgM.title = ''; }
     }
+    // Refresh Tồn HT color + re-validate cho cả 2 chiều NHẬP↔XUẤT
+    lookupPkfVt(tr);
   });
   // Refresh preview mã phiếu khi đổi loại (chỉ cho phiếu mới)
   _refreshPreviewMaPhieu();
@@ -9671,6 +9676,7 @@ function addPkfLine(data) {
     + '<td><input class="pkf-mavt" list="dl-mavt" placeholder="Gõ mã..." autocomplete="off" style="text-transform:uppercase;text-align:left;font-size:var(--text-sm)" onblur="lookupPkfVt(this.closest(\'tr\'))"></td>'
     + '<td style="text-align:left;font-size:var(--text-sm);color:var(--gray-700);overflow:hidden;text-overflow:ellipsis"><span class="pkf-tenvt" title="">—</span></td>'
     + '<td style="text-align:center;font-size:var(--text-sm);color:var(--gray-700)"><span class="pkf-donvi">—</span></td>'
+    + '<td style="text-align:right;font-size:var(--text-sm);color:var(--gray-600)"><span class="pkf-tonht">—</span></td>'
     + '<td><input type="number" class="pkf-soluong" min="0" step="0.01" style="text-align:right" oninput="onPkfQtyOrPriceChange(this)"></td>'
     + '<td><input type="text" inputmode="numeric" class="pkf-dongia" placeholder="0" style="text-align:right" oninput="onPkfPriceInput(this)" onfocus="this.select()"></td>'
     + '<td style="text-align:right;font-weight:600"><span class="pkf-thanhtien">0</span></td>'
@@ -9692,6 +9698,9 @@ function addPkfLine(data) {
     + '</div>'
     + '<div class="pkf-line-card-row full">'
     + '  <div><label>Tên vật tư</label><input class="pkf-tenvt-m" readonly placeholder="—" style="font-size:11px"></div>'
+    + '</div>'
+    + '<div class="pkf-line-card-row full">'
+    + '  <div><label>Tồn hiện tại</label><input class="pkf-tonht-m" readonly placeholder="—" style="text-align:right;font-weight:600"></div>'
     + '</div>'
     + '<div class="pkf-line-card-row">'
     + '  <div><label>Số lượng</label><input type="number" class="pkf-soluong-m" min="0" step="0.01" oninput="onPkfQtyOrPriceChange(this)"></div>'
@@ -9799,6 +9808,32 @@ function lookupPkfVt(rowOrCard) {
     card.querySelector('.pkf-donvi-m').value = dv;
   }
 
+  // Fill Tồn HT — màu cảnh báo khi XUẤT và tồn ≤ 0 / thấp
+  var ton = vt ? (parseFloat(vt.ton_hien_tai) || 0) : null;
+  var tonFmt = (ton === null) ? '—' : ton.toLocaleString('vi-VN');
+  var tonColor = '';
+  var tonWeight = '';
+  if (vt && _pkfCurrentLoai() === 'XUẤT') {
+    if (ton <= 0)      { tonColor = 'var(--error-text)';   tonWeight = '700'; }
+    else if (ton < 5)  { tonColor = 'var(--warning-text)'; tonWeight = '600'; }
+  }
+  if (tr) {
+    var tonEl = tr.querySelector('.pkf-tonht');
+    if (tonEl) {
+      tonEl.textContent      = tonFmt;
+      tonEl.style.color      = tonColor;
+      tonEl.style.fontWeight = tonWeight;
+    }
+  }
+  if (card) {
+    var tonElM = card.querySelector('.pkf-tonht-m');
+    if (tonElM) {
+      tonElM.value           = tonFmt;
+      tonElM.style.color     = tonColor;
+      tonElM.style.fontWeight= tonWeight;
+    }
+  }
+
   // XUẤT mode → auto-fill đơn giá theo WAC từ tồn kho
   if (vt && _pkfCurrentLoai() === 'XUẤT') {
     var avg = _pkfAvgPrices[ma] || 0;
@@ -9812,6 +9847,9 @@ function lookupPkfVt(rowOrCard) {
     if (card) card.querySelector('.pkf-dongia-m').value = avgFmt;
     if (tr) onPkfQtyOrPriceChange(tr.querySelector('.pkf-dongia'));
   }
+
+  // Re-validate SL vs tồn (sau khi đổi mã VT)
+  if (tr) _pkfValidateLine(tr.dataset.idx);
 }
 
 // ─── Đơn giá: format text với dấu phẩy ngàn, parse khi cần số ───
@@ -9854,7 +9892,37 @@ function onPkfQtyOrPriceChange(input) {
   var tt = sl * dg;
   if (tr) tr.querySelector('.pkf-thanhtien').textContent = tt.toLocaleString('vi-VN');
   if (card) card.querySelector('.pkf-thanhtien-m').value = tt.toLocaleString('vi-VN');
+  _pkfValidateLine(idx);
   calcPkfTotal();
+}
+
+// Validate SL không vượt tồn HT (chỉ áp dụng XUẤT khi tạo phiếu MỚI).
+// Skip khi edit phiếu cũ — backend reverse phiếu rồi validate, frontend tính sai vì tồn đã trừ phiếu này.
+function _pkfValidateLine(idx) {
+  var tr = document.querySelector('#pkf-lines tr[data-idx="'+idx+'"]');
+  var card = document.querySelector('#pkf-lines-cards .pkf-line-card[data-idx="'+idx+'"]');
+  if (!tr) return;
+  var slEl = tr.querySelector('.pkf-soluong');
+  var slElM = card ? card.querySelector('.pkf-soluong-m') : null;
+  var clear = function(){
+    slEl.classList.remove('input-invalid'); slEl.title = '';
+    if (slElM) { slElM.classList.remove('input-invalid'); slElM.title = ''; }
+  };
+  // NHẬP / sửa phiếu cũ / chưa chọn mã → clear
+  var isEdit = !!(_pkfState && _pkfState.ma_phieu);
+  var ma = String(tr.querySelector('.pkf-mavt').value||'').trim().toUpperCase();
+  var sl = parseFloat(slEl.value) || 0;
+  if (_pkfCurrentLoai() !== 'XUẤT' || isEdit || !ma || !sl) { clear(); return; }
+  var vt = _dmVatTu.find(function(v){ return String(v.ma_vt||'').trim().toUpperCase() === ma; });
+  if (!vt) return; // mã không tồn tại — đã có cảnh báo riêng ở Tên VT
+  var ton = parseFloat(vt.ton_hien_tai) || 0;
+  var exceeds = sl > ton;
+  slEl.classList.toggle('input-invalid', exceeds);
+  slEl.title = exceeds ? ('Vượt tồn! Tồn hiện tại: ' + ton.toLocaleString('vi-VN')) : '';
+  if (slElM) {
+    slElM.classList.toggle('input-invalid', exceeds);
+    slElM.title = slEl.title;
+  }
 }
 
 function calcPkfTotal() {
@@ -9896,6 +9964,24 @@ async function savePhieuKhoForm() {
   // Validate lines
   for (var i = 0; i < lines.length; i++) {
     if (lines[i].so_luong <= 0) { toast('Dòng '+(i+1)+': số lượng phải > 0', 3000); return; }
+  }
+  // Validate XUẤT không được vượt tồn hiện tại (chỉ áp dụng khi tạo phiếu MỚI).
+  // Edit phiếu cũ: skip — backend reverse phiếu rồi validate đúng, frontend tính sai vì tồn đã trừ phiếu này.
+  var isEditingPk = !!(_pkfState && _pkfState.ma_phieu);
+  if (loai === 'XUẤT' && !isEditingPk) {
+    var exceedMsgs = [];
+    for (var j = 0; j < lines.length; j++) {
+      var vt = _dmVatTu.find(function(v){ return String(v.ma_vt||'').trim().toUpperCase() === lines[j].ma_vt; });
+      if (!vt) { toast('Dòng '+(j+1)+': mã VT "'+lines[j].ma_vt+'" không tồn tại trong DM', 4000); return; }
+      var ton = parseFloat(vt.ton_hien_tai) || 0;
+      if (lines[j].so_luong > ton) {
+        exceedMsgs.push('• Dòng '+(j+1)+' ('+lines[j].ma_vt+'): xuất '+lines[j].so_luong+' > tồn '+ton);
+      }
+    }
+    if (exceedMsgs.length) {
+      toast('❌ Vượt tồn kho — không thể lưu phiếu Xuất:\n' + exceedMsgs.join('\n'), 6000);
+      return;
+    }
   }
 
   var btn = document.getElementById('pkform-save-btn');
