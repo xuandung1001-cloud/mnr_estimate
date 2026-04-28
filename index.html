@@ -96,7 +96,7 @@
 }
 
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','SF Pro',system-ui,'Segoe UI',Roboto,sans-serif;
+  font-family:Tahoma,Geneva,Verdana,sans-serif;
   background:var(--gray-50);
   color:var(--gray-900);
   font-size:var(--text-base);
@@ -436,7 +436,7 @@ select.fi{padding-right:24px;background-image:url("data:image/svg+xml;utf8,<svg 
 .kr-sk-sug-item{padding:var(--sp-2) var(--sp-3);cursor:pointer;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;gap:var(--sp-2)}
 .kr-sk-sug-item:last-child{border-bottom:none}
 .kr-sk-sug-item:hover,.kr-sk-sug-item.is-hi{background:var(--amber-bg)}
-.kr-sk-sug-item .ma{font-family:var(--font-mono,ui-monospace,monospace);font-weight:600;color:var(--gray-900)}
+.kr-sk-sug-item .ma{font-weight:600;color:var(--gray-900)}
 .kr-sk-sug-item .meta{color:var(--gray-500);font-size:var(--text-xs);white-space:nowrap}
 
 /* ─────────────────────────────────────────────────────────────────
@@ -481,6 +481,29 @@ select.fi{padding-right:24px;background-image:url("data:image/svg+xml;utf8,<svg 
 .kho-screen > .card > .tbl-wrap thead th{position:sticky;top:0;z-index:5;background:var(--gray-50);box-shadow:0 1px 0 var(--gray-200)}
 /* Khi nav vào kho-screen — JS toggle class này lên #content để tắt scroll ngoài */
 #content.content-no-scroll{overflow:hidden !important;display:flex;flex-direction:column}
+
+/* PICTURES SCREEN — fixed-layout: controls cố định, table preview scroll riêng */
+.screen.pic-screen.active{display:flex !important;flex-direction:column;height:100%;overflow:hidden}
+.pic-screen > .pic-main-card{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin-bottom:0}
+.pic-screen .pic-controls{flex-shrink:0}
+.pic-screen .pic-preview{flex:1;display:flex;flex-direction:column;min-height:0;margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--gray-200)}
+.pic-screen .pic-preview-head{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2)}
+.pic-screen .pic-tbl-wrap{flex:1;min-height:0;overflow-y:auto}
+.pic-screen .pic-tbl-wrap thead th{position:sticky;top:0;z-index:5;background:var(--gray-50);box-shadow:0 1px 0 var(--gray-200)}
+.pic-screen .pic-preview > .page-foot{flex-shrink:0}
+/* Cells bảng preview — đậm + letter-spacing nhẹ cho dễ đọc, font kế thừa Tahoma từ body */
+.pic-screen td.pic-mono-cell{font-weight:600;letter-spacing:.3px}
+/* Result mode: ẩn form, result chiếm full screen với scroll riêng */
+.pic-screen.pic-result-mode > .pic-main-card{display:none !important}
+.pic-screen.pic-result-mode > .pic-result-card{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin-bottom:0}
+.pic-screen.pic-result-mode > .pic-result-card > .card-title{flex-shrink:0}
+.pic-screen.pic-result-mode > .pic-result-card > #pic-result-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.pic-screen.pic-result-mode > .pic-result-card #pic-result-body > .stats-row,
+.pic-screen.pic-result-mode > .pic-result-card #pic-result-body > .alert{flex-shrink:0}
+.pic-screen.pic-result-mode > .pic-result-card #pic-result-body > .pic-result-tbl-wrap{flex:1;min-height:0;overflow-y:auto}
+.pic-screen.pic-result-mode > .pic-result-card #pic-result-body > .pic-result-tbl-wrap thead th{position:sticky;top:0;background:var(--gray-50);z-index:5;box-shadow:0 1px 0 var(--gray-200)}
+.pic-screen.pic-result-mode > .pic-result-card #pic-result-body > .page-foot{flex-shrink:0}
+#content.content-no-scroll-pic{overflow:hidden !important;display:flex;flex-direction:column}
 
 /* FIXED-LAYOUT — generic alias cho kho-screen, dùng cho Tracking/Summary/Stock/Tariff */
 .screen.fixed-layout.active{display:flex !important;flex-direction:column;height:100%;overflow:hidden}
@@ -545,7 +568,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 .st-repaired{background:var(--st-repaired-bg);color:var(--st-repaired-text)}
 .st-rejected{background:var(--st-rejected-bg);color:var(--st-rejected-text)}
 /* Inline status dropdown trong table cells */
-.status-select{border:none;border-radius:var(--r-sm);font-size:var(--text-xs);font-weight:500;padding:2px 5px;cursor:pointer;width:100%;font-family:inherit}
+.status-select{border:none;border-radius:var(--r-sm);font-size:var(--text-base);font-weight:500;padding:4px 6px;cursor:pointer;width:100%;font-family:inherit}
 
 /* ALERT */
 .alert{padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);font-size:var(--text-base);margin-bottom:var(--sp-3);border:1px solid}
@@ -1398,25 +1421,23 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <thead>
                 <tr>
                   <th style="width:32px">Stt</th>
-                  <th style="width:110px">Equipment No</th>
+                  <th style="width:120px">Equipment No</th>
                   <th style="width:46px">Carrier</th>
-                  <th style="width:40px">Size</th>
-                  <th style="width:72px">Est. Date</th>
-                  <th style="width:62px;text-align:right">Total Est.</th>
-                  <th style="width:120px">Ref No</th>
-                  <th style="width:72px">App. Date</th>
-                  <th style="width:62px;text-align:right">Total App.</th>
-                  <th style="width:62px;text-align:right">Total Rev.</th>
-                  <th style="width:150px">Status</th>
-                  <th style="width:72px">Repair Date</th>
-                  <th style="width:120px">PO Number</th>
-                  <th style="width:72px">PO Date</th>
-                  <th style="width:160px">Remarks</th>
-                  <th style="width:150px">Thao tác</th>
+                  <th style="width:64px">Size</th>
+                  <th style="width:78px">Est. Date</th>
+                  <th style="width:68px;text-align:right">Total Est.</th>
+                  <th style="width:130px">Ref No</th>
+                  <th style="width:78px">App. Date</th>
+                  <th style="width:68px;text-align:right">Total App.</th>
+                  <th style="width:68px;text-align:right">Total Rev.</th>
+                  <th style="width:180px">Status</th>
+                  <th style="width:78px">Repair Date</th>
+                  <th style="width:200px">Remarks</th>
+                  <th style="width:160px">Thao tác</th>
                 </tr>
               </thead>
               <tbody id="trk-rows">
-                <tr><td colspan="16" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="14" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1485,7 +1506,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th style="width:40px">STT</th>
                   <th style="width:105px">Equipment No</th>
                   <th style="width:46px">Carrier</th>
-                  <th style="width:40px">Size</th>
+                  <th style="width:64px">Size</th>
                   <th style="width:76px">Est Date</th>
                   <th style="width:130px">Ref No</th>
                   <th style="width:76px">App. Date</th>
@@ -2072,59 +2093,88 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- PICTURES -->
-      <div class="screen" id="screen-pictures">
-        <div class="card">
-          <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);margin-bottom:var(--sp-3)">
-            <span id="pic-index-status" style="font-size:var(--text-xs);color:var(--gray-500)"></span>
-          </div>
+      <div class="screen pic-screen" id="screen-pictures">
+        <div class="card pic-main-card">
+          <div class="pic-controls">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3)">
+              <div class="mode-tabs" style="margin:0">
+                <div class="mode-tab active" id="pic-tab-b" onclick="setPicMode('B',this)">Trước Sửa Chữa</div>
+                <div class="mode-tab" id="pic-tab-a" onclick="setPicMode('A',this)">Sau Sửa Chữa</div>
+              </div>
+              <span id="pic-index-status" style="font-size:var(--text-xs);color:var(--gray-500)"></span>
+            </div>
 
-          <div class="mode-tabs" style="margin-bottom:var(--sp-3)">
-            <div class="mode-tab active" id="pic-tab-b" onclick="setPicMode('B',this)">Trước Sửa Chữa</div>
-            <div class="mode-tab" id="pic-tab-a" onclick="setPicMode('A',this)">Sau Sửa Chữa</div>
-          </div>
+            <div id="pic-mode-info" class="alert alert-info" style="margin-bottom:var(--sp-3);padding:var(--sp-2) var(--sp-3);font-size:var(--text-xs)">
+              <span id="pic-mode-info-text"></span>
+            </div>
 
-          <div id="pic-mode-info" class="alert alert-info" style="margin-bottom:var(--sp-3)">
-            <span id="pic-mode-info-text"></span>
-          </div>
+            <div style="display:grid;grid-template-columns:240px 1fr;gap:var(--sp-3);margin-bottom:var(--sp-3);align-items:start">
+              <div class="fb-field">
+                <label>Carrier *</label>
+                <select class="fi" id="pic-carrier">
+                  <option value="">— Chọn Carrier —</option>
+                </select>
+              </div>
+              <div class="fb-field">
+                <label>Danh sách Container * <span style="font-weight:400;text-transform:none;color:var(--gray-500)">(cách nhau bằng dấu phẩy / space — Enter để thêm)</span></label>
+                <input class="fi pic-mono" id="pic-cont-list" type="text"
+                  placeholder="MSMU1234567 CAIU8765432 BEAU4225240 ..."
+                  style="white-space:nowrap;overflow-x:auto"
+                  oninput="previewRefNos()">
+              </div>
+            </div>
 
-          <div class="fb-grid" style="margin-bottom:var(--sp-3)">
-            <div class="fb-field">
-              <label>Carrier *</label>
-              <select class="fi" id="pic-carrier">
-                <option value="">— Chọn Carrier —</option>
-              </select>
+            <div class="fb-bottom" style="margin-top:0">
+              <button class="btn" onclick="fillContFromBulk()">Lấy từ Xuất Bulk hiện tại</button>
+              <button class="btn btn-blue" onclick="doExportPictures()" id="pic-export-btn">Export lên Drive</button>
+              <span id="pic-bulk-hint" style="font-size:var(--text-xs);color:var(--gray-500)"></span>
             </div>
           </div>
 
-          <div class="fb-field" style="margin-bottom:var(--sp-3)">
-            <label>Danh sách Container * <span style="font-weight:400;text-transform:none;color:var(--gray-500)">(mỗi số 1 dòng, hoặc cách nhau bằng dấu phẩy / space)</span></label>
-            <textarea class="fi" id="pic-cont-list" rows="5"
-              placeholder="MSMU1234567&#10;CAIU8765432&#10;BEAU4225240&#10;..."
-              style="resize:vertical;font-family:monospace;letter-spacing:.5px;height:auto;padding:var(--sp-2) var(--sp-3);line-height:1.5"
-              oninput="previewRefNos()"></textarea>
-          </div>
-
-          <div class="fb-bottom" style="margin-top:0">
-            <button class="btn" onclick="fillContFromBulk()">Lấy từ Xuất Bulk hiện tại</button>
-            <span id="pic-bulk-hint" style="font-size:var(--text-xs);color:var(--gray-500)"></span>
-            <div style="margin-left:auto">
-              <button class="btn" onclick="doExportPictures()" id="pic-export-btn">Export lên Drive</button>
+          <div id="pic-ref-preview" class="pic-preview" style="display:none">
+            <div class="pic-preview-head">
+              <div class="fl">Preview Ref Number (từ Tracking)</div>
+              <span id="pic-preview-count" style="font-size:var(--text-xs);color:var(--gray-500)"></span>
             </div>
-          </div>
-
-          <div id="pic-ref-preview" style="display:none;margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--gray-200)">
-            <div class="fl" style="margin-bottom:var(--sp-2)">Preview Ref Number (từ Tracking)</div>
-            <div class="tbl-wrap">
-              <table>
+            <div class="tbl-wrap pic-tbl-wrap">
+              <table style="table-layout:fixed">
+                <colgroup>
+                  <col style="width:60px">
+                  <col style="width:140px">
+                  <col style="width:200px">
+                  <col style="width:90px">
+                  <col>
+                </colgroup>
                 <thead><tr>
-                  <th style="width:32px">STT</th>
+                  <th>STT</th>
                   <th>Container</th>
                   <th>Ref Number</th>
-                  <th style="width:70px;text-align:right">Số ảnh</th>
+                  <th style="text-align:right">Số ảnh</th>
                   <th>Tên file mẫu</th>
                 </tr></thead>
                 <tbody id="pic-ref-rows"></tbody>
               </table>
+            </div>
+            <div class="page-foot" id="pic-pagefoot" style="display:none">
+              <div class="page-foot-info" id="pic-pf-info">—</div>
+              <div class="page-foot-nav">
+                <button class="pf-btn" id="pic-pf-first" onclick="picGoPage(1)" title="Trang đầu">«</button>
+                <button class="pf-btn" id="pic-pf-prev" onclick="picGoPage(_picPage-1)" title="Trang trước">‹</button>
+                <span class="pf-info">Page <b id="pic-pf-cur">1</b> / <b id="pic-pf-total">1</b></span>
+                <button class="pf-btn" id="pic-pf-next" onclick="picGoPage(_picPage+1)" title="Trang sau">›</button>
+                <button class="pf-btn" id="pic-pf-last" onclick="picGoPage(9999)" title="Trang cuối">»</button>
+              </div>
+              <div class="page-foot-size">
+                <span>Show:</span>
+                <select id="pic-pf-size" onchange="picSetPageSize(this.value)">
+                  <option value="25" selected>25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="250">250</option>
+                  <option value="9999">All</option>
+                </select>
+                <span>per page</span>
+              </div>
             </div>
           </div>
         </div>
@@ -2139,8 +2189,11 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           </div>
         </div>
 
-        <div id="pic-result" style="display:none" class="card">
-          <div class="card-title">Kết quả Export</div>
+        <div id="pic-result" style="display:none" class="card pic-result-card">
+          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Kết quả Export</span>
+            <button class="btn btn-sm" onclick="closePicResult()">← Quay lại form</button>
+          </div>
           <div id="pic-result-body"></div>
         </div>
       </div>
@@ -3770,7 +3823,7 @@ function nav(screen, el) {
   var screenEl = document.getElementById('screen-' + screen);
   screenEl.classList.add('active');
   // Toggle no-scroll cho #content khi vào kho-screen (cần để inner tbl-wrap scroll)
-  contentEl.classList.toggle('content-no-scroll', screenEl.classList.contains('kho-screen') || screenEl.classList.contains('fixed-layout'));
+  contentEl.classList.toggle('content-no-scroll', screenEl.classList.contains('kho-screen') || screenEl.classList.contains('fixed-layout') || screenEl.classList.contains('pic-screen'));
 
   // Reset transient state khi rời màn để tránh memory leak / state stale.
   // Chỉ reset khi rời CHÍNH màn liên quan (không reset khi nav vào lại nó).
@@ -5101,11 +5154,11 @@ function renderOvmPreview() {
     var diffClr  = diff === 0 ? '' : (diff > 0 ? 'color:var(--green)' : 'color:var(--red)');
     var rowBg    = !r.in_tracking ? 'background:var(--red-light)' : r.will_skip ? 'opacity:0.5' : '';
     var refCell  = r.new_status === 'Sent for Approval'
-      ? `<td style="font-family:monospace;color:var(--blue)">${esc(r.ref_no||'—')}</td>`
+      ? `<td style="color:var(--blue)">${esc(r.ref_no||'—')}</td>`
       : `<td style="color:var(--gray)">—</td>`;
     return `<tr style="${rowBg}">
       <td>${i+1}</td>
-      <td style="font-family:monospace">${esc(r.cont_no)}</td>
+      <td style="font-weight:600">${esc(r.cont_no)}</td>
       ${refCell}
       <td style="text-align:right">${r.est_total ? num(r.est_total) : '—'}</td>
       <td style="text-align:right">${r.ovm_total ? num(r.ovm_total) : '—'}</td>
@@ -5667,7 +5720,7 @@ function renderTrackingTable(data) {
   var foot = document.getElementById('trk-pagefoot');
   const tbody = document.getElementById('trk-rows');
   if (!data || !data.length) {
-    tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--gray);padding:20px">Không có dữ liệu</td></tr>';
     if (foot) foot.style.display = 'none';
     return;
   }
@@ -5711,8 +5764,6 @@ function renderTrackingTable(data) {
       <td style="text-align:right;${reviseTotal>0?'color:#A06010;font-weight:500':'color:var(--gray)'}">${reviseTotal>0?num(reviseTotal):'—'}</td>
       <td style="padding:2px 4px">${makeStatusSelect(r.seq||'', r.approval_status)}</td>
       <td style="padding:2px 4px"><input class="trk-date-input" value="${esc(formatDate(r.repair_date)||'')}" placeholder="" onblur="saveTrackingRepairDate(this,'${seq}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:center" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'" title="Click để nhập ngày sửa chữa"></td>
-      <td style="text-align:center">${esc(r.po_number||'—')}</td>
-      <td>${esc(formatDate(r.po_date)||'—')}</td>
       <td style="padding:2px 4px"><input class="trk-remark-input" value="${esc(r.remarks1||r.remarks2||'')}" placeholder="Ghi chú..." onblur="saveTrackingRemark(this,'${cont}','${estD}')" style="width:100%;border:none;border-bottom:1px solid transparent;background:transparent;color:var(--text);padding:2px 4px;border-radius:3px;outline:none;text-align:left" onfocus="this.style.borderBottomColor='var(--amber-accent)';this.style.background='#fff'"></td>
       <td style="white-space:nowrap;padding:2px 4px;text-align:left"><button onclick="editEstimate('${cont}','${estD}')" class="btn btn-sm" style="margin-right:2px">Sửa</button><button onclick="deleteEstimate('${cont}','${estD}')" class="btn btn-sm btn-red" style="margin-right:2px">Xoá</button>${canRevise ? `<button onclick="goRevise('${cont}','${estD}')" class="btn btn-sm">Revise</button>` : ''}</td>
     </tr>
@@ -7478,27 +7529,174 @@ function _findActiveTracking(contNo) {
   return fallback; // không có active → trả dòng cuối cùng tìm thấy
 }
 
-function previewRefNos() {
-  var conts   = parseContList();
-  var preview = document.getElementById('pic-ref-preview');
-  var tbody   = document.getElementById('pic-ref-rows');
-  if (!conts.length) { preview.style.display = 'none'; return; }
+var _picPage = 1;
+var _picPageSize = 25;
+var _picLastConts = [];
+var _picCountCache = {}; // contNo → count (giữ qua pagination)
 
-  tbody.innerHTML = conts.map(function(contNo, i) {
+// Pagination + state cho bảng kết quả Export
+var _picResultData = [];
+var _picResultPage = 1;
+var _picResultPageSize = 25;
+var _picResultMeta = null;
+
+function picResultGoPage(p) {
+  var total = (_picResultData||[]).length;
+  var totalPages = Math.max(1, Math.ceil(total / _picResultPageSize));
+  _picResultPage = Math.max(1, Math.min(parseInt(p)||1, totalPages));
+  _renderPicResult();
+}
+function picResultSetPageSize(sz) {
+  _picResultPageSize = parseInt(sz) || 25;
+  _picResultPage = 1;
+  _renderPicResult();
+}
+
+function _renderPicResult() {
+  var meta = _picResultMeta; if (!meta) return;
+  var data = _picResultData || [];
+  var total = data.length;
+  var totalPages = Math.max(1, Math.ceil(total / _picResultPageSize));
+  if (_picResultPage > totalPages) _picResultPage = totalPages;
+  var start = (_picResultPage - 1) * _picResultPageSize;
+  var end = Math.min(start + _picResultPageSize, total);
+  var pageData = data.slice(start, end);
+  var detailRows = pageData.map(function(r, idx) {
+    var i = start + idx;
+    var countDisplay = r.total_found && r.total_found !== r.count
+      ? `<span style="color:var(--red);font-weight:600">${r.count}/${r.total_found}</span>`
+      : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
+    return `<tr>
+      <td style="font-weight:600">${i+1}</td>
+      <td class="pic-mono-cell">${esc(r.cont)}</td>
+      <td class="pic-mono-cell" style="color:var(--gray-600)">${esc(r.ref||'—')}</td>
+      <td style="text-align:right">${countDisplay} ảnh</td>
+      <td class="pic-mono-cell" style="color:var(--gray-700);overflow:hidden;text-overflow:ellipsis" title="${esc(r.sample_name)}">${esc(r.sample_name)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('pic-result-body').innerHTML = `
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+      <div class="stat-card">
+        <div class="stat-label">Tổng ảnh đã copy</div>
+        <div class="stat-value" style="color:var(--blue)">${meta.totalCopied}</div>
+        ${meta.countMismatch ? `<div style="font-size:10px;color:var(--red);margin-top:2px">⚠ Folder thực tế: ${meta.actualCount} file</div>` : `<div style="font-size:10px;color:var(--green);margin-top:2px">✓ Khớp folder Drive</div>`}
+      </div>
+      <div class="stat-card"><div class="stat-label">Cont có ảnh</div><div class="stat-value" style="color:var(--green)">${total} / ${meta.totalConts}</div></div>
+      <div class="stat-card"><div class="stat-label">Folder Drive</div><div class="stat-value" style="font-size:13px"><a href="${meta.folderUrl}" target="_blank" style="color:var(--blue)">📂 Mở Drive</a></div></div>
+    </div>
+    <div class="alert alert-ok">
+      ✓ Export xong! Folder: <strong>${meta.folderName}</strong><br>
+      Drive Desktop sẽ tự sync xuống máy trong vài phút.
+    </div>
+    ${meta.notFoundHtml}
+    <div class="tbl-wrap pic-result-tbl-wrap" style="margin-top:10px">
+      <table style="table-layout:fixed">
+        <colgroup><col style="width:60px"><col style="width:140px"><col style="width:200px"><col style="width:100px"><col></colgroup>
+        <thead><tr><th>STT</th><th>Container</th><th>Ref No</th><th style="text-align:right">Số ảnh</th><th>Tên file mẫu</th></tr></thead>
+        <tbody>${detailRows}</tbody>
+      </table>
+    </div>
+    <div class="page-foot" style="display:${total>0?'flex':'none'}">
+      <div class="page-foot-info">Hiển thị <b>${total>0?(start+1):0}–${end}</b> / <b>${total}</b> container</div>
+      <div class="page-foot-nav">
+        <button class="pf-btn" onclick="picResultGoPage(1)" ${_picResultPage<=1?'disabled':''}>«</button>
+        <button class="pf-btn" onclick="picResultGoPage(${_picResultPage-1})" ${_picResultPage<=1?'disabled':''}>‹</button>
+        <span class="pf-info">Page <b>${_picResultPage}</b> / <b>${totalPages}</b></span>
+        <button class="pf-btn" onclick="picResultGoPage(${_picResultPage+1})" ${_picResultPage>=totalPages?'disabled':''}>›</button>
+        <button class="pf-btn" onclick="picResultGoPage(9999)" ${_picResultPage>=totalPages?'disabled':''}>»</button>
+      </div>
+      <div class="page-foot-size">
+        <span>Show:</span>
+        <select onchange="picResultSetPageSize(this.value)">
+          <option value="25"${_picResultPageSize===25?' selected':''}>25</option>
+          <option value="50"${_picResultPageSize===50?' selected':''}>50</option>
+          <option value="100"${_picResultPageSize===100?' selected':''}>100</option>
+          <option value="250"${_picResultPageSize===250?' selected':''}>250</option>
+          <option value="9999"${_picResultPageSize===9999?' selected':''}>All</option>
+        </select>
+        <span>per page</span>
+      </div>
+    </div>`;
+}
+
+function closePicResult() {
+  document.getElementById('pic-result').style.display = 'none';
+  document.getElementById('screen-pictures').classList.remove('pic-result-mode');
+}
+
+function picGoPage(p) {
+  var total = (_picLastConts||[]).length;
+  var totalPages = Math.max(1, Math.ceil(total / _picPageSize));
+  _picPage = Math.max(1, Math.min(parseInt(p)||1, totalPages));
+  _renderPicPreviewTable();
+}
+function picSetPageSize(sz) {
+  _picPageSize = parseInt(sz) || 50;
+  _picPage = 1;
+  _renderPicPreviewTable();
+}
+
+function _renderPicPreviewTable() {
+  var conts = _picLastConts || [];
+  var tbody = document.getElementById('pic-ref-rows');
+  var foot  = document.getElementById('pic-pagefoot');
+  var total = conts.length;
+  var totalPages = Math.max(1, Math.ceil(total / _picPageSize));
+  if (_picPage > totalPages) _picPage = totalPages;
+  var start = (_picPage - 1) * _picPageSize;
+  var end = Math.min(start + _picPageSize, total);
+  var pageData = conts.slice(start, end);
+  tbody.innerHTML = pageData.map(function(contNo, idx) {
+    var i = start + idx;
     var trk     = _findActiveTracking(contNo);
     var ref     = (trk && trk.ref_number) ? trk.ref_number : '—';
     var refPart = (trk && trk.ref_number) ? trk.ref_number + '_' : '';
     var sample  = _picMode + '_' + contNo + '_' + refPart + '001.jpg';
     var refClr  = ref === '—' ? 'color:var(--amber)' : 'color:var(--green)';
+    var cached  = _picCountCache[contNo];
+    var countCellStyle, countCellTxt;
+    if (cached === undefined) {
+      countCellStyle = 'text-align:right;color:var(--gray)';
+      countCellTxt   = '...';
+    } else {
+      countCellStyle = 'text-align:right;font-weight:600;color:' + (cached > 0 ? 'var(--blue)' : 'var(--red)');
+      countCellTxt   = cached + ' ảnh';
+    }
     return `<tr id="pic-prev-row-${esc(contNo)}">
-      <td>${i+1}</td>
-      <td style="font-family:monospace">${esc(contNo)}</td>
-      <td style="font-family:monospace;${refClr}">${esc(ref)}</td>
-      <td style="text-align:right;color:var(--gray)" id="pic-count-${esc(contNo)}">...</td>
-      <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(sample)}</td>
+      <td style="font-weight:600">${i+1}</td>
+      <td class="pic-mono-cell">${esc(contNo)}</td>
+      <td class="pic-mono-cell" style="${refClr}">${esc(ref)}</td>
+      <td style="${countCellStyle}" id="pic-count-${esc(contNo)}">${countCellTxt}</td>
+      <td class="pic-mono-cell" style="color:var(--gray-700);overflow:hidden;text-overflow:ellipsis" title="${esc(sample)}">${esc(sample)}</td>
     </tr>`;
   }).join('');
-  preview.style.display = 'block';
+  if (foot) {
+    foot.style.display = total > 0 ? 'flex' : 'none';
+    document.getElementById('pic-pf-info').innerHTML = total > 0
+      ? 'Hiển thị <b>' + (start+1) + '–' + end + '</b> / <b>' + total + '</b> container'
+      : '—';
+    document.getElementById('pic-pf-cur').textContent = _picPage;
+    document.getElementById('pic-pf-total').textContent = totalPages;
+    document.getElementById('pic-pf-first').disabled = _picPage <= 1;
+    document.getElementById('pic-pf-prev').disabled  = _picPage <= 1;
+    document.getElementById('pic-pf-next').disabled  = _picPage >= totalPages;
+    document.getElementById('pic-pf-last').disabled  = _picPage >= totalPages;
+    document.getElementById('pic-pf-size').value = String(_picPageSize);
+  }
+}
+
+function previewRefNos() {
+  var conts   = parseContList();
+  var preview = document.getElementById('pic-ref-preview');
+  if (!conts.length) { preview.style.display = 'none'; _picLastConts = []; _picCountCache = {}; return; }
+  // Reset cache khi danh sách cont đổi
+  if (conts.join('|') !== _picLastConts.join('|')) _picCountCache = {};
+  _picLastConts = conts;
+  _picPage = 1;
+  _renderPicPreviewTable();
+  preview.style.display = '';
+  var cntEl = document.getElementById('pic-preview-count');
+  if (cntEl) cntEl.textContent = conts.length + ' container';
 
   // Fetch photo counts from Drive
   var carrier = document.getElementById('pic-carrier').value;
@@ -7510,11 +7708,12 @@ function previewRefNos() {
       // Build danh sách cont count=0 cần heal
       var needHeal = [];
       (res.counts || []).forEach(function(item) {
+        _picCountCache[item.cont] = item.count;
         var el = document.getElementById('pic-count-' + item.cont);
         if (el) {
           el.textContent = item.count + ' ảnh';
           el.style.color = item.count > 0 ? 'var(--blue)' : 'var(--red)';
-          el.style.fontWeight = item.count > 0 ? '600' : 'normal';
+          el.style.fontWeight = '600';
           if (item.count === 0) needHeal.push({ cont: item.cont, el: el });
         }
       });
@@ -7545,11 +7744,14 @@ async function tryHealCont(carrier, loaiAnh, contNo, el) {
       loai_anh: loaiAnh,
       cont_no:  contNo
     });
-    if (res && res.success && res.count > 0 && el) {
-      el.textContent = res.count + ' ảnh ✨';
-      el.style.color = 'var(--blue)';
-      el.style.fontWeight = '600';
-      el.title = 'Tự sync ' + res.count + ' ảnh từ Drive (vừa cập nhật index)';
+    if (res && res.success && res.count > 0) {
+      _picCountCache[contNo] = res.count;
+      if (el) {
+        el.textContent = res.count + ' ảnh ✨';
+        el.style.color = 'var(--blue)';
+        el.style.fontWeight = '600';
+        el.title = 'Tự sync ' + res.count + ' ảnh từ Drive (vừa cập nhật index)';
+      }
     }
   } catch(e) {}
 }
@@ -7566,7 +7768,7 @@ function fillContFromBulk() {
   });
   if (!conts.length) { toast('Xuất Bulk đang trống — hãy tải Xuất Bulk trước!', 3000); return; }
   conts = [...new Set(conts)];
-  document.getElementById('pic-cont-list').value = conts.join('\n');
+  document.getElementById('pic-cont-list').value = conts.join(' ');
   document.getElementById('pic-bulk-hint').textContent = 'Đã lấy ' + conts.length + ' containers từ Xuất Bulk';
   var carrierSet = [...new Set(state.tracking.filter(r => conts.includes(r.container_no)).map(r => r.carrier).filter(Boolean))];
   if (carrierSet.length === 1) document.getElementById('pic-carrier').value = carrierSet[0];
@@ -7640,7 +7842,7 @@ async function doExportPictures() {
     var notFoundHtml = allNotFound.length
       ? `<div class="alert alert-warn" style="margin-top:10px">
           <strong>Không tìm thấy ảnh (${allNotFound.length} cont):</strong><br>
-          <span style="font-family:monospace;font-size:11px">${allNotFound.join(', ')}</span><br>
+          <span style="font-size:11px">${allNotFound.join(', ')}</span><br>
           <button onclick="doExportRetry()" class="btn btn-sm btn-blue" style="margin-top:8px">Xuất bổ sung ${allNotFound.length} cont này vào folder cũ</button>
          </div>` : '';
 
@@ -7651,45 +7853,17 @@ async function doExportPictures() {
       refMap, loaiAnh
     };
 
-    var detailRows = allResults.map(function(r, i) {
-      var countDisplay = r.total_found && r.total_found !== r.count
-        ? `<span style="color:var(--red);font-weight:600">${r.count}/${r.total_found}</span>`
-        : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
-      return `<tr>
-        <td>${i+1}</td>
-        <td style="font-family:monospace">${esc(r.cont)}</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.ref||'—')}</td>
-        <td style="text-align:right">${countDisplay} ảnh</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.sample_name)}</td>
-      </tr>`;
-    }).join('');
-
     var actualCount = window._lastActualCount || totalCopied;
     var countMismatch = actualCount !== totalCopied;
     window._lastActualCount = 0;
 
-    document.getElementById('pic-result-body').innerHTML = `
-      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
-        <div class="stat-card">
-          <div class="stat-label">Tổng ảnh đã copy</div>
-          <div class="stat-value" style="color:var(--blue)">${totalCopied}</div>
-          ${countMismatch ? `<div style="font-size:10px;color:var(--red);margin-top:2px">⚠ Folder thực tế: ${actualCount} file</div>` : `<div style="font-size:10px;color:var(--green);margin-top:2px">✓ Khớp folder Drive</div>`}
-        </div>
-        <div class="stat-card"><div class="stat-label">Cont có ảnh</div><div class="stat-value" style="color:var(--green)">${allResults.length} / ${contList.length}</div></div>
-        <div class="stat-card"><div class="stat-label">Folder Drive</div><div class="stat-value" style="font-size:13px"><a href="${folderUrl}" target="_blank" style="color:var(--blue)">📂 Mở Drive</a></div></div>
-      </div>
-      <div class="alert alert-ok">
-        ✓ Export xong! Folder: <strong>${folderName}</strong><br>
-        Drive Desktop sẽ tự sync xuống máy trong vài phút.
-      </div>
-      ${notFoundHtml}
-      <div class="tbl-wrap" style="margin-top:10px">
-        <table>
-          <thead><tr><th>STT</th><th>Container</th><th>Ref No</th><th style="text-align:right">Số ảnh</th><th>Tên file mẫu</th></tr></thead>
-          <tbody>${detailRows}</tbody>
-        </table>
-      </div>`;
-    document.getElementById('pic-result').style.display = 'block';
+    // Lưu state cho pagination
+    _picResultData = allResults;
+    _picResultPage = 1;
+    _picResultMeta = { totalCopied: totalCopied, actualCount: actualCount, countMismatch: countMismatch, folderName: folderName, folderUrl: folderUrl, totalConts: contList.length, notFoundHtml: notFoundHtml };
+    _renderPicResult();
+    document.getElementById('pic-result').style.display = '';
+    document.getElementById('screen-pictures').classList.add('pic-result-mode');
     toast('Export xong! ' + totalCopied + ' ảnh — ' + allResults.length + '/' + contList.length + ' cont', 4000);
 
   } catch(e) {
@@ -8583,7 +8757,7 @@ function _renderActLogTable(rows) {
       + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">'
       +   '<span style="background:' + color + '22;color:' + color + ';padding:2px 8px;border-radius:99px;font-weight:600">' + esc(r.action||'—') + '</span>'
       + '</td>'
-      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-family:monospace;text-align:center">' + esc(r.container_no||'—') + '</td>'
+      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">' + esc(r.container_no||'—') + '</td>'
       + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gray);text-align:center">' + esc(r.detail||'—') + '</td>'
       + '</tr>';
   }).join('');
@@ -8771,38 +8945,23 @@ async function doExportRetry() {
     // Cập nhật _lastExportCtx
     window._lastExportCtx.notFound = retryNotFound;
 
-    var stillNotFound = retryNotFound.length
-      ? `<div class="alert alert-warn" style="margin-top:8px">
-          <strong>Vẫn không tìm thấy (${retryNotFound.length} cont):</strong><br>
-          <span style="font-family:monospace;font-size:11px">${retryNotFound.join(', ')}</span><br>
-          <button onclick="doExportRetry()" class="btn btn-sm btn-blue" style="margin-top:8px">Thử lại</button>
-         </div>` : '<div class="alert alert-ok" style="margin-top:8px">✓ Đã xuất bổ sung xong tất cả!</div>';
-
-    var retryRows = retryResults.map(function(r, i) {
-      var countDisplay = r.total_found && r.total_found !== r.count
-        ? `<span style="color:var(--red);font-weight:600">${r.count}/${r.total_found}</span>`
-        : `<span style="color:var(--green);font-weight:600">${r.count}/${r.total_found||r.count}</span>`;
-      return `<tr>
-        <td>${i+1}</td>
-        <td style="font-family:monospace">${esc(r.cont)}</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.ref||'—')}</td>
-        <td style="text-align:right">${countDisplay} ảnh</td>
-        <td style="font-family:monospace;font-size:10px;color:var(--gray)">${esc(r.sample_name)}</td>
-      </tr>`;
-    }).join('');
-
-    // Append vào pic-result-body
-    var extra = document.createElement('div');
-    extra.innerHTML = `
-      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:12px;font-weight:600;color:var(--gray-900);margin-bottom:8px">Kết quả xuất bổ sung — ${retryCopied} ảnh</div>
-        ${stillNotFound}
-        ${retryRows ? `<div class="tbl-wrap" style="margin-top:8px"><table>
-          <thead><tr><th>STT</th><th>Container</th><th>Ref No</th><th style="text-align:right">Số ảnh</th><th>Tên file mẫu</th></tr></thead>
-          <tbody>${retryRows}</tbody></table></div>` : ''}
-      </div>`;
-    document.getElementById('pic-result-body').appendChild(extra);
-    document.getElementById('pic-result').scrollIntoView({ behavior: 'smooth' });
+    // Merge retryResults vào _picResultData + cập nhật meta để re-render với pagination
+    if (retryResults.length && _picResultData) {
+      var existingConts = {};
+      _picResultData.forEach(function(r){ existingConts[r.cont] = true; });
+      retryResults.forEach(function(r){ if (!existingConts[r.cont]) _picResultData.push(r); });
+    }
+    if (_picResultMeta) {
+      _picResultMeta.totalCopied += retryCopied;
+      _picResultMeta.notFoundHtml = retryNotFound.length
+        ? `<div class="alert alert-warn" style="margin-top:8px">
+            <strong>Vẫn không tìm thấy (${retryNotFound.length} cont):</strong><br>
+            <span style="font-size:11px">${retryNotFound.join(', ')}</span><br>
+            <button onclick="doExportRetry()" class="btn btn-sm btn-blue" style="margin-top:8px">Thử lại</button>
+           </div>`
+        : '<div class="alert alert-ok" style="margin-top:8px">✓ Đã xuất bổ sung xong tất cả!</div>';
+    }
+    _renderPicResult();
     toast('Xuất bổ sung xong! ' + retryCopied + ' ảnh thêm', 3000);
 
   } catch(e) {
