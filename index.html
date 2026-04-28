@@ -1932,14 +1932,14 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         <div class="kstat-row" id="pk-stats"></div>
         <div class="card">
           <div class="filter-bar">
-            <select class="fi" id="pk-loai" onchange="loadPhieuKhoList()" style="width:140px">
+            <select class="fi" id="pk-loai" onchange="_pkApplyFilters()" style="width:140px">
               <option value="">Tất cả loại</option>
               <option value="NHẬP">NHẬP</option>
               <option value="XUẤT">XUẤT</option>
             </select>
-            <input class="fi" type="date" id="pk-from" onchange="loadPhieuKhoList()" style="width:140px" title="Từ ngày">
+            <input class="fi" type="date" id="pk-from" onchange="_pkApplyFilters()" style="width:140px" title="Từ ngày">
             <span style="font-size:11px;color:var(--gray);align-self:center">→</span>
-            <input class="fi" type="date" id="pk-to" onchange="loadPhieuKhoList()" style="width:140px" title="Đến ngày">
+            <input class="fi" type="date" id="pk-to" onchange="_pkApplyFilters()" style="width:140px" title="Đến ngày">
             <input class="fi" id="pk-search" placeholder="Tìm mã phiếu, đối tượng..." oninput="_pkSearchDebounce()" style="flex:1;min-width:160px">
             <span id="pk-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
             <button class="btn btn-sm" onclick="loadPhieuKhoList()">Refresh</button>
@@ -3071,7 +3071,7 @@ async function prefetchKhoData() {
     var calls = [
       apiGet({ action: 'getDmVatTu' }).then(function(r){ if (r&&r.success) _dmVatTu = r.data || []; }),
       apiGet({ action: 'getDmCongCu' }).then(function(r){ if (r&&r.success) _dmCongCu = r.data || []; }),
-      apiGet({ action: 'getPhieuKhoList' }).then(function(r){ if (r&&r.success) _pkList = r.data || []; }),
+      apiGet({ action: 'getPhieuKhoList' }).then(function(r){ if (r&&r.success) { _pkAllList = r.data || []; _pkList = _pkAllList.slice(); } }),
       apiGet({ action: 'getCcdcGdList' }).then(function(r){ if (r&&r.success) _ccdcList = r.data || []; }),
       apiGet({ action: 'getBaoTriList' }).then(function(r){ if (r&&r.success) _btList = r.data || []; }),
       apiGet({ action: 'getDotKiemKeList' }).then(function(r){ if (r&&r.success) _kkList = r.data || []; })
@@ -3158,7 +3158,7 @@ function nav(screen, el) {
   // Force reload chỉ qua nút Refresh hoặc filter onchange.
   if (screen === 'dm-vattu')    { if (_dmVatTu.length) filterDmVatTu(); else loadDmVatTu(); }
   if (screen === 'dm-congcu')   { if (_dmCongCu.length) filterDmCongCu(); else loadDmCongCu(); }
-  if (screen === 'pk')          { if (_pkList.length) { renderPhieuKhoStats(); renderPhieuKhoList(); } else loadPhieuKhoList(); }
+  if (screen === 'pk')          { if (_pkAllList.length) { _pkApplyFilters(); } else loadPhieuKhoList(); }
   if (screen === 'ccdc')        { if (_ccdcList.length) { renderCcdcStats(); renderCcdcList(); } else loadCcdcList(); }
   if (screen === 'baotri')      { if (_btList.length) { renderBtStats(); renderBtList(); } else loadBaoTriList(); }
   if (screen === 'kiemke')      { if (_kkList.length) { renderKkStats(); renderKkList(); } else loadKiemKeList(); }
@@ -9445,34 +9445,50 @@ function _kstat(opts) {
     +  '</div>';
 }
 
-var _pkList = [];
+var _pkAllList = []; // full list từ backend (cache 5 phút server-side)
+var _pkList = [];    // filtered view — render chỉ đọc cái này
 var _pkfState = null;       // { ma_phieu, loai_gd, lines: [...] } khi đang ở form
 var _pkfDirty = false;
 var _pkSearchTimer = null;
 var _pkfAvgPrices = {};     // { ma_vt: avg_price } — WAC từ phiếu Nhập, cho XUẤT auto-fill
 
+// Search → filter local, không gọi API. Debounce ngắn vì chỉ filter in-memory.
 function _pkSearchDebounce() {
   clearTimeout(_pkSearchTimer);
-  _pkSearchTimer = setTimeout(loadPhieuKhoList, 350);
+  _pkSearchTimer = setTimeout(_pkApplyFilters, 100);
+}
+
+// Filter _pkAllList (full) → _pkList (filtered), rồi render.
+// Tất cả filter (loại/from/to/search) đều client-side để khỏi round-trip GAS.
+function _pkApplyFilters() {
+  var loai   = (document.getElementById('pk-loai').value||'').toUpperCase();
+  var from   = document.getElementById('pk-from').value;
+  var to     = document.getElementById('pk-to').value;
+  var search = (document.getElementById('pk-search').value||'').trim().toLowerCase();
+  _pkList = _pkAllList.filter(function(r) {
+    if (loai && r.loai !== loai) return false;
+    if (from && r.ngay_iso && r.ngay_iso < from) return false;
+    if (to   && r.ngay_iso && r.ngay_iso > to)   return false;
+    if (search) {
+      var hay = ((r.ma_phieu||'') + ' ' + (r.doi_tuong||'') + ' ' + (r.bp_su_dung||'') + ' ' + (r.nguoi_thuc_hien||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) return false;
+    }
+    return true;
+  });
+  renderPhieuKhoStats();
+  renderPhieuKhoList();
 }
 
 // ───── LIST ─────
+// Fetch full list 1 lần (backend cache 5 phút). Filter làm client-side qua _pkApplyFilters.
 async function loadPhieuKhoList() {
   var tbody = document.getElementById('pk-list-rows');
   tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
-    var res = await apiGet({
-      action: 'getPhieuKhoList',
-      loai:   document.getElementById('pk-loai').value,
-      from:   document.getElementById('pk-from').value,
-      to:     document.getElementById('pk-to').value,
-      search: document.getElementById('pk-search').value,
-      _t:     Date.now()
-    });
+    var res = await apiGet({ action: 'getPhieuKhoList', _t: Date.now() });
     if (res && res.success) {
-      _pkList = res.data || [];
-      renderPhieuKhoStats();
-      renderPhieuKhoList();
+      _pkAllList = res.data || [];
+      _pkApplyFilters();
     } else {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
     }
@@ -9747,13 +9763,14 @@ function addPkfLine(data) {
   calcPkfTotal();
 }
 
-// Compute next mã phiếu client-side từ _pkList (max+1 theo prefix năm + loại).
-// Backend regen lại lúc save → race-safe. Không cần API call → instant.
+// Compute next mã phiếu client-side từ _pkAllList (max+1 theo prefix năm + loại).
+// Backend regen lại lúc save → race-safe. Phải scan FULL list (không phải _pkList đã filter).
 function _computeNextMaPhieu(loai) {
   var year = new Date().getFullYear();
   var prefix = (loai === 'NHẬP' ? 'PN_' : 'PX_') + year + '_';
   var maxSeq = 0;
-  (_pkList||[]).forEach(function(r){
+  var src = _pkAllList.length ? _pkAllList : _pkList; // fallback nếu chưa fetch full
+  (src||[]).forEach(function(r){
     var ma = String(r.ma_phieu||'');
     if (ma.indexOf(prefix) === 0) {
       var seq = parseInt(ma.substring(prefix.length)) || 0;
