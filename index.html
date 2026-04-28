@@ -6578,12 +6578,6 @@ function previewRefNos() {
           if (item.count === 0) needHeal.push({ cont: item.cont, el: el });
         }
       });
-      // Smart Heal: CHỈ heal max 3 cont để tránh đốt UrlFetch quota
-      // Nếu nhiều cont count=0 → hint user chạy syncPhotoIndexFull thay vì auto-spam
-      if (needHeal.length > 3) {
-        toast('⚠ ' + needHeal.length + ' cont chưa có index. Chạy syncPhotoIndexFull (GAS Editor) trước khi Export để tiết kiệm quota Drive.', 6000);
-        needHeal = needHeal.slice(0, 3); // chỉ heal 3 cont đầu tiên
-      }
       // Sequential — không song song để tránh burst quota
       _healSequential(needHeal, carrier, loaiAnh);
     })
@@ -6767,16 +6761,9 @@ async function doExportPictures() {
   }
 }
 
-// Detect Google API quota errors → trả message tiếng Việt rõ ràng
+// Trả raw error — không dịch/cảnh báo quota nữa
 function _friendlyQuotaError(rawMsg) {
-  var s = String(rawMsg||'');
-  if (s.indexOf('vượt quá hạn mức') >= 0 || s.indexOf('quota') >= 0 || s.indexOf('rate limit') >= 0) {
-    return '⛔ Hết quota Google Drive/UrlFetch hôm nay. Quota reset lúc 0h đêm. Đừng bấm thêm — đợi qua đêm rồi chạy syncPhotoIndexFull trước khi Export.';
-  }
-  if (s.indexOf('Dịch vụ bị lỗi') >= 0 || s.indexOf('Service is unavailable') >= 0) {
-    return '⚠ Drive service đang gặp sự cố tạm thời. Đợi 5 phút thử lại, hoặc chạy syncPhotoIndexFull trước khi Export.';
-  }
-  return 'Lỗi: ' + s;
+  return 'Lỗi: ' + String(rawMsg||'');
 }
 
 
@@ -8469,12 +8456,6 @@ async function refreshQuotaGauge() {
     }
     box.style.display = 'flex';
     box.title = 'Quota Drive: ' + used + '/' + limit + ' (còn ' + remain + ', click để refresh)';
-    // Cảnh báo 1 lần khi vượt 80%
-    if (pct >= 0.8 && !window._quotaWarned) {
-      window._quotaWarned = true;
-      try { toast('⚠ Quota Drive còn ' + remain + ' req. Hạn chế xuất ảnh đến 0h đêm.', 8000); } catch(_) {}
-    }
-    if (pct < 0.5) window._quotaWarned = false;
   } catch(e) {}
 }
 function startQuotaGaugeAutoRefresh() {
