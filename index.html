@@ -1110,7 +1110,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Thông tin container</div>
-                <div class="card-sec-sub">Auto-fill từ Tồn Rỗng khi nhập Equipment No</div>
               </div>
             </div>
           </div>
@@ -1171,7 +1170,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Chi tiết hạng mục sửa chữa</div>
-                <div class="card-sec-sub">Tariff lookup auto theo Component + Damage + Repair Type</div>
               </div>
             </div>
             <div class="card-sec-actions">
@@ -1245,7 +1243,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Thông tin báo giá Approved</div>
-                <div class="card-sec-sub">Tra cứu cont đã Partially/Fully Approved · auto-fill thông tin từ Estimate gốc</div>
               </div>
             </div>
           </div>
@@ -1284,7 +1281,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Chi tiết hạng mục — chỉnh sửa rồi lưu</div>
-                <div class="card-sec-sub">Lookup Tariff lại khi sửa Component / Damage / Repair Type</div>
               </div>
             </div>
             <div class="card-sec-actions">
@@ -1422,7 +1418,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo Equipment No · trạng thái duyệt · carrier</div>
               </div>
             </div>
           </div>
@@ -1527,7 +1522,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo Equipment No · Ref No · PO Number · Carrier · khoảng PO Date</div>
               </div>
             </div>
           </div>
@@ -1623,7 +1617,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Nhập Equipment No (mỗi cont 1 dòng hoặc cách bằng phẩy)</div>
               </div>
             </div>
           </div>
@@ -1707,7 +1700,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo size · grade · status</div>
               </div>
             </div>
           </div>
@@ -1808,7 +1800,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tác vụ</div>
-                <div class="card-sec-sub">Chọn kỳ · carrier · xem xu hướng tháng/tuần · export Excel</div>
               </div>
             </div>
           </div>
@@ -1902,7 +1893,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 </div>
                 <div class="card-sec-text">
                   <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                  <div class="card-sec-sub">Lọc theo khoảng ngày · mã/tên vật tư</div>
                 </div>
               </div>
             </div>
@@ -1970,7 +1960,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 </div>
                 <div class="card-sec-text">
                   <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                  <div class="card-sec-sub">Lọc theo mã/tên vật tư</div>
                 </div>
               </div>
             </div>
@@ -2071,7 +2060,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo carrier · component · damage type · rep type</div>
               </div>
             </div>
           </div>
@@ -2435,7 +2423,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo mã VT · tên · qui cách · cảnh báo dưới min</div>
               </div>
             </div>
           </div>
@@ -2449,7 +2436,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <label class="chip-toggle warn"><input type="checkbox" id="vt-low-stock" onchange="filterDmVatTu()"> Cần nhập thêm</label>
             <span id="vt-count" style="font-size:var(--text-xs);color:var(--gray-600);display:none"></span>
             <div style="margin-left:auto;display:flex;gap:var(--sp-2)">
-              <button class="btn btn-sm" onclick="loadDmVatTu()">Refresh</button>
+              <button class="btn btn-sm" onclick="loadDmVatTu(true)" title="Force reload, bỏ cache server">Refresh</button>
               <button class="btn btn-sm" onclick="exportDmVatTu()" title="Export Excel theo filter hiện tại">Export Excel</button>
               <button class="btn btn-sm" onclick="openBulkBarcodeModal('vt')" title="In tem hàng loạt">In tem hàng loạt</button>
               <button class="btn btn-sm" onclick="showVatTuModal()">+ Thêm vật tư</button>
@@ -2512,7 +2499,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo mã CC · tên · model/serial · trạng thái</div>
               </div>
             </div>
           </div>
@@ -2538,7 +2524,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="fb-bottom">
             <span id="ccm-count" style="font-size:var(--text-xs);color:var(--gray-600);display:none"></span>
             <div style="margin-left:auto;display:flex;gap:var(--sp-2)">
-              <button class="btn btn-sm" onclick="loadDmCongCu()">Refresh</button>
+              <button class="btn btn-sm" onclick="loadDmCongCu(true)" title="Force reload, bỏ cache server">Refresh</button>
               <button class="btn btn-sm" onclick="exportDmCongCu()" title="Export Excel theo filter hiện tại">Export Excel</button>
               <button class="btn btn-sm" onclick="openBulkBarcodeModal('cc')" title="In tem hàng loạt">In tem hàng loạt</button>
               <button class="btn btn-sm" onclick="showCongCuModal()">+ Thêm công cụ</button>
@@ -2549,15 +2535,14 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="tbl-wrap">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:150px"><col><col style="width:170px"><col style="width:85px">
+                <col style="width:150px"><col><col style="width:85px">
                 <col style="width:100px"><col style="width:140px"><col style="width:120px"><col style="width:110px">
                 <col style="width:80px"><col style="width:160px">
               </colgroup>
               <thead>
                 <tr>
                   <th style="text-align:left">Mã CC</th>
-                  <th style="text-align:left">Tên công cụ</th>
-                  <th style="text-align:left">Model/Serial</th>
+                  <th style="text-align:left">Tên công cụ / Model</th>
                   <th>Ngày mua</th>
                   <th style="text-align:right">Nguyên giá</th>
                   <th title="Khấu hao theo phương pháp đường thẳng">Khấu hao</th>
@@ -2567,7 +2552,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th>Thao tác</th>
                 </tr>
               </thead>
-              <tbody id="ccm-rows"><tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
+              <tbody id="ccm-rows"><tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
             </table>
           </div>
           <div class="page-foot" id="cc-pagefoot" style="display:none">
@@ -2605,7 +2590,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo loại phiếu · khoảng ngày · mã phiếu · NCC / bộ phận sử dụng</div>
               </div>
             </div>
           </div>
@@ -2703,7 +2687,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title" id="pkform-title">Phiếu kho</div>
-                <div class="card-sec-sub">Quản lý phiếu N/X vật tư · tự tính WAC khi xuất</div>
               </div>
             </div>
             <div class="card-sec-actions">
@@ -2762,7 +2745,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Chi tiết vật tư</div>
-                <div class="card-sec-sub">Quét tem hoặc gõ mã VT để lookup tự động</div>
               </div>
             </div>
             <div class="card-sec-actions">
@@ -3959,29 +3941,29 @@ function nav(screen, el) {
   };
 
   const configs = {
-    estimate: { title: 'Nhập Báo Giá mới', subtitle: 'Tạo báo giá mới · auto-fill giá từ Tariff theo carrier + component + damage type', icon: ICONS.estimate, iconColor: '#4F46E5', actions: [] },
-    revise: { title: 'Chỉnh sửa Báo Giá', subtitle: 'Cập nhật báo giá đã có · so sánh diff với bản gốc inline', icon: ICONS.revise, iconColor: '#7C3AED', actions: [] },
-    ovm:      { title: 'Cập nhật OVM', subtitle: 'Import file Excel OVM từ MSC · auto-detect status thay đổi', icon: ICONS.ovm, iconColor: '#0EA5E9', actions: [] },
-    tariff:   { title: 'Quản lý Bảng Giá', subtitle: 'Bảng giá Tariff · import/sửa giá theo carrier + size type', icon: ICONS.tariff, iconColor: '#A855F7', actions: [] },
-    tracking: { title: 'Danh sách Báo Giá', subtitle: 'Theo dõi trạng thái duyệt MNR · chỉnh sửa Repair Date / Remark inline', icon: ICONS.tracking, iconColor: '#06B6D4', actions: [] },
-    summary:  { title: 'Tổng hợp', subtitle: 'Báo giá đã có PO · group theo carrier, tính theo VAT 10%/8%/no-VAT', icon: ICONS.summary, iconColor: '#0891B2', actions: [] },
-    bulk:     { title: 'Xuất Bulk & Export', subtitle: 'Xuất file Excel format MSC · estimate hoặc approved detail', icon: ICONS.bulk, iconColor: '#14B8A6', actions: [] },
-    stock:    { title: 'Tồn Rỗng', subtitle: 'Container rỗng đang ở bãi · upload TOS file để cập nhật', icon: ICONS.stock, iconColor: '#22C55E', actions: [] },
-    report:   { title: 'Tổng quan', subtitle: 'Dashboard tổng quan · KPI doanh thu, xu hướng tháng/tuần, cảnh báo', icon: ICONS.report, iconColor: '#F59E0B', actions: [] },
-    pictures: { title: 'Xuất hình ảnh', subtitle: 'Copy ảnh container vào Drive theo Ref Number · before/after sửa chữa', icon: ICONS.pictures, iconColor: '#10B981', actions: [] },
-    inventory: { title: 'MSC Inventory', subtitle: 'Bảng tồn rỗng MSC chuẩn · export Excel format theo size + grade', icon: ICONS.inventory, iconColor: '#3B82F6', actions: [] },
-    photos:    { title: 'Xem Hình Ảnh', subtitle: 'Tra cứu ảnh container đã upload · before/after sửa chữa', icon: ICONS.photos, iconColor: '#F43F5E', actions: [] },
-    users:     { title: 'Quản lý User', subtitle: 'Tài khoản · phân quyền màn hình cho từng user (role + permissions)', icon: ICONS.users, iconColor: '#EC4899', actions: [] },
-    actlog:    { title: 'Nhật ký hoạt động', subtitle: 'Audit log thao tác CRUD · tìm theo user / loại thao tác', icon: ICONS.actlog, iconColor: '#64748B', actions: [] },
-    'dm-vattu':    { title: 'Danh mục Vật tư', subtitle: 'DM vật tư MNR · tồn kho hiện tại + cảnh báo dưới min', icon: ICONS.dmvt, iconColor: '#84CC16', actions: [] },
-    'dm-congcu':   { title: 'Danh mục Công cụ', subtitle: 'DM công cụ dụng cụ · trạng thái + người giữ + lịch sử BD', icon: ICONS.dmcc, iconColor: '#EAB308', actions: [] },
-    'pk':          { title: 'Phiếu Nhập Xuất kho', subtitle: 'Quản lý phiếu N/X vật tư · tự tính WAC khi xuất', icon: ICONS.pk, iconColor: '#F59E0B', actions: [] },
-    'pkform':      { title: 'Phiếu kho', subtitle: 'Tạo / chỉnh sửa phiếu nhập xuất · scan barcode VT', icon: ICONS.pk, iconColor: '#F59E0B', actions: [] },
-    'ccdc':        { title: 'Lịch sử giao dịch CCDC', subtitle: 'Cấp phát · thu hồi · báo hỏng · BD định kỳ công cụ', icon: ICONS.ccdc, iconColor: '#F97316', actions: [] },
-    'baotri':      { title: 'Bảo trì sửa chữa', subtitle: 'Phiếu sửa chữa & bảo dưỡng định kỳ công cụ · chi phí + đơn vị sửa', icon: ICONS.baotri, iconColor: '#EF4444', actions: [] },
-    'kiemke':      { title: 'Kiểm kê tồn', subtitle: 'Kiểm kê tồn vật tư theo đợt · so sánh sổ sách vs thực tế', icon: ICONS.kiemke, iconColor: '#16A34A', actions: [] },
-    'kkdetail':    { title: 'Chi tiết đợt kiểm kê', subtitle: 'Nhập tồn thực tế · auto tính chênh lệch + đóng đợt', icon: ICONS.kiemke, iconColor: '#16A34A', actions: [] },
-    'khoreport':   { title: 'Báo cáo Kho MNR', subtitle: 'Báo cáo nhập-xuất-tồn vật tư · sổ kho theo từng VT', icon: ICONS.khoreport, iconColor: '#6366F1', actions: [] }
+    estimate: { title: 'Nhập Báo Giá mới', icon: ICONS.estimate, iconColor: '#4F46E5', actions: [] },
+    revise: { title: 'Chỉnh sửa Báo Giá', icon: ICONS.revise, iconColor: '#7C3AED', actions: [] },
+    ovm:      { title: 'Cập nhật OVM', icon: ICONS.ovm, iconColor: '#0EA5E9', actions: [] },
+    tariff:   { title: 'Quản lý Bảng Giá', icon: ICONS.tariff, iconColor: '#A855F7', actions: [] },
+    tracking: { title: 'Danh sách Báo Giá', icon: ICONS.tracking, iconColor: '#06B6D4', actions: [] },
+    summary:  { title: 'Tổng hợp', icon: ICONS.summary, iconColor: '#0891B2', actions: [] },
+    bulk:     { title: 'Xuất Bulk & Export', icon: ICONS.bulk, iconColor: '#14B8A6', actions: [] },
+    stock:    { title: 'Tồn Rỗng', icon: ICONS.stock, iconColor: '#22C55E', actions: [] },
+    report:   { title: 'Tổng quan', icon: ICONS.report, iconColor: '#F59E0B', actions: [] },
+    pictures: { title: 'Xuất hình ảnh', icon: ICONS.pictures, iconColor: '#10B981', actions: [] },
+    inventory: { title: 'MSC Inventory', icon: ICONS.inventory, iconColor: '#3B82F6', actions: [] },
+    photos:    { title: 'Xem Hình Ảnh', icon: ICONS.photos, iconColor: '#F43F5E', actions: [] },
+    users:     { title: 'Quản lý User', icon: ICONS.users, iconColor: '#EC4899', actions: [] },
+    actlog:    { title: 'Nhật ký hoạt động', icon: ICONS.actlog, iconColor: '#64748B', actions: [] },
+    'dm-vattu':    { title: 'Danh mục Vật tư', icon: ICONS.dmvt, iconColor: '#84CC16', actions: [] },
+    'dm-congcu':   { title: 'Danh mục Công cụ', icon: ICONS.dmcc, iconColor: '#EAB308', actions: [] },
+    'pk':          { title: 'Phiếu Nhập Xuất kho', icon: ICONS.pk, iconColor: '#F59E0B', actions: [] },
+    'pkform':      { title: 'Phiếu kho', icon: ICONS.pk, iconColor: '#F59E0B', actions: [] },
+    'ccdc':        { title: 'Lịch sử giao dịch CCDC', icon: ICONS.ccdc, iconColor: '#F97316', actions: [] },
+    'baotri':      { title: 'Bảo trì sửa chữa', icon: ICONS.baotri, iconColor: '#EF4444', actions: [] },
+    'kiemke':      { title: 'Kiểm kê tồn', icon: ICONS.kiemke, iconColor: '#16A34A', actions: [] },
+    'kkdetail':    { title: 'Chi tiết đợt kiểm kê', icon: ICONS.kiemke, iconColor: '#16A34A', actions: [] },
+    'khoreport':   { title: 'Báo cáo Kho MNR', icon: ICONS.khoreport, iconColor: '#6366F1', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
@@ -8074,7 +8056,7 @@ function goRevise(containerNo, estDate) {
   if (ni) ni.classList.add('active');
   document.getElementById('screen-revise').classList.add('active');
   var reviseIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
-  setTopbar('Chỉnh sửa Báo Giá', [], 'Cập nhật báo giá đã có · so sánh diff với bản gốc inline', reviseIcon, '#7C3AED');
+  setTopbar('Chỉnh sửa Báo Giá', [], '', reviseIcon, '#7C3AED');
 
   // Điền cont số và load data
   var revEq = document.getElementById('rev-eq');
@@ -8101,7 +8083,7 @@ async function editEstimate(containerNo, estDate) {
     var ni = document.querySelector('.nav-item[onclick*="estimate"]');
     if (ni) ni.classList.add('active');
     document.getElementById('screen-estimate').classList.add('active');
-    setTopbar('Ch\u1ec9nh s\u1eeda \u2014 ' + containerNo, [], 'Ch\u1ec9nh s\u1eeda b\u00e1o gi\u00e1 \u0111\u00e3 c\u00f3 \u00b7 b\u1ea5m \u201cL\u01b0u ch\u1ec9nh s\u1eeda\u201d \u0111\u1ec3 c\u1eadp nh\u1eadt', ICONS.estimate, '#4F46E5');
+    setTopbar('Ch\u1ec9nh s\u1eeda \u2014 ' + containerNo, [], '', ICONS.estimate, '#4F46E5');
     setEstimateMode('edit', containerNo, estDate);
     document.getElementById('eq-no').value       = containerNo;
     document.getElementById('size-type').value   = first.size_type || '';
@@ -8153,7 +8135,7 @@ async function editEstimate(containerNo, estDate) {
 
 function cancelEditEstimate() {
   resetEstimate();
-  setTopbar('Nhập Báo Giá mới', [], 'Tạo báo giá mới · auto-fill giá từ Tariff theo carrier + component + damage type', ICONS.estimate, '#4F46E5');
+  setTopbar('Nhập Báo Giá mới', [], '', ICONS.estimate, '#4F46E5');
   setEstimateMode('new');
 }
 
@@ -10552,6 +10534,29 @@ function _khoRenderImgPreview(elId, url) {
   }
 }
 
+// Render preview cho CC detail — handle cả http URL lẫn AppSheet path
+// AppSheet path → resolve qua API, cache trong _resolvedImageCache
+function _khoRenderCcdImage(rawPath) {
+  if (!rawPath) { _khoRenderImgPreview('ccd-img-preview', ''); return; }
+  if (rawPath.indexOf('http') === 0) { _khoRenderImgPreview('ccd-img-preview', rawPath); return; }
+  // AppSheet path: dùng cache nếu có, else show loading + fetch
+  if (_resolvedImageCache[rawPath]) { _khoRenderImgPreview('ccd-img-preview', _resolvedImageCache[rawPath]); return; }
+  var el = document.getElementById('ccd-img-preview');
+  if (el) el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100px;height:100px;background:var(--gray-100);border-radius:6px;color:var(--gray-400);font-size:11px">⏳ Đang tải...</div>';
+  apiGet({ action: 'resolveAppSheetImage', path: rawPath })
+    .then(function(res){
+      if (res && res.success && res.url) {
+        _resolvedImageCache[rawPath] = res.url;
+        _khoRenderImgPreview('ccd-img-preview', res.url);
+      } else {
+        if (el) el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100px;height:100px;background:#FEE2E2;color:#991B1B;font-size:10px;text-align:center;padding:4px;border-radius:6px">❌ Không tải được</div>';
+      }
+    })
+    .catch(function(){
+      if (el) el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100px;height:100px;background:#FEE2E2;color:#991B1B;font-size:10px;text-align:center;padding:4px;border-radius:6px">❌ Lỗi tải ảnh</div>';
+    });
+}
+
 // ═════════════════════ EXPORT XLSX (KHO) ═════════════════════
 // Lazy load XLSX library (chỉ load khi user bấm Export — tiết kiệm bandwidth)
 function _khoLoadXLSX(cb) {
@@ -10685,6 +10690,7 @@ function exportKiemKe() {
 async function loadDmVatTu(force) {
   document.getElementById('vt-rows').innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
+    if (force === true) { try { await apiPost({ action: 'clearCache' }); } catch(_){} }
     var res = await apiGet({ action: 'getDmVatTu', _t: Date.now() });
     if (res && res.success) { _dmVatTu = res.data || []; filterDmVatTu(); }
     else document.getElementById('vt-rows').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'Unknown')+'</td></tr>';
@@ -10831,12 +10837,16 @@ async function deleteVatTu(maVT) {
 
 // ═════════════════════ DM CÔNG CỤ ═════════════════════
 async function loadDmCongCu(force) {
-  document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
+    // force=true (bấm Refresh) → clear server cache trước, đảm bảo lấy data mới nhất từ Sheet
+    if (force === true) {
+      try { await apiPost({ action: 'clearCache' }); } catch(_){}
+    }
     var res = await apiGet({ action: 'getDmCongCu', _t: Date.now() });
     if (res && res.success) { _dmCongCu = res.data || []; filterDmCongCu(); }
-    else document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
-  } catch(e) { document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>'; }
+    else document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
+  } catch(e) { document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>'; }
 }
 
 function filterDmCongCu() {
@@ -10873,7 +10883,7 @@ function renderDmCongCu(data) {
   var tbody = document.getElementById('ccm-rows');
   var foot = document.getElementById('cc-pagefoot');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px">Không có công cụ nào</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px">Không có công cụ nào</td></tr>';
     if (foot) foot.style.display = 'none';
     return;
   }
@@ -10926,10 +10936,11 @@ function renderDmCongCu(data) {
       ? '<div style="margin-top:3px"><span class="badge" style="background:#FEE2E2;color:#991B1B;font-weight:700;font-size:10px;padding:2px 6px" title="'+esc(liq.reasons.join(' · '))+'">⚠ Nên thanh lý</span></div>'
       : '';
 
+    var tenCell = '<div style="overflow:hidden;text-overflow:ellipsis" title="'+esc(r.ten_cong_cu)+'">'+esc(r.ten_cong_cu)+'</div>'
+      + (r.model_serial ? '<div style="color:var(--gray-500);font-size:11px;overflow:hidden;text-overflow:ellipsis;margin-top:1px" title="'+esc(r.model_serial)+'">'+esc(r.model_serial)+'</div>' : '');
     return '<tr class="cc-row" style="'+bg+';cursor:pointer" onclick="openCongCuDetail(\''+esc(r.ma_cong_cu)+'\')" title="Click để xem chi tiết & lịch sử">'
       + '<td style="text-align:left;font-weight:600;color:var(--blue)">'+esc(r.ma_cong_cu)+'</td>'
-      + '<td style="text-align:left;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.ten_cong_cu)+'">'+esc(r.ten_cong_cu)+'</td>'
-      + '<td style="text-align:left;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.model_serial)+'">'+(r.model_serial?esc(r.model_serial):dash)+'</td>'
+      + '<td style="text-align:left">'+tenCell+'</td>'
       + '<td>'+(r.ngay_mua?esc(r.ngay_mua):dash)+'</td>'
       + '<td style="text-align:right">'+(r.nguyen_gia>0?r.nguyen_gia.toLocaleString('vi-VN'):dash)+'</td>'
       + '<td>'+khCell+'</td>'
@@ -11099,7 +11110,7 @@ async function openCongCuDetail(maCC) {
   document.getElementById('ccd-thangbh').value     = cc.so_thang_bh || 0;
   document.getElementById('ccd-thongtinbh').value  = cc.thong_tin_bh || '';
   document.getElementById('ccd-hinhanh').value     = cc.hinh_anh || '';
-  _khoRenderImgPreview('ccd-img-preview', cc.hinh_anh && cc.hinh_anh.indexOf('http')===0 ? cc.hinh_anh : '');
+  _khoRenderCcdImage(cc.hinh_anh || '');
 
   // Khấu hao panel — render + bind live update
   renderCcdDepreciationPanel();
