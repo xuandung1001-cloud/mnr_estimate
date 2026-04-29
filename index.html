@@ -804,6 +804,51 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
   #screen-pkform .pkf-grid{gap:10px;margin-bottom:10px}
   #pkform-title{font-size:14px}
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+ * DATE RANGE PICKER — popover calendar dùng chung cho mọi filter from-to.
+ * Trigger là 1 button-like "input" hiển thị "DD/MM/YYYY → DD/MM/YYYY".
+ * Popover float dưới trigger, click outside để cancel, Apply để commit.
+ * ═══════════════════════════════════════════════════════════════════ */
+.dr-trigger{display:inline-flex;align-items:center;gap:var(--sp-2);height:34px;padding:0 var(--sp-3);background:var(--white);border:1px solid var(--gray-300);border-radius:var(--r-md);color:var(--gray-900);font-size:var(--text-sm);font-family:inherit;cursor:pointer;user-select:none;white-space:nowrap;line-height:1;transition:all .15s ease;outline:none}
+.dr-trigger:hover{border-color:var(--gray-400);background:var(--gray-50)}
+.dr-trigger.is-open{border-color:var(--amber);box-shadow:var(--focus-ring)}
+.dr-trigger svg{color:var(--gray-500);flex-shrink:0}
+.dr-trigger .dr-label{color:var(--gray-500);overflow:hidden;text-overflow:ellipsis}
+.dr-trigger.has-value .dr-label{color:var(--gray-900);font-weight:500}
+.dr-trigger .dr-x{margin-left:var(--sp-1);width:16px;height:16px;display:none;align-items:center;justify-content:center;border-radius:50%;color:var(--gray-400);font-size:14px;line-height:1}
+.dr-trigger.has-value .dr-x{display:inline-flex}
+.dr-trigger .dr-x:hover{background:var(--gray-200);color:var(--error-text)}
+
+.dr-popover{position:absolute;z-index:999;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);padding:var(--sp-4);width:300px;display:none;font-family:inherit}
+.dr-popover.open{display:block}
+.dr-popover-header{font-size:var(--text-xs);color:var(--gray-600);margin-bottom:var(--sp-3)}
+.dr-month-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-3)}
+.dr-nav-btn{width:28px;height:28px;border:none;background:transparent;cursor:pointer;border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;color:var(--gray-700);padding:0}
+.dr-nav-btn:hover{background:var(--gray-100);color:var(--gray-900)}
+.dr-month-label{font-weight:600;font-size:var(--text-md);color:var(--gray-900);text-transform:capitalize}
+.dr-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:var(--sp-1)}
+.dr-dow div{text-align:center;font-size:10px;color:var(--gray-500);font-weight:700;padding:var(--sp-1) 0;text-transform:uppercase;letter-spacing:.04em}
+.dr-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dr-day{aspect-ratio:1;display:inline-flex;align-items:center;justify-content:center;font-size:var(--text-sm);cursor:pointer;border-radius:var(--r-md);user-select:none;color:var(--gray-800);transition:background .1s}
+.dr-day:hover{background:var(--gray-100)}
+.dr-day.dim{color:var(--gray-300)}
+.dr-day.today{font-weight:700;box-shadow:inset 0 0 0 1px var(--amber)}
+.dr-day.in-range{background:var(--amber-bg);color:var(--amber-text);border-radius:0}
+.dr-day.range-start,.dr-day.range-end{background:var(--amber);color:var(--amber-text);font-weight:700}
+.dr-day.range-start{border-radius:var(--r-md) 0 0 var(--r-md)}
+.dr-day.range-end{border-radius:0 var(--r-md) var(--r-md) 0}
+.dr-day.range-start.range-end{border-radius:var(--r-md)}
+.dr-draft{margin-top:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--gray-50);border-radius:var(--r-md);font-size:var(--text-xs);color:var(--gray-700);text-align:center}
+.dr-draft b{color:var(--gray-900)}
+.dr-actions{margin-top:var(--sp-3);display:flex;justify-content:space-between;gap:var(--sp-2)}
+.dr-actions .btn{height:30px;font-size:var(--text-sm);padding:0 var(--sp-3)}
+.dr-actions .dr-apply{background:var(--amber);border-color:var(--amber-press);color:var(--amber-text);font-weight:600}
+.dr-actions .dr-apply:hover:not(:disabled){background:var(--amber-hover);border-color:var(--amber-press);color:var(--amber-text)}
+.dr-actions .dr-apply:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:600px){
+  .dr-popover{width:calc(100vw - 24px);max-width:340px}
+}
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -1482,7 +1527,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo Equipment No · Ref No · PO Number · Carrier</div>
+                <div class="card-sec-sub">Lọc theo Equipment No · Ref No · PO Number · Carrier · khoảng PO Date</div>
               </div>
             </div>
           </div>
@@ -1496,6 +1541,16 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <select class="fi" id="sum-carrier" onchange="filterSummary()">
                 <option value="">Tất cả Carrier</option>
               </select>
+            </div>
+            <div class="fb-field">
+              <label>Khoảng PO Date</label>
+              <button type="button" class="dr-trigger" data-dr-from="sum-po-from" data-dr-to="sum-po-to" data-dr-onapply="filterSummary" data-dr-placeholder="Tất cả ngày">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="dr-label">Tất cả ngày</span>
+                <span class="dr-x" title="Xoá filter">×</span>
+              </button>
+              <input type="hidden" id="sum-po-from">
+              <input type="hidden" id="sum-po-to">
             </div>
           </div>
           <div class="fb-bottom">
@@ -1852,9 +1907,13 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
             </div>
             <div class="kr-filter-bar">
-              <input type="date" class="fi" id="kr-nxt-from" style="width:150px">
-              <span class="kr-filter-label">→</span>
-              <input type="date" class="fi" id="kr-nxt-to" style="width:150px">
+              <button type="button" class="dr-trigger" data-dr-from="kr-nxt-from" data-dr-to="kr-nxt-to" data-dr-placeholder="Chọn khoảng ngày" style="min-width:240px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="dr-label">Chọn khoảng ngày</span>
+                <span class="dr-x" title="Xoá">×</span>
+              </button>
+              <input type="hidden" id="kr-nxt-from">
+              <input type="hidden" id="kr-nxt-to">
               <input class="fi" id="kr-nxt-search" placeholder="Tìm mã/tên vật tư..." style="flex:1;min-width:180px" oninput="krFilterNxt()">
               <button class="btn btn-sm btn-blue" onclick="krLoadNxt()">Tải báo cáo</button>
               <button class="btn btn-sm" onclick="krExportNxt()">Xuất Excel</button>
@@ -1925,9 +1984,13 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <span id="kr-sk-clear" onclick="krSkClear()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--gray-500);font-size:16px;font-weight:600">×</span>
                 <div id="kr-sk-suggest" class="kr-sk-suggest"></div>
               </div>
-              <input type="date" class="fi" id="kr-sk-from" style="width:150px">
-              <span class="kr-filter-label">→</span>
-              <input type="date" class="fi" id="kr-sk-to" style="width:150px">
+              <button type="button" class="dr-trigger" data-dr-from="kr-sk-from" data-dr-to="kr-sk-to" data-dr-placeholder="Chọn khoảng ngày" style="min-width:240px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="dr-label">Chọn khoảng ngày</span>
+                <span class="dr-x" title="Xoá">×</span>
+              </button>
+              <input type="hidden" id="kr-sk-from">
+              <input type="hidden" id="kr-sk-to">
               <button class="btn btn-sm btn-blue" onclick="krLoadSoKho()">Xem sổ kho</button>
             </div>
             <div id="kr-sk-summary" class="kr-summary" style="display:none"></div>
@@ -2554,13 +2617,15 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <option value="XUẤT">XUẤT</option>
               </select>
             </div>
-            <div class="fb-field">
-              <label>Từ ngày</label>
-              <input class="fi" type="date" id="pk-from" onchange="_pkApplyFilters()">
-            </div>
-            <div class="fb-field">
-              <label>Đến ngày</label>
-              <input class="fi" type="date" id="pk-to" onchange="_pkApplyFilters()">
+            <div class="fb-field" style="grid-column:span 2">
+              <label>Khoảng ngày</label>
+              <button type="button" class="dr-trigger" data-dr-from="pk-from" data-dr-to="pk-to" data-dr-onapply="_pkApplyFilters" data-dr-placeholder="Tất cả ngày">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="dr-label">Tất cả ngày</span>
+                <span class="dr-x" title="Xoá filter">×</span>
+              </button>
+              <input type="hidden" id="pk-from">
+              <input type="hidden" id="pk-to">
             </div>
             <div class="fb-field" style="grid-column:span 2">
               <label>Tìm kiếm</label>
@@ -2672,11 +2737,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <div class="kho-fg">
               <label>Bộ phận sử dụng</label>
               <input id="pkf-bp" class="fi" list="dl-bpsd" placeholder="Chọn hoặc nhập...">
-              <datalist id="dl-bpsd">
-                <option value="MNR_Tổ 1"></option>
-                <option value="Quản Lý Rỗng"></option>
-                <option value="Hậu cần"></option>
-              </datalist>
+              <datalist id="dl-bpsd"></datalist>
             </div>
             <div class="kho-fg" style="grid-column:1/-1">
               <label>Ghi chú chung</label>
@@ -2783,9 +2844,13 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <option value="THANH_LY">Thanh lý</option>
               <option value="TIM_THAY">Tìm thấy</option>
             </select>
-            <input class="fi" type="date" id="ccdc-from" onchange="loadCcdcList()" style="width:140px" title="Từ ngày">
-            <span style="font-size:11px;color:var(--gray);align-self:center">→</span>
-            <input class="fi" type="date" id="ccdc-to" onchange="loadCcdcList()" style="width:140px" title="Đến ngày">
+            <button type="button" class="dr-trigger" data-dr-from="ccdc-from" data-dr-to="ccdc-to" data-dr-onapply="loadCcdcList" data-dr-placeholder="Tất cả ngày" style="min-width:220px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="dr-label">Tất cả ngày</span>
+              <span class="dr-x" title="Xoá filter">×</span>
+            </button>
+            <input type="hidden" id="ccdc-from">
+            <input type="hidden" id="ccdc-to">
             <input class="fi" id="ccdc-search" placeholder="Tìm mã CC, tên, người nhận..." oninput="_ccdcSearchDebounce()" style="flex:1;min-width:160px">
             <span id="ccdc-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
             <button class="btn btn-sm" onclick="loadCcdcList()">Refresh</button>
@@ -2856,9 +2921,13 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <option value="HOAN_THANH">Hoàn thành</option>
               <option value="SUA_KHONG_DUOC">Sửa không được</option>
             </select>
-            <input class="fi" type="date" id="bt-from" onchange="loadBaoTriList()" style="width:140px" title="Từ ngày">
-            <span style="font-size:11px;color:var(--gray);align-self:center">→</span>
-            <input class="fi" type="date" id="bt-to" onchange="loadBaoTriList()" style="width:140px" title="Đến ngày">
+            <button type="button" class="dr-trigger" data-dr-from="bt-from" data-dr-to="bt-to" data-dr-onapply="loadBaoTriList" data-dr-placeholder="Tất cả ngày" style="min-width:220px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="dr-label">Tất cả ngày</span>
+              <span class="dr-x" title="Xoá filter">×</span>
+            </button>
+            <input type="hidden" id="bt-from">
+            <input type="hidden" id="bt-to">
             <input class="fi" id="bt-search" placeholder="Tìm mã phiếu, nội dung sửa, đơn vị..." oninput="_btSearchDebounce()" style="flex:1;min-width:160px">
             <span id="bt-count" style="font-size:11px;color:var(--gray);white-space:nowrap"></span>
             <button class="btn btn-sm" onclick="loadBaoTriList()">Refresh</button>
@@ -5900,11 +5969,24 @@ function sortSummaryByUpdated() {
 function filterSummary() {
   const q  = document.getElementById('sum-search').value.toLowerCase();
   const ca = document.getElementById('sum-carrier').value;
+  const poFrom = document.getElementById('sum-po-from').value; // yyyy-mm-dd ISO
+  const poTo   = document.getElementById('sum-po-to').value;
+  // Convert ISO → ms một lần để so sánh nhanh trong filter
+  const fromMs = poFrom ? new Date(poFrom + 'T00:00:00').getTime() : null;
+  const toMs   = poTo   ? new Date(poTo   + 'T23:59:59').getTime() : null;
   var filtered = state.tracking.filter(r => {
     if (!r.po_number) return false;
     const matchQ  = !q || (r.container_no||'').toLowerCase().includes(q) || (r.ref_number||'').toLowerCase().includes(q) || (r.po_number||'').toLowerCase().includes(q);
     const matchCa = !ca || r.carrier === ca;
-    return matchQ && matchCa;
+    if (!matchQ || !matchCa) return false;
+    if (fromMs !== null || toMs !== null) {
+      var pd = parseReportDate(r.po_date);
+      if (!pd) return false;
+      var pdMs = pd.getTime();
+      if (fromMs !== null && pdMs < fromMs) return false;
+      if (toMs   !== null && pdMs > toMs)   return false;
+    }
+    return true;
   });
   // Sort by updated_at if active
   if (_sumSortUpdated) {
@@ -5922,7 +6004,7 @@ function filterSummary() {
     });
   }
   _sumPage = 1; // reset page khi đổi filter
-  renderSumChips({ q: q, ca: ca });
+  renderSumChips({ q: q, ca: ca, poFrom: poFrom, poTo: poTo });
   renderSummaryTable(filtered);
 }
 
@@ -5950,6 +6032,13 @@ function renderSumChips(opts) {
   var chips = [];
   if (opts.q)  chips.push({ label: 'Tìm', value: opts.q, clear: "document.getElementById('sum-search').value='';filterSummary()" });
   if (opts.ca) chips.push({ label: 'Carrier', value: opts.ca, clear: "document.getElementById('sum-carrier').value='';filterSummary()" });
+  if (opts.poFrom || opts.poTo) {
+    function _f(s){ if(!s) return ''; var p=s.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : s; }
+    var rangeLabel = opts.poFrom && opts.poTo ? (_f(opts.poFrom)+' → '+_f(opts.poTo))
+                    : opts.poFrom ? ('Từ '+_f(opts.poFrom))
+                    : ('Đến '+_f(opts.poTo));
+    chips.push({ label: 'PO Date', value: rangeLabel, clear: "sumClearPoDate()" });
+  }
   if (!chips.length) { box.innerHTML = ''; return; }
   box.innerHTML = chips.map(function(c) {
     var lbl = c.label ? '<span class="fb-chip-label">' + esc(c.label) + ':</span>' : '';
@@ -5957,9 +6046,21 @@ function renderSumChips(opts) {
   }).join('') + '<button class="fb-chips-clear" onclick="sumClearAllFilters()">Xoá tất cả</button>';
 }
 
+function sumClearPoDate() {
+  document.getElementById('sum-po-from').value = '';
+  document.getElementById('sum-po-to').value = '';
+  var dt = document.querySelector('.dr-trigger[data-dr-from="sum-po-from"]');
+  if (dt && window.DateRangePicker) DateRangePicker.refresh(dt);
+  filterSummary();
+}
+
 function sumClearAllFilters() {
   document.getElementById('sum-search').value = '';
   document.getElementById('sum-carrier').value = '';
+  document.getElementById('sum-po-from').value = '';
+  document.getElementById('sum-po-to').value = '';
+  var dt = document.querySelector('.dr-trigger[data-dr-from="sum-po-from"]');
+  if (dt && window.DateRangePicker) DateRangePicker.refresh(dt);
   filterSummary();
 }
 
@@ -8184,6 +8285,251 @@ function doLogout() {
   location.reload();
 }
 
+// ===================== DATE RANGE PICKER =====================
+// Component dùng chung cho tất cả filter from-to date.
+// HTML: <button class="dr-trigger" data-dr-from="ID" data-dr-to="ID" [data-dr-onapply="fn"] [data-dr-maxdays="N"]>
+//        <span class="dr-label">…</span><span class="dr-x">×</span></button>
+//       <input type="hidden" id="ID" value="yyyy-mm-dd">
+// API: window.DateRangePicker.init() — gọi lại sau khi inject HTML mới có .dr-trigger
+//      window.DateRangePicker.refresh(triggerEl) — update label sau khi setValue programmatic
+(function(){
+  var POP = null, ACTIVE = null;
+  var STATE = { draftStart: null, draftEnd: null, monthCursor: null };
+  var DOW = ['CN','T2','T3','T4','T5','T6','T7']; // Sun-first để match getDay()
+
+  function _isoFromDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function _dateFromIso(s){ if(!s) return null; var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); return m?new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3])):null; }
+  function _fmt(s){ var d=_dateFromIso(s); return d?String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear():''; }
+  function _diff(a,b){ return Math.round((b-a)/86400000)+1; }
+
+  function _ensure(){
+    if (POP) return POP;
+    POP = document.createElement('div');
+    POP.className = 'dr-popover';
+    POP.innerHTML = ''
+      + '<div class="dr-popover-header" id="dr-pop-header">Chọn khoảng ngày</div>'
+      + '<div class="dr-month-nav">'
+      +   '<button class="dr-nav-btn" data-dr-act="prev" type="button" aria-label="Tháng trước"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +   '<div class="dr-month-label" id="dr-pop-month"></div>'
+      +   '<button class="dr-nav-btn" data-dr-act="next" type="button" aria-label="Tháng sau"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      + '</div>'
+      + '<div class="dr-dow">'+DOW.map(function(d){return '<div>'+d+'</div>';}).join('')+'</div>'
+      + '<div class="dr-grid" id="dr-pop-grid"></div>'
+      + '<div class="dr-draft" id="dr-pop-draft"></div>'
+      + '<div class="dr-actions">'
+      +   '<button class="btn" data-dr-act="clear" type="button">Xoá</button>'
+      +   '<button class="btn dr-apply" data-dr-act="apply" type="button" id="dr-pop-apply">Áp dụng</button>'
+      + '</div>';
+    document.body.appendChild(POP);
+    // Event delegation cho TẤT CẢ click trong popover (day cells + action buttons)
+    POP.addEventListener('click', function(e){
+      e.stopPropagation();
+      var day = e.target.closest('.dr-day');
+      if (day) { _pick(day.dataset.drIso); return; }
+      var b = e.target.closest('[data-dr-act]');
+      if (!b) return;
+      var a = b.dataset.drAct;
+      if (a === 'prev') { STATE.monthCursor.setMonth(STATE.monthCursor.getMonth()-1); _render(); }
+      else if (a === 'next') { STATE.monthCursor.setMonth(STATE.monthCursor.getMonth()+1); _render(); }
+      else if (a === 'clear') { STATE.draftStart = null; STATE.draftEnd = null; _render(); }
+      else if (a === 'apply') { _applyClose(); }
+    });
+    document.addEventListener('click', function(e){
+      if (!POP.classList.contains('open')) return;
+      if (POP.contains(e.target)) return;
+      if (ACTIVE && ACTIVE.contains(e.target)) return;
+      _close();
+    });
+    document.addEventListener('keydown', function(e){
+      if (POP.classList.contains('open') && e.key === 'Escape') _close();
+    });
+    window.addEventListener('resize', function(){ if (POP.classList.contains('open')) _position(); });
+    return POP;
+  }
+
+  function _position(){
+    if (!ACTIVE) return;
+    var r = ACTIVE.getBoundingClientRect();
+    var w = POP.offsetWidth || 300;
+    var h = POP.offsetHeight || 380;
+    var top = r.bottom + 6 + window.scrollY;
+    var left = r.left + window.scrollX;
+    var maxLeft = window.innerWidth + window.scrollX - w - 10;
+    if (left > maxLeft) left = maxLeft;
+    if (left < window.scrollX + 8) left = window.scrollX + 8;
+    if (r.bottom + 6 + h > window.innerHeight && r.top > h + 6) top = r.top - h - 6 + window.scrollY;
+    POP.style.top = top + 'px';
+    POP.style.left = left + 'px';
+  }
+
+  function _open(trigger){
+    _ensure();
+    if (ACTIVE === trigger && POP.classList.contains('open')) { _close(); return; }
+    ACTIVE = trigger;
+    var fromInp = document.getElementById(trigger.dataset.drFrom);
+    var toInp   = document.getElementById(trigger.dataset.drTo);
+    var f = fromInp ? fromInp.value : '';
+    var t = toInp ? toInp.value : '';
+    STATE.draftStart = f || null;
+    STATE.draftEnd   = t || null;
+    STATE.monthCursor = _dateFromIso(STATE.draftStart) || new Date();
+    STATE.monthCursor.setDate(1);
+    var maxDays = parseInt(trigger.dataset.drMaxdays) || 0;
+    document.getElementById('dr-pop-header').textContent = maxDays > 0 ? ('Chọn tối đa ' + maxDays + ' ngày liên tục') : 'Chọn ngày bắt đầu và ngày kết thúc';
+    POP.classList.add('open');
+    document.querySelectorAll('.dr-trigger.is-open').forEach(function(b){ b.classList.remove('is-open'); });
+    trigger.classList.add('is-open');
+    _render();
+    _position();
+  }
+
+  function _close(){
+    if (POP) POP.classList.remove('open');
+    if (ACTIVE) ACTIVE.classList.remove('is-open');
+    ACTIVE = null;
+  }
+
+  function _render(){
+    var c = STATE.monthCursor;
+    var year = c.getFullYear(), month = c.getMonth();
+    var monthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+    document.getElementById('dr-pop-month').textContent = monthNames[month] + ' ' + year;
+    var first = new Date(year, month, 1);
+    var firstDow = first.getDay();
+    var startDate = new Date(year, month, 1 - firstDow);
+    var todayIso = _isoFromDate(new Date());
+    var s = STATE.draftStart, e = STATE.draftEnd;
+    if (s && e && s > e) { var tmp = s; s = e; e = tmp; }
+    var html = '';
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(startDate); d.setDate(startDate.getDate() + i);
+      var iso = _isoFromDate(d);
+      var cls = ['dr-day'];
+      if (d.getMonth() !== month) cls.push('dim');
+      if (iso === todayIso) cls.push('today');
+      if (s && iso === s) cls.push('range-start');
+      if (e && iso === e) cls.push('range-end');
+      if (s && e && iso > s && iso < e) cls.push('in-range');
+      html += '<div class="'+cls.join(' ')+'" data-dr-iso="'+iso+'">'+d.getDate()+'</div>';
+    }
+    var grid = document.getElementById('dr-pop-grid');
+    grid.innerHTML = html;
+    // Day click → handle qua event delegation trên POP (xem _ensure).
+    var draft = document.getElementById('dr-pop-draft');
+    var apply = document.getElementById('dr-pop-apply');
+    if (STATE.draftStart && STATE.draftEnd) {
+      var ss = STATE.draftStart < STATE.draftEnd ? STATE.draftStart : STATE.draftEnd;
+      var ee = STATE.draftStart < STATE.draftEnd ? STATE.draftEnd : STATE.draftStart;
+      draft.innerHTML = '<b>'+_fmt(ss)+'</b> → <b>'+_fmt(ee)+'</b> · '+_diff(_dateFromIso(ss), _dateFromIso(ee))+' ngày';
+      apply.disabled = false;
+    } else if (STATE.draftStart) {
+      draft.innerHTML = 'Bắt đầu: <b>'+_fmt(STATE.draftStart)+'</b> — chọn ngày kết thúc';
+      apply.disabled = true;
+    } else {
+      draft.textContent = 'Chưa chọn ngày — bấm Áp dụng để xoá filter';
+      apply.disabled = false;
+    }
+  }
+
+  function _pick(iso){
+    var maxDays = parseInt(ACTIVE.dataset.drMaxdays) || 0;
+    if (!STATE.draftStart || (STATE.draftStart && STATE.draftEnd)) {
+      // Bắt đầu range mới
+      STATE.draftStart = iso; STATE.draftEnd = null;
+    } else {
+      // Đã có start, đang chọn end
+      if (iso < STATE.draftStart) {
+        STATE.draftEnd = STATE.draftStart;
+        STATE.draftStart = iso;
+      } else {
+        STATE.draftEnd = iso;
+      }
+      // Validate maxDays
+      if (maxDays > 0) {
+        var d1 = _dateFromIso(STATE.draftStart);
+        var d2 = _dateFromIso(STATE.draftEnd);
+        if (_diff(d1, d2) > maxDays) {
+          var d3 = new Date(d1); d3.setDate(d1.getDate() + maxDays - 1);
+          STATE.draftEnd = _isoFromDate(d3);
+        }
+      }
+    }
+    _render();
+  }
+
+  function _applyClose(){
+    if (!ACTIVE) return;
+    var fromInp = document.getElementById(ACTIVE.dataset.drFrom);
+    var toInp   = document.getElementById(ACTIVE.dataset.drTo);
+    var s = STATE.draftStart, e = STATE.draftEnd;
+    if (s && e && s > e) { var t = s; s = e; e = t; }
+    if (fromInp) fromInp.value = s || '';
+    if (toInp)   toInp.value   = e || '';
+    _updateLabel(ACTIVE);
+    var fnName = ACTIVE.dataset.drOnapply;
+    var fn = fnName && window[fnName];
+    if (typeof fn === 'function') { try { fn(); } catch(err) { console.error(err); } }
+    _close();
+  }
+
+  function _updateLabel(trigger){
+    var fromInp = document.getElementById(trigger.dataset.drFrom);
+    var toInp   = document.getElementById(trigger.dataset.drTo);
+    var f = fromInp ? fromInp.value : '';
+    var t = toInp ? toInp.value : '';
+    var labelEl = trigger.querySelector('.dr-label');
+    if (!labelEl) return;
+    if (f && t) {
+      labelEl.textContent = _fmt(f) + ' → ' + _fmt(t);
+      trigger.classList.add('has-value');
+    } else if (f) {
+      labelEl.textContent = 'Từ ' + _fmt(f);
+      trigger.classList.add('has-value');
+    } else if (t) {
+      labelEl.textContent = 'Đến ' + _fmt(t);
+      trigger.classList.add('has-value');
+    } else {
+      labelEl.textContent = trigger.dataset.drPlaceholder || 'Chọn khoảng ngày';
+      trigger.classList.remove('has-value');
+    }
+  }
+
+  function _onClearClick(e, trigger){
+    e.stopPropagation();
+    var fromInp = document.getElementById(trigger.dataset.drFrom);
+    var toInp   = document.getElementById(trigger.dataset.drTo);
+    if (fromInp) fromInp.value = '';
+    if (toInp)   toInp.value   = '';
+    _updateLabel(trigger);
+    var fnName = trigger.dataset.drOnapply;
+    var fn = fnName && window[fnName];
+    if (typeof fn === 'function') { try { fn(); } catch(err){} }
+  }
+
+  function init(){
+    document.querySelectorAll('.dr-trigger').forEach(function(btn){
+      if (btn.dataset.drBound) return;
+      btn.dataset.drBound = '1';
+      btn.addEventListener('click', function(e){
+        // Click vào nút × để clear
+        var x = e.target.closest('.dr-x');
+        if (x) { _onClearClick(e, btn); return; }
+        e.preventDefault(); e.stopPropagation();
+        _open(btn);
+      });
+      _updateLabel(btn);
+    });
+  }
+
+  window.DateRangePicker = {
+    init: init,
+    refresh: function(t){ if (t) _updateLabel(t); }
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
 // ===================== UTILS =====================
 function round2(n) { return Math.round((n||0) * 100) / 100; }
 
@@ -8684,8 +9030,12 @@ function onUserRoleChange() {
   if (qlrBlock) qlrBlock.style.display = role === 'admin' ? 'none' : 'block';
 }
 
+// Empty string ('') = uncheck tất cả (admin đã clear hết quyền có chủ đích).
+// null/undefined = chưa set → fallback DEFAULT (legacy users).
 function setPermCheckboxes(permsStr) {
-  const perms = permsStr ? permsStr.split(',').map(s=>s.trim()) : DEFAULT_USER_PERMS.split(',');
+  const perms = permsStr == null
+    ? DEFAULT_USER_PERMS.split(',')
+    : permsStr.split(',').map(s=>s.trim()).filter(Boolean);
   ALL_SCREENS.forEach(s => {
     const cb = document.getElementById('perm-' + s);
     if (cb) cb.checked = perms.includes(s);
@@ -8939,8 +9289,10 @@ function showEditUserModal(username, fullname, expiry, role, perms, title, perms
   const isAdmin = role === 'admin';
   document.getElementById('u-perms-block').style.display = isAdmin ? 'none' : 'block';
   document.getElementById('u-qlr-perms-block').style.display = isAdmin ? 'none' : 'block';
-  setPermCheckboxes(perms || DEFAULT_USER_PERMS);
-  setQlrPermCheckboxes(permsQlr !== undefined && permsQlr !== '' ? permsQlr : DEFAULT_QLR_PERMS);
+  // Truyền perms as-is — empty string nghĩa là admin đã clear có chủ đích, không fallback.
+  // Chỉ undefined (không truyền) mới rơi vào nhánh DEFAULT trong setter.
+  setPermCheckboxes(perms != null ? perms : DEFAULT_USER_PERMS);
+  setQlrPermCheckboxes(permsQlr != null ? permsQlr : DEFAULT_QLR_PERMS);
   _syncQlrChkHighlight();
   document.getElementById('modal-user-error').style.display = 'none';
   document.getElementById('modal-user').style.display = 'flex';
@@ -9445,6 +9797,8 @@ async function krLoadNxt() {
   var toInp   = document.getElementById('kr-nxt-to');
   if (!fromInp.value) fromInp.value = p.fromIso;
   if (!toInp.value)   toInp.value   = p.toIso;
+  var dt = document.querySelector('.dr-trigger[data-dr-from="kr-nxt-from"]');
+  if (dt && window.DateRangePicker) DateRangePicker.refresh(dt);
   var rowsTb = document.getElementById('kr-nxt-rows');
   rowsTb.innerHTML = '<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--gray-500)"><div class="spinner" style="display:inline-block;margin-right:8px"></div>Đang tải NXT...</td></tr>';
   try {
@@ -9582,6 +9936,8 @@ async function krInitSoKho() {
   var toInp   = document.getElementById('kr-sk-to');
   if (!fromInp.value) fromInp.value = p.fromIso;
   if (!toInp.value)   toInp.value   = p.toIso;
+  var dt = document.querySelector('.dr-trigger[data-dr-from="kr-sk-from"]');
+  if (dt && window.DateRangePicker) DateRangePicker.refresh(dt);
   // Load danh sách VT cho autocomplete (dùng cache _dmVatTu nếu đã prefetch)
   if (_krState.vtList) return;
   if (typeof _dmVatTu !== 'undefined' && _dmVatTu && _dmVatTu.length) {
@@ -11067,6 +11423,15 @@ async function openPhieuKhoForm(loaiGD, maPhieu) {
     + (_khoUsersList||[]).map(function(u){
         return '<option value="'+esc(u.username)+'">'+esc(u.fullname||u.username)+(u.title?' — '+esc(u.title):'')+'</option>';
       }).join('');
+  // Build datalist Bộ phận sử dụng từ user list (mỗi user account = 1 BP option)
+  var bpDl = document.getElementById('dl-bpsd');
+  if (bpDl) {
+    bpDl.innerHTML = (_khoUsersList||[])
+      .map(function(u){
+        var label = u.fullname || u.username;
+        return '<option value="'+esc(label)+'"></option>';
+      }).join('');
+  }
 
   // Load DM Vật tư + WAC prices song song — luôn refresh để có ton_hien_tai mới nhất
   // (sau khi vừa save phiếu khác, tồn kho đã thay đổi)
@@ -11094,10 +11459,13 @@ async function openPhieuKhoForm(loaiGD, maPhieu) {
           || (u.fullname||'').toLowerCase().indexOf('huu thien') >= 0;
     });
     var defaultNguoi = defaultUser ? defaultUser.username : (state.user && state.user.username || '');
+    // Mặc định Bộ phận sử dụng = user MNR_01 (fullname nếu có, fallback username)
+    var defaultBpUser = (_khoUsersList||[]).find(function(u){ return u.username === 'MNR_01'; });
+    var defaultBp = defaultBpUser ? (defaultBpUser.fullname || defaultBpUser.username) : 'MNR_01';
     _fillPkForm({
       ma_phieu: '', loai: loai, ngay_iso: new Date().toISOString().substring(0,10),
       nguoi_thuc_hien: defaultNguoi,
-      doi_tuong: '', bp_su_dung: '', ghi_chu: '',
+      doi_tuong: '', bp_su_dung: defaultBp, ghi_chu: '',
       trang_thai: 'NHAP'
     }, []);
   }
