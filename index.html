@@ -504,6 +504,20 @@ select.fi{padding-right:24px;background-image:url("data:image/svg+xml;utf8,<svg 
 .fixed-layout > .card > .tbl-wrap thead th{position:sticky;top:0;z-index:5;background:var(--gray-50);box-shadow:0 1px 0 var(--gray-200)}
 .fixed-layout > .card > .page-foot{flex-shrink:0}
 
+/* KHO BÃI - VẬT TƯ MNR group: text trong table neutral (font-weight 400 + đen).
+   Áp dụng: Tồn Rỗng, DM Vật tư/Công cụ, Phiếu N/X, Lịch sử CCDC,
+   Bảo trì, Kiểm kê, Báo cáo Kho. Loại trừ .badge, .btn, .kr-badge,
+   button để giữ màu semantic của trạng thái + nút thao tác. */
+.kho-group td,
+.kho-group td > a:not(.btn),
+.kho-group td > b,
+.kho-group td > strong,
+.kho-group td > div,
+.kho-group td > span:not(.badge):not(.btn):not([class^="kr-badge"]):not([class*=" kr-badge"]){
+  font-weight:400 !important;
+  color:var(--gray-900) !important;
+}
+
 /* REPORT (Tổng quan) — dùng fixed-layout, custom rule cho #rpt-dashboard scroll */
 #screen-report > #rpt-dashboard{flex:1 1 0;min-height:0;overflow-y:auto;padding-right:4px}
 #screen-report > #rpt-dashboard > .dash-grid-2:last-child{margin-bottom:0}
@@ -511,6 +525,8 @@ select.fi{padding-right:24px;background-image:url("data:image/svg+xml;utf8,<svg 
 #content.content-no-scroll > #screen-actions{display:none !important}
 /* Ẩn card thống kê ở các màn không cần — chỉ giữ ở Tracking (Danh sách Báo Giá) & Report (Tổng quan) */
 #sum-stats,#kr-nxt-kpi,#pk-stats,#ccdc-stats,#bt-stats,#kk-stats,#kkd-stats{display:none !important}
+/* Ẩn ghi chú đếm số bản ghi cạnh nút Refresh — pagination đã hiển thị count rồi, không cần duplicate */
+#vt-count,#ccm-count,#pk-count,#ccdc-count,#bt-count,#kkd-count,#log-count,#trf-footer,#stk-info{display:none !important}
 /* TREND TABLE — khoá trang, scroll table */
 #screen-trend-table.active{display:flex !important;flex-direction:column;height:100%;overflow:hidden}
 #screen-trend-table > .card:first-child{flex-shrink:0}
@@ -1627,7 +1643,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- STOCK -->
-      <div class="screen fixed-layout" id="screen-stock">
+      <div class="screen fixed-layout kho-group" id="screen-stock">
         <div class="fb-card">
           <div class="card-sec">
             <div class="card-sec-left">
@@ -1809,7 +1825,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═════════════ PHASE 6 — SCREEN BÁO CÁO KHO MNR (standalone) ═════════════ -->
-      <div class="screen fixed-layout" id="screen-khoreport">
+      <div class="screen fixed-layout kho-group" id="screen-khoreport">
         <!-- KPI Strip — trên cùng, chỉ hiện ở tab NXT -->
         <div class="stats-row" id="kr-nxt-kpi" style="margin-bottom:var(--sp-3)"></div>
         <div class="card kr-card">
@@ -1848,7 +1864,8 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <thead>
                   <tr>
                     <th style="width:110px">Mã VT</th>
-                    <th>Tên vật tư</th>
+                    <th style="width:50%">Tên vật tư</th>
+                    <th style="width:50%">Qui cách</th>
                     <th style="width:64px">ĐV</th>
                     <th style="width:90px">Tồn đầu</th>
                     <th style="width:90px">Nhập kỳ</th>
@@ -1859,7 +1876,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                     <th style="width:88px">Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody id="kr-nxt-rows"><tr><td colspan="10" class="kr-empty">Chọn khoảng ngày và bấm "Tải báo cáo"</td></tr></tbody>
+                <tbody id="kr-nxt-rows"><tr><td colspan="11" class="kr-empty">Chọn khoảng ngày và bấm "Tải báo cáo"</td></tr></tbody>
               </table>
             </div>
             <div class="page-foot" id="kr-nxt-pagefoot" style="display:none">
@@ -2346,7 +2363,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ DM VẬT TƯ ═══════════════ -->
-      <div class="screen fixed-layout" id="screen-dm-vattu">
+      <div class="screen fixed-layout kho-group" id="screen-dm-vattu">
         <div class="fb-card">
           <div class="card-sec">
             <div class="card-sec-left">
@@ -2423,7 +2440,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ DM CÔNG CỤ ═══════════════ -->
-      <div class="screen fixed-layout" id="screen-dm-congcu">
+      <div class="screen fixed-layout kho-group" id="screen-dm-congcu">
         <div class="fb-card">
           <div class="card-sec">
             <div class="card-sec-left">
@@ -2445,9 +2462,12 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <label>Trạng thái</label>
               <select class="fi" id="cc-status-master" onchange="filterDmCongCu()">
                 <option value="">Tất cả trạng thái</option>
+                <option>Trong kho</option>
                 <option>Đang sử dụng</option>
-                <option>Hư hỏng</option>
-                <option>Bảo trì</option>
+                <option>Đang sửa</option>
+                <option>Đang BD định kỳ</option>
+                <option>Hỏng</option>
+                <option>Mất</option>
                 <option>Thanh lý</option>
               </select>
             </div>
@@ -2511,7 +2531,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ PHIẾU NHẬP / XUẤT — LIST ═══════════════ -->
-      <div class="screen fixed-layout" id="screen-pk">
+      <div class="screen fixed-layout kho-group" id="screen-pk">
         <div class="kstat-row" id="pk-stats"></div>
         <div class="fb-card">
           <div class="card-sec">
@@ -2521,7 +2541,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
               <div class="card-sec-text">
                 <div class="card-sec-title">Bộ lọc & tìm kiếm</div>
-                <div class="card-sec-sub">Lọc theo loại phiếu · khoảng ngày · mã phiếu · đối tượng</div>
+                <div class="card-sec-sub">Lọc theo loại phiếu · khoảng ngày · mã phiếu · NCC / bộ phận sử dụng</div>
               </div>
             </div>
           </div>
@@ -2562,8 +2582,8 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <table style="table-layout:fixed">
               <colgroup>
                 <col style="width:130px"><col style="width:80px"><col style="width:65px">
-                <col style="width:180px"><col style="width:220px"><col>
-                <col style="width:80px"><col style="width:130px"><col style="width:170px">
+                <col style="width:160px"><col style="width:190px"><col style="width:150px"><col>
+                <col style="width:70px"><col style="width:120px"><col style="width:170px">
               </colgroup>
               <thead>
                 <tr>
@@ -2571,14 +2591,15 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th>Ngày</th>
                   <th>Loại</th>
                   <th style="text-align:left">Người TH</th>
-                  <th style="text-align:left">Đối tượng / NCC</th>
+                  <th style="text-align:left">Nhà cung cấp</th>
+                  <th style="text-align:left">Bộ phận sử dụng</th>
                   <th style="text-align:left">Ghi chú</th>
                   <th>SL dòng</th>
                   <th style="text-align:right">Tổng tiền</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
-              <tbody id="pk-list-rows"><tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
+              <tbody id="pk-list-rows"><tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
             </table>
           </div>
           <div class="page-foot" id="pk-pagefoot" style="display:none">
@@ -2606,7 +2627,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ PHIẾU NHẬP / XUẤT — FORM ═══════════════ -->
-      <div class="screen" id="screen-pkform">
+      <div class="screen kho-group" id="screen-pkform">
         <!-- INFO CARD -->
         <div class="card">
           <div class="card-sec">
@@ -2747,7 +2768,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ CẤP PHÁT CCDC — LIST ═══════════════ -->
-      <div class="screen kho-screen" id="screen-ccdc">
+      <div class="screen kho-screen kho-group" id="screen-ccdc">
         <div class="kstat-row" id="ccdc-stats"></div>
         <div class="card">
           <div class="filter-bar">
@@ -2818,7 +2839,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ BẢO TRÌ SỬA CHỮA — LIST ═══════════════ -->
-      <div class="screen kho-screen" id="screen-baotri">
+      <div class="screen kho-screen kho-group" id="screen-baotri">
         <div class="kstat-row" id="bt-stats"></div>
         <div class="card">
           <div class="filter-bar">
@@ -2893,7 +2914,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ KIỂM KÊ TỒN — LIST ═══════════════ -->
-      <div class="screen kho-screen" id="screen-kiemke">
+      <div class="screen kho-screen kho-group" id="screen-kiemke">
         <div class="kstat-row" id="kk-stats"></div>
         <div class="card">
           <div class="filter-bar">
@@ -2905,12 +2926,11 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="tbl-wrap" style="max-height:calc(100vh - 240px);overflow-y:auto">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:160px"><col><col style="width:110px"><col style="width:110px">
+                <col><col style="width:110px"><col style="width:110px">
                 <col style="width:140px"><col style="width:90px"><col style="width:200px">
               </colgroup>
               <thead>
                 <tr>
-                  <th style="text-align:left">Mã đợt</th>
                   <th style="text-align:left">Tên đợt</th>
                   <th>Ngày KK</th>
                   <th>Trạng thái</th>
@@ -2919,7 +2939,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th>Thao tác</th>
                 </tr>
               </thead>
-              <tbody id="kk-list-rows"><tr><td colspan="7" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
+              <tbody id="kk-list-rows"><tr><td colspan="6" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
             </table>
           </div>
           <div class="page-foot" id="kk-pagefoot" style="display:none">
@@ -2947,7 +2967,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- ═══════════════ KIỂM KÊ — DETAIL ═══════════════ -->
-      <div class="screen kho-screen" id="screen-kkdetail">
+      <div class="screen kho-screen kho-group" id="screen-kkdetail">
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -9470,7 +9490,7 @@ function krRenderNxt() {
   var foot = document.getElementById('kr-nxt-pagefoot');
   var tb = document.getElementById('kr-nxt-rows');
   if (!rows.length) {
-    tb.innerHTML = '<tr><td colspan="10" class="kr-empty">Không có dữ liệu</td></tr>';
+    tb.innerHTML = '<tr><td colspan="11" class="kr-empty">Không có dữ liệu</td></tr>';
     if (foot) foot.style.display = 'none';
   } else {
     var total = rows.length;
@@ -9490,12 +9510,17 @@ function krRenderNxt() {
       document.getElementById('kr-nxt-pf-last').disabled  = _krNxtPage >= totalPages;
       document.getElementById('kr-nxt-pf-size').value = String(_krNxtPageSize);
     }
+    // Lookup qui_cach từ _dmVatTu cache (prefetch lúc login)
+    var vtMap = {};
+    (_dmVatTu||[]).forEach(function(v){ vtMap[v.ma_vt] = v.qui_cach || ''; });
     tb.innerHTML = pageData.map(function(r) {
       var trCls = r.low ? ' class="is-low"' : '';
       var lowBadge = r.low ? '<span class="kr-badge kr-badge-low">Dưới min</span>' : '<span class="kr-badge-ok">OK</span>';
+      var quiCach = vtMap[r.ma_vt] || '';
       return '<tr'+trCls+'>'
         + '<td class="code">'+esc(r.ma_vt)+'</td>'
         + '<td>'+esc(r.ten_vt)+'</td>'
+        + '<td style="color:var(--gray-600)">'+esc(quiCach)+'</td>'
         + '<td class="ctr" style="color:var(--gray-600)">'+esc(r.don_vi)+'</td>'
         + '<td class="num">'+_krFmtQty(r.ton_dau_ky)+'</td>'
         + '<td class="num kr-cell-pos">'+(r.nhap_ky ? _krFmtQty(r.nhap_ky) : '—')+'</td>'
@@ -9536,12 +9561,14 @@ async function krExportNxt() {
     if (typeof XLSX === 'undefined') return;
   }
   var rows = _krState.nxt.rows;
-  var ws_data = [['Mã VT','Tên vật tư','ĐV','Tồn đầu kỳ','Nhập kỳ','Xuất kỳ','Tồn cuối kỳ','ĐG WAC','Giá trị tồn','Tồn min','Cảnh báo']];
+  var vtMap = {};
+  (_dmVatTu||[]).forEach(function(v){ vtMap[v.ma_vt] = v.qui_cach || ''; });
+  var ws_data = [['Mã VT','Tên vật tư','Qui cách','ĐV','Tồn đầu kỳ','Nhập kỳ','Xuất kỳ','Tồn cuối kỳ','ĐG WAC','Giá trị tồn','Tồn min','Cảnh báo']];
   rows.forEach(function(r) {
-    ws_data.push([r.ma_vt, r.ten_vt, r.don_vi, r.ton_dau_ky, r.nhap_ky, r.xuat_ky, r.ton_cuoi_ky, r.don_gia_wac, r.gia_tri_ton, r.ton_min, r.low ? 'Dưới min' : '']);
+    ws_data.push([r.ma_vt, r.ten_vt, vtMap[r.ma_vt]||'', r.don_vi, r.ton_dau_ky, r.nhap_ky, r.xuat_ky, r.ton_cuoi_ky, r.don_gia_wac, r.gia_tri_ton, r.ton_min, r.low ? 'Dưới min' : '']);
   });
   var ws = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [{wch:14},{wch:36},{wch:6},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10},{wch:12}];
+  ws['!cols'] = [{wch:14},{wch:36},{wch:36},{wch:6},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:10},{wch:12}];
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'NXT');
   var fname = 'NXT_' + _krState.nxt.from_iso + '_' + _krState.nxt.to_iso + '.xlsx';
@@ -10224,7 +10251,7 @@ function exportDmCongCu() {
   var q = (document.getElementById('cc-search-master').value||'').toLowerCase();
   var st = document.getElementById('cc-status-master').value;
   var data = (_dmCongCu||[]).filter(function(r){
-    if (st && r.trang_thai !== st) return false;
+    if (st && _normalizeCcStatus(r.trang_thai) !== st) return false;
     if (!q) return true;
     return ((r.ma_cong_cu||'')+' '+(r.ten_cong_cu||'')+' '+(r.model_serial||'')).toLowerCase().indexOf(q) >= 0;
   });
@@ -10455,7 +10482,7 @@ function filterDmCongCu() {
   var q = (document.getElementById('cc-search-master').value||'').toLowerCase();
   var st = document.getElementById('cc-status-master').value;
   var data = _dmCongCu.filter(function(r){
-    if (st && r.trang_thai !== st) return false;
+    if (st && _normalizeCcStatus(r.trang_thai) !== st) return false;
     if (!q) return true;
     return (r.ma_cong_cu+' '+r.ten_cong_cu+' '+r.model_serial).toLowerCase().indexOf(q) >= 0;
   });
@@ -10562,14 +10589,28 @@ var _ccdState = null; // { ma_cc, cc, ccdcLoaded:bool, btLoaded:bool }
 
 async function openCongCuDetail(maCC) {
   if (!maCC) return;
-  // Load DM_CongCu nếu chưa có
-  if (!_dmCongCu.length) {
-    var res = await apiGet({ action:'getDmCongCu' });
-    if (res && res.success) _dmCongCu = res.data || [];
-  }
+  // Load DM_CongCu + users list (cho dropdown người giữ) song song
+  await Promise.all([
+    _loadKhoUsersList(),
+    (_dmCongCu.length ? Promise.resolve() : (async function(){
+      var res = await apiGet({ action:'getDmCongCu' });
+      if (res && res.success) _dmCongCu = res.data || [];
+    })())
+  ]);
   var cc = _dmCongCu.find(function(x){ return x.ma_cong_cu === maCC; });
   if (!cc) { toast('Không tìm thấy CC: '+maCC, 'err'); return; }
   _ccdState = { ma_cc: maCC, cc: cc, ccdcLoaded:false, btLoaded:false };
+  // Populate dropdown người giữ
+  var sel = document.getElementById('ccd-nguoigiu');
+  var cur = cc.nguoi_giu || '';
+  var opts = '<option value="">— Chưa giao —</option>'
+    + (_khoUsersList||[]).map(function(u){
+        return '<option value="'+esc(u.username)+'"'+(cur===u.username?' selected':'')+'>'+esc(u.fullname||u.username)+(u.title?' — '+esc(u.title):'')+'</option>';
+      }).join('');
+  if (cur && !(_khoUsersList||[]).some(function(u){return u.username===cur;})) {
+    opts += '<option value="'+esc(cur)+'" selected>'+esc(cur)+' (legacy)</option>';
+  }
+  sel.innerHTML = opts;
 
   // Header
   document.getElementById('ccd-title').textContent = maCC + ' · ' + (cc.ten_cong_cu||'');
@@ -10586,7 +10627,6 @@ async function openCongCuDetail(maCC) {
   document.getElementById('ccd-nguyengia').value   = cc.nguyen_gia || 0;
   document.getElementById('ccd-thangkh').value     = cc.so_thang_kh || 0;
   document.getElementById('ccd-thangbh').value     = cc.so_thang_bh || 0;
-  document.getElementById('ccd-nguoigiu').value    = cc.nguoi_giu || '';
   document.getElementById('ccd-thongtinbh').value  = cc.thong_tin_bh || '';
   document.getElementById('ccd-hinhanh').value     = cc.hinh_anh || '';
   _khoRenderImgPreview('ccd-img-preview', cc.hinh_anh && cc.hinh_anh.indexOf('http')===0 ? cc.hinh_anh : '');
@@ -10924,16 +10964,16 @@ function pkSetPageSize(sz) {
 // Fetch full list 1 lần (backend cache 5 phút). Filter làm client-side qua _pkApplyFilters.
 async function loadPhieuKhoList() {
   var tbody = document.getElementById('pk-list-rows');
-  tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
     var res = await apiGet({ action: 'getPhieuKhoList', _t: Date.now() });
     if (res && res.success) {
       _pkAllList = res.data || [];
       _pkApplyFilters();
     } else {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
     }
-  } catch(e) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>'; }
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>'; }
 }
 
 function renderPhieuKhoStats() {
@@ -10952,7 +10992,7 @@ function renderPhieuKhoList() {
   var foot = document.getElementById('pk-pagefoot');
   document.getElementById('pk-count').textContent = _pkList.length + ' phiếu';
   if (!_pkList.length) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">Chưa có phiếu nào</div><div class="empty-state-sub">Bấm <b>Nhập</b> hoặc <b>Xuất</b> để tạo phiếu mới.</div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">Chưa có phiếu nào</div><div class="empty-state-sub">Bấm <b>Nhập</b> hoặc <b>Xuất</b> để tạo phiếu mới.</div></div></td></tr>';
     if (foot) foot.style.display = 'none';
     return;
   }
@@ -10978,10 +11018,10 @@ function renderPhieuKhoList() {
     var loaiBadge = r.loai === 'NHẬP'
       ? '<span class="badge st-approved">NHẬP</span>'
       : '<span class="badge st-partially">XUẤT</span>';
-    var doiTuongMain = r.doi_tuong || r.bp_su_dung || '—';
-    var bpSubtitle   = (r.doi_tuong && r.bp_su_dung) ? ' <span style="color:var(--gray);font-size:10px;font-weight:400">· '+esc(r.bp_su_dung)+'</span>' : '';
-    var titleAttr    = esc((r.doi_tuong||'') + (r.bp_su_dung?' · '+r.bp_su_dung:''));
-    var slCell       = r.so_dong > 0 ? r.so_dong : '<span style="color:var(--gray-300)">—</span>';
+    var dashCell  = '<span style="color:var(--gray-300)">—</span>';
+    var nccCell   = r.doi_tuong  ? esc(r.doi_tuong)  : dashCell;
+    var bpCell    = r.bp_su_dung ? esc(r.bp_su_dung) : dashCell;
+    var slCell    = r.so_dong > 0 ? r.so_dong : dashCell;
     var ttCell       = r.tong_tien > 0
       ? '<span style="font-weight:600;color:var(--success-text)">'+r.tong_tien.toLocaleString('vi-VN')+'</span>'
       : '<span style="color:var(--gray-300)">—</span>';
@@ -10993,8 +11033,9 @@ function renderPhieuKhoList() {
       + '<td>'+esc(r.ngay)+'</td>'
       + '<td>'+loaiBadge+'</td>'
       + '<td style="text-align:left;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.nguoi_thuc_hien)+'">'+esc(r.nguoi_thuc_hien)+'</td>'
-      + '<td style="text-align:left;font-weight:600;color:var(--gray-900);overflow:hidden;text-overflow:ellipsis" title="'+titleAttr+'">'+esc(doiTuongMain)+bpSubtitle+'</td>'
-      + '<td style="text-align:left;color:var(--gray-600);font-size:11px;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.ghi_chu||'')+'">'+(r.ghi_chu ? esc(r.ghi_chu) : '<span style="color:var(--gray-300)">—</span>')+'</td>'
+      + '<td style="text-align:left;font-weight:600;color:var(--gray-900);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.doi_tuong||'')+'">'+nccCell+'</td>'
+      + '<td style="text-align:left;color:var(--gray-700);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.bp_su_dung||'')+'">'+bpCell+'</td>'
+      + '<td style="text-align:left;color:var(--gray-600);font-size:11px;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.ghi_chu||'')+'">'+(r.ghi_chu ? esc(r.ghi_chu) : dashCell)+'</td>'
       + '<td>'+slCell+'</td>'
       + '<td style="text-align:right">'+ttCell+'</td>'
       + '<td>'+actBtns+'</td>'
@@ -12047,7 +12088,7 @@ function renderBtList() {
           : '<button onclick="viewAppSheetImage(\''+esc(r.hinh_anh_hd)+'\',\''+esc(r.ma_phieu_sua)+'\')" title="Click xem ảnh" style="border:none;background:var(--gray-100);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:14px";color:var(--gray-500)><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"/><polyline points=\"21 15 16 10 5 21\"/></svg></button>')
       : dash;
     var loaiCfg = BT_LOAI_LABELS[r.loai_bt] || BT_LOAI_LABELS.SUA_CHUA;
-    var loaiBadge = '<span class="badge" style="background:'+loaiCfg.bg+';color:'+loaiCfg.color+';font-weight:600;font-size:10px">'+loaiCfg.icon+' '+loaiCfg.label+'</span>';
+    var loaiBadge = '<span class="badge" style="background:'+loaiCfg.bg+';color:'+loaiCfg.color+';font-weight:600;font-size:10px">'+loaiCfg.label+'</span>';
     var ttCfg = BT_TT_LABELS[r.trang_thai_phieu] || BT_TT_LABELS.HOAN_THANH;
     var ttBadge = '<span class="badge" style="background:'+ttCfg.bg+';color:'+ttCfg.color+';font-weight:600;font-size:10px">'+ttCfg.label+'</span>';
     var actBtns = '<button class="btn btn-sm" onclick="openBaoTriForm(null,\''+esc(r.ma_phieu_sua)+'\')">'+(r.trang_thai_phieu==='DANG_SUA'?'Mở':'Xem')+'</button>'
@@ -12074,8 +12115,8 @@ var BT_TT_LABELS = {
   SUA_KHONG_DUOC:  { label: 'Sửa không được',   bg: '#FEE2E2', color: '#991B1B' }
 };
 var BT_LOAI_LABELS = {
-  SUA_CHUA:    { label: 'Sửa chữa',     bg:'#FFEDD5', color:'#9A3412', icon:'🔧' },
-  BD_DINH_KY:  { label: 'BD định kỳ',   bg:'#FEF3C7', color:'#92400E', icon:'🔄' }
+  SUA_CHUA:    { label: 'Sửa chữa',  bg:'#FFEDD5', color:'#9A3412', icon:'' },
+  BD_DINH_KY:  { label: 'Bảo dưỡng', bg:'#FEF3C7', color:'#92400E', icon:'' }
 };
 
 // Compute mã phiếu BT kế tiếp client-side (PS_<YYYY>_<NNNN>) — backend regen lúc save → race-safe
@@ -12786,7 +12827,7 @@ function renderKkList() {
   var tbody = document.getElementById('kk-list-rows');
   var foot  = document.getElementById('kk-pagefoot');
   if (!_kkList.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">Chưa có đợt kiểm kê nào</div><div class="empty-state-sub">Bấm <b>+ Tạo đợt mới</b> để bắt đầu kiểm kê tồn vật tư.</div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">Chưa có đợt kiểm kê nào</div><div class="empty-state-sub">Bấm <b>+ Tạo đợt mới</b> để bắt đầu kiểm kê tồn vật tư.</div></div></td></tr>';
     if (foot) foot.style.display = 'none';
     return;
   }
@@ -12820,8 +12861,7 @@ function renderKkList() {
       : '<button class="btn btn-sm btn-blue" onclick="openKkDetail(\''+esc(r.ma_dot)+'\')">Kiểm</button>'
         + ' <button class="btn btn-sm btn-red" onclick="deleteKkDot(\''+esc(r.ma_dot)+'\')">Xoá</button>';
     return '<tr style="'+bg+'">'
-      + '<td style="text-align:left"><a href="#" onclick="openKkDetail(\''+esc(r.ma_dot)+'\');return false" style="color:var(--blue);font-weight:600;text-decoration:none">'+esc(r.ma_dot)+'</a></td>'
-      + '<td style="text-align:left;font-weight:600">'+esc(r.ten_dot)+'</td>'
+      + '<td style="text-align:left;font-weight:600"><a href="#" onclick="openKkDetail(\''+esc(r.ma_dot)+'\');return false" style="color:var(--blue);text-decoration:none">'+esc(r.ten_dot)+'</a></td>'
       + '<td>'+esc(r.ngay_kk)+'</td>'
       + '<td>'+stBadge+'</td>'
       + '<td>'+pctBar+'</td>'
@@ -13461,7 +13501,7 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
         <div class="kho-fg"><label>Số tháng KH</label><input id="ccd-thangkh" type="number" min="0"></div>
         <div class="kho-fg"><label>Số tháng BH</label><input id="ccd-thangbh" type="number" min="0"></div>
       </div>
-      <div class="kho-fg"><label>Người giữ hiện tại</label><input id="ccd-nguoigiu" disabled style="background:var(--gray-50)" placeholder="Trống"></div>
+      <div class="kho-fg"><label>Người giữ hiện tại</label><select id="ccd-nguoigiu"><option value="">— Chưa giao —</option></select></div>
       <div class="kho-fg"><label>Thông tin BH</label><input id="ccd-thongtinbh"></div>
     </div>
 
@@ -13628,8 +13668,8 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
       <div class="kho-fg">
         <label>Loại phiếu *</label>
         <div style="display:flex;gap:var(--sp-2)" id="bt-loai-wrap">
-          <label class="chip-toggle"><input type="radio" name="bt-loai" value="SUA_CHUA" checked onchange="onBtLoaiChange()"> 🔧 Sửa chữa (do hỏng)</label>
-          <label class="chip-toggle"><input type="radio" name="bt-loai" value="BD_DINH_KY" onchange="onBtLoaiChange()"> 🔄 BD định kỳ</label>
+          <label class="chip-toggle"><input type="radio" name="bt-loai" value="SUA_CHUA" checked onchange="onBtLoaiChange()"> Sửa chữa</label>
+          <label class="chip-toggle"><input type="radio" name="bt-loai" value="BD_DINH_KY" onchange="onBtLoaiChange()"> Bảo dưỡng</label>
         </div>
       </div>
       <div class="kho-grid-2">
@@ -13657,7 +13697,7 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
           <input id="bt-don-vi" placeholder="VD: Cửa hàng XYZ, Bảo hành hãng...">
         </div>
         <div class="kho-fg">
-          <label>Chi phí (đ)</label>
+          <label>Chi phí</label>
           <input id="bt-chi-phi" type="text" inputmode="numeric" placeholder="0" oninput="onBtChiPhiInput(this)" onfocus="this.select()">
         </div>
       </div>
@@ -13682,9 +13722,9 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
         <div class="kho-fg">
           <label>Kết quả *</label>
           <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap">
-            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="VE_KHO" onchange="onBtKetQuaChange()" checked> 📦 Trả về kho</label>
-            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="GIAO_NV" onchange="onBtKetQuaChange()"> 👷 Giao cho NV</label>
-            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="SUA_KHONG_DUOC" onchange="onBtKetQuaChange()"> 🗑 Sửa không được (Thanh lý)</label>
+            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="VE_KHO" onchange="onBtKetQuaChange()" checked> Nhập kho</label>
+            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="GIAO_NV" onchange="onBtKetQuaChange()"> Cấp phát</label>
+            <label class="chip-toggle"><input type="radio" name="bt-ket-qua" value="SUA_KHONG_DUOC" onchange="onBtKetQuaChange()"> Thanh lý</label>
           </div>
         </div>
         <div class="kho-fg" id="bt-close-nguoi-wrap" style="display:none">
