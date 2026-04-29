@@ -8993,11 +8993,11 @@ function renderPermBadges(role, permissions, permissionsQlr) {
       <span style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></span>${esc(label)}
     </span>`;
   }
-  // App MNR
-  const mnrStr = permissions && String(permissions).trim() ? String(permissions) : DEFAULT_USER_PERMS;
+  // App MNR — empty string = admin clear có chủ ý → hiển thị empty (không fallback DEFAULT).
+  const mnrStr = permissions != null ? String(permissions) : DEFAULT_USER_PERMS;
   const mnrList = mnrStr.split(',').map(s=>s.trim()).filter(Boolean);
   // App Quản lý rỗng
-  const qlrStr  = permissionsQlr && String(permissionsQlr).trim() ? String(permissionsQlr) : '';
+  const qlrStr  = permissionsQlr != null ? String(permissionsQlr) : '';
   const qlrList = qlrStr.split(',').map(s=>s.trim()).filter(Boolean);
   if (!mnrList.length && !qlrList.length) return '<span style="color:var(--gray);font-size:11px">— Chưa gán —</span>';
   let html = '';
@@ -9014,7 +9014,11 @@ function renderPermBadges(role, permissions, permissionsQlr) {
 
 function applyPermissions(role, permissions) {
   if (!role || role === 'admin') return; // admin thấy tất cả
-  const allowed = permissions ? permissions.split(',').map(s=>s.trim()) : DEFAULT_USER_PERMS.split(',');
+  // null/undefined = chưa từng set → fallback DEFAULT (legacy users).
+  // Empty string = admin đã clear có chủ ý → không screen nào hiện.
+  const allowed = permissions != null
+    ? permissions.split(',').map(s=>s.trim()).filter(Boolean)
+    : DEFAULT_USER_PERMS.split(',');
   ALL_SCREENS.forEach(screen => {
     const el = document.querySelector(`.nav-item[onclick*="nav('${screen}',this)"]`);
     if (!el) return;
