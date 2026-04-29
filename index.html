@@ -112,13 +112,6 @@ body{
 /* Screen-level action bar — sticky top, right-aligned */
 #screen-actions{position:sticky;top:0;z-index:6;display:flex;justify-content:flex-end;gap:var(--sp-2);padding:var(--sp-2) 0;background:var(--gray-50);margin-bottom:var(--sp-3);border-bottom:1px solid var(--gray-200)}
 #screen-actions:empty{display:none;margin:0;border:0;padding:0}
-/* Tổng quan — sticky stack: filter (top:0) + KPI strip (ngay dưới filter) */
-#screen-report > .card:first-child{position:sticky;top:0;z-index:5;padding:var(--sp-2) var(--sp-4);margin-bottom:var(--sp-3)}
-#screen-report > .card:first-child .filter-bar{align-items:center;margin-bottom:0}
-#screen-report #rpt-kpi{position:sticky;top:60px;z-index:4;background:var(--gray-50);padding:var(--sp-2) 0;margin-top:0;margin-bottom:var(--sp-3);box-shadow:0 4px 8px -4px rgba(0,0,0,.06)}
-/* Filter bar Tổng quan — đồng bộ 28px cho mọi control */
-#screen-report .filter-bar .fi,
-#screen-report .filter-bar .btn{height:34px;font-size:var(--text-sm);padding-top:0;padding-bottom:0}
 /* Topbar gradient amber lợt → trắng từ trái qua phải */
 #topbar{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 var(--sp-5);height:72px;display:flex;align-items:center;gap:var(--sp-3);flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.02)}
 #content{flex:1;overflow-y:auto;padding:var(--sp-5)}
@@ -141,9 +134,13 @@ body{
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:.95;color:var(--ic, currentColor)}
 .nav-item.active{--ic: var(--amber-text)}
 .nav-item.active .nav-icon{opacity:1}
-.sb-footer{margin-top:auto;padding:var(--sp-3) var(--sp-3);border-top:1px solid var(--gray-200)}
-.sb-user{font-size:var(--text-sm);font-weight:600;color:var(--gray-900)}
-.sb-expiry{font-size:var(--text-xs);color:var(--gray-500);margin-top:2px}
+/* User dropdown trên topbar */
+#tb-user-btn:hover{background:var(--gray-50);border-color:var(--gray-200)}
+#tb-user-btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+@media(max-width:768px){
+  #tb-user-btn span#sb-username{display:none}
+  #tb-user-btn{padding:2px}
+}
 
 /* TOPBAR */
 .tb-header{display:flex;align-items:center;gap:var(--sp-3);min-width:0;flex:0 1 auto}
@@ -170,12 +167,6 @@ body.sb-collapsed #sidebar .nav-item{font-size:0;padding:var(--sp-2);justify-con
 body.sb-collapsed #sidebar .nav-item .nav-icon,
 body.sb-collapsed #sidebar .nav-item .nav-dot{font-size:initial;flex-shrink:0}
 body.sb-collapsed #sidebar .nav-icon{width:18px;height:18px}
-body.sb-collapsed #sidebar .sb-footer .sb-user,
-body.sb-collapsed #sidebar .sb-footer .sb-expiry,
-body.sb-collapsed #sidebar .sb-footer > div > div:last-child{display:none}
-body.sb-collapsed #sidebar .sb-footer{padding:var(--sp-2)}
-body.sb-collapsed #sidebar .sb-footer button{font-size:0;padding:6px;height:30px;position:relative}
-body.sb-collapsed #sidebar .sb-footer button::after{content:'⏻';font-size:14px;color:var(--gray-600);font-weight:400}
 body.sb-collapsed #sb-collapse-btn svg{transform:rotate(180deg)}
 /* Tooltip khi hover trong collapsed state */
 body.sb-collapsed #sidebar .nav-item[data-label]:hover::after{content:attr(data-label);position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:var(--gray-900);color:#fff;padding:5px 10px;border-radius:var(--r-md);font-size:var(--text-xs);font-weight:500;white-space:nowrap;z-index:200;pointer-events:none;box-shadow:var(--shadow-md)}
@@ -513,6 +504,20 @@ select.fi{padding-right:24px;background-image:url("data:image/svg+xml;utf8,<svg 
 .fixed-layout > .card > .tbl-wrap thead th{position:sticky;top:0;z-index:5;background:var(--gray-50);box-shadow:0 1px 0 var(--gray-200)}
 .fixed-layout > .card > .page-foot{flex-shrink:0}
 
+/* REPORT (Tổng quan) — dùng fixed-layout, custom rule cho #rpt-dashboard scroll */
+#screen-report > #rpt-dashboard{flex:1 1 0;min-height:0;overflow-y:auto;padding-right:4px}
+#screen-report > #rpt-dashboard > .dash-grid-2:last-child{margin-bottom:0}
+/* Tắt screen-actions hoàn toàn khi content-no-scroll (fixed-layout/kho/pic) — tránh padding/border ngầm */
+#content.content-no-scroll > #screen-actions{display:none !important}
+/* Ẩn card thống kê ở các màn không cần — chỉ giữ ở Tracking (Danh sách Báo Giá) & Report (Tổng quan) */
+#sum-stats,#kr-nxt-kpi,#pk-stats,#ccdc-stats,#bt-stats,#kk-stats,#kkd-stats{display:none !important}
+/* TREND TABLE — khoá trang, scroll table */
+#screen-trend-table.active{display:flex !important;flex-direction:column;height:100%;overflow:hidden}
+#screen-trend-table > .card:first-child{flex-shrink:0}
+#screen-trend-table > .card:last-child{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;margin-bottom:0}
+#screen-trend-table > .card:last-child > .tbl-wrap{flex:1;min-height:0;max-height:none !important;overflow-y:auto}
+#screen-trend-table > .card:last-child > .tbl-wrap thead th{position:sticky;top:0;z-index:5}
+
 /* Chip toggle — replace raw checkboxes (Termite/Rejected filters) */
 .chip-toggle{display:inline-flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-3);height:34px;border:1px solid var(--gray-300);border-radius:var(--r-md);background:var(--white);cursor:pointer;font-size:var(--text-sm);color:var(--gray-700);font-weight:500;transition:all .15s;white-space:nowrap;user-select:none}
 .chip-toggle:hover{border-color:var(--gray-400);background:var(--gray-50)}
@@ -677,6 +682,21 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 .btn-toggle-active{background:var(--error-bg)!important;border-color:var(--error-border)!important;color:var(--error-text)!important}
 .input-invalid{background:var(--error-bg);color:var(--error-text);border-color:var(--error-border)}
 .row-flash{background:var(--amber-bg);transition:background .3s ease}
+/* INLINE DIFF — Revise screen highlight rows changed/new/removed */
+#rev-rows tr.row-changed > td:first-child{box-shadow:inset 3px 0 0 #F59E0B}
+#rev-rows tr.row-changed{background:#FFFBEB}
+#rev-rows tr.row-new > td:first-child{box-shadow:inset 3px 0 0 #16A34A}
+#rev-rows tr.row-new{background:#F0FDF4}
+#rev-rows tr.row-new td:first-child::after{content:'+';color:#16A34A;font-weight:700;margin-left:4px}
+#rev-rows tr.row-removed{background:#FEF2F2;opacity:.7;pointer-events:none}
+#rev-rows tr.row-removed > td:first-child{box-shadow:inset 3px 0 0 #DC2626;pointer-events:auto}
+#rev-rows tr.row-removed input,#rev-rows tr.row-removed select{text-decoration:line-through;color:var(--gray-500)!important}
+#rev-rows tr.row-removed .rv-restore{position:absolute;width:22px;height:22px;border:1px solid #DC2626;background:#fff;color:#DC2626;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;pointer-events:auto;z-index:2}
+/* Cell-level diff: ô có giá trị sửa — stacked old (strikethrough)/new — pattern git diff */
+#rev-rows tr.row-changed td{padding-bottom:16px;position:relative}
+#rev-rows td.cell-changed{background:#FEF3C7!important}
+#rev-rows td.cell-changed input{font-weight:600;color:#B45309}
+#rev-rows .diff-orig{position:absolute;left:4px;right:4px;bottom:1px;font-size:10px;line-height:1.1;color:#9CA3AF;text-decoration:line-through;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;text-align:center;font-weight:500}
 .diff-card{transition:background .2s,border-color .2s}
 .diff-card-match{background:var(--success-bg);border-color:var(--success-border)}
 .diff-card-mismatch{background:var(--warning-bg);border-color:var(--warning-border)}
@@ -970,18 +990,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         Xem Hình Ảnh
       </div>
     </div>
-    <div class="sb-footer">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:26px;height:26px;border-radius:50%;background:#F5F5F5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div>
-          <div class="sb-user" id="sb-username">—</div>
-          <div class="sb-expiry" id="sb-expiry">—</div>
-        </div>
-      </div>
-      <button onclick="doLogout()" style="margin-top:8px;width:100%;font-size:11px;padding:5px 0;border:1px solid #DDD;border-radius:6px;background:#F5F5F5;color:#555;cursor:pointer;font-family:inherit;font-weight:600" onmouseover="this.style.background='#EBEBEB';this.style.color='#222'" onmouseout="this.style.background='#F5F5F5';this.style.color='#555'">Đăng xuất</button>
-    </div>
   </div>
 
   <div id="sb-backdrop" onclick="toggleSidebar(false)"></div>
@@ -1002,6 +1010,27 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         style="display:none;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--gray-50);border:1px solid var(--gray-200);font-size:var(--text-md);font-weight:600;color:var(--gray-600);cursor:pointer;flex-shrink:0;user-select:none">
         <span id="tb-quota-dot" style="width:9px;height:9px;border-radius:50%;background:var(--green)"></span>
         <span id="tb-quota-text">— /20k</span>
+      </div>
+      <!-- USER DROPDOWN — top right of topbar -->
+      <div id="tb-user-wrap" style="position:relative;flex-shrink:0;margin-left:var(--sp-3)">
+        <button id="tb-user-btn" onclick="toggleUserMenu(event)" type="button"
+          style="display:flex;align-items:center;gap:var(--sp-2);padding:4px 10px 4px 4px;background:transparent;border:1px solid transparent;border-radius:999px;cursor:pointer;font-family:inherit;color:var(--gray-700);transition:all .15s">
+          <div id="tb-user-avatar" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#A855F7 0%,#3B82F6 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;letter-spacing:.5px">—</div>
+          <span id="sb-username" style="font-weight:600;font-size:var(--text-md);color:var(--gray-900);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div id="tb-user-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--gray-200);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);min-width:240px;z-index:50;overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--gray-100)">
+            <div id="tb-user-fullname" style="font-weight:700;font-size:var(--text-md);color:var(--gray-900);margin-bottom:2px">—</div>
+            <div id="sb-expiry" style="font-size:var(--text-xs);color:var(--gray-500)">—</div>
+          </div>
+          <button onclick="doLogout()" type="button"
+            style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:var(--text-md);color:var(--error-text);font-weight:600;text-align:left;transition:background .12s"
+            onmouseover="this.style.background='var(--error-bg)'" onmouseout="this.style.background='transparent'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Đăng xuất
+          </button>
+        </div>
       </div>
     </div>
     <div id="content">
@@ -1198,7 +1227,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               </div>
             </div>
             <div class="card-sec-actions">
-              <button class="btn btn-green" id="btn-compare" onclick="toggleCompare()" style="display:none">So sánh thay đổi</button>
+              <button class="btn btn-green" id="btn-compare" onclick="toggleCompare()" style="display:none" title="Bật/tắt highlight thay đổi inline">Highlight thay đổi</button>
               <button class="btn" onclick="addReviseRow()">+ Thêm dòng</button>
             </div>
           </div>
@@ -1271,51 +1300,12 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <span style="font-size:10px;font-weight:700;margin-top:1px;letter-spacing:.04em" id="rev-match-badge"></span>
             </div>
           </div>
-          <!-- COMPARE PANEL -->
-          <div id="rev-compare-panel" style="display:none;margin-top:12px">
-            <div style="font-size:12px;font-weight:600;color:var(--gray-900);margin-bottom:8px;display:flex;align-items:center;gap:12px">
-              So sánh thay đổi
-              <span style="font-size:10px;font-weight:400;display:flex;gap:10px;align-items:center">
-                <span style="background:#fefce8;border:1px solid #fbbf24;padding:1px 7px;border-radius:3px">🟡 Sửa giá trị</span>
-                <span style="background:#FEFAF0;border:1px solid #F5EDD0;padding:1px 7px;border-radius:3px">🟢 Dòng mới</span>
-                <span style="background:#fff1f2;border:1px solid #f87171;padding:1px 7px;border-radius:3px">🔴 Bị xoá</span>
-              </span>
-            </div>
-            <div class="tbl-wrap">
-              <table style="table-layout:fixed">
-                <colgroup>
-                  <col style="width:36px"><col style="width:80px"><col style="width:90px">
-                  <col style="width:72px"><col style="width:72px"><col style="width:58px">
-                  <col style="width:58px"><col style="width:58px"><col style="width:48px">
-                  <col style="width:60px"><col style="width:72px"><col style="width:68px">
-                  <col style="width:70px"><col style="width:70px"><col style="width:80px">
-                  <col style="width:120px"><col style="width:100px"><col style="width:28px">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th style="width:36px">STT</th>
-                    <th style="width:80px">Dmg Loc</th>
-                    <th style="width:90px">Component</th>
-                    <th style="width:72px">Dmg Type</th>
-                    <th style="width:72px">Rep Type</th>
-                    <th style="width:58px">Length</th>
-                    <th style="width:58px">Width</th>
-                    <th style="width:58px;text-align:center">Unit</th>
-                    <th style="width:48px;text-align:center">Qty</th>
-                    <th style="width:60px" class="td-auto">Hours</th>
-                    <th style="width:72px" class="td-auto">Material</th>
-                    <th style="width:68px" class="td-auto">Labour</th>
-                    <th style="width:70px">Total Est.</th>
-                    <th style="width:70px" class="td-total">Total App.</th>
-                    <th style="width:80px;text-align:center">Resp. Party</th>
-                    <th style="width:120px">Status</th>
-                    <th style="width:100px">Remark</th>
-                    <th style="width:28px"></th>
-                  </tr>
-                </thead>
-                <tbody id="rev-compare-rows"></tbody>
-              </table>
-            </div>
+          <!-- DIFF LEGEND — chỉ hiện khi đang bật highlight -->
+          <div id="rev-diff-legend" style="display:none;font-size:11px;color:var(--gray-600);margin-top:var(--sp-2);display:none;gap:var(--sp-2);align-items:center;flex-wrap:wrap">
+            <span style="font-weight:600">Chú thích:</span>
+            <span style="background:#FEF9C3;border-left:3px solid #F59E0B;padding:2px 8px;border-radius:3px">🟡 Có sửa giá trị (hover ô vàng để xem giá gốc)</span>
+            <span style="background:#DCFCE7;border-left:3px solid #16A34A;padding:2px 8px;border-radius:3px">🟢 Dòng mới thêm</span>
+            <span style="background:#FEE2E2;border-left:3px solid #DC2626;padding:2px 8px;border-radius:3px">🔴 Dòng đã xoá (click ↩ để khôi phục)</span>
           </div>
         </div>
       </div>
@@ -1524,7 +1514,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 </tr>
               </thead>
               <tbody id="sum-rows">
-                <tr><td colspan="19" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
+                <tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1736,9 +1726,22 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       </div>
 
       <!-- REPORT -->
-      <div class="screen" id="screen-report">
-        <div class="card">
-          <div class="filter-bar" style="flex-wrap:wrap;gap:var(--sp-2)">
+      <div class="screen fixed-layout" id="screen-report">
+        <!-- VÙNG 1 — KPI Strip (trên cùng, render khi có data) -->
+        <div class="stats-row" id="rpt-kpi" style="display:none"></div>
+        <div class="fb-card">
+          <div class="card-sec">
+            <div class="card-sec-left">
+              <div class="card-sec-icon" style="--ic:#F59E0B;--ic-bg:#F59E0B1A;--ic-border:#F59E0B4D">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              </div>
+              <div class="card-sec-text">
+                <div class="card-sec-title">Bộ lọc & tác vụ</div>
+                <div class="card-sec-sub">Chọn kỳ · carrier · xem xu hướng tháng/tuần · export Excel</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center">
             <select class="fi" id="rpt-month" onchange="genDashboard()" style="width:120px">
               <option value="ALL">— Cả năm —</option>
               <option>JANUARY</option><option>FEBRUARY</option><option>MARCH</option>
@@ -1760,9 +1763,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 
         <!-- DASHBOARD -->
         <div id="rpt-dashboard" style="display:none">
-          <!-- VÙNG 1 — KPI Strip (6 cards) -->
-          <div class="stats-row" id="rpt-kpi" style="margin-bottom:var(--sp-3)"></div>
-
           <!-- VÙNG 2 — Tồn rỗng + Thống kê sửa chữa (50/50) -->
           <div class="dash-grid-2">
             <div class="card dash-card">
@@ -1810,6 +1810,8 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 
       <!-- ═════════════ PHASE 6 — SCREEN BÁO CÁO KHO MNR (standalone) ═════════════ -->
       <div class="screen fixed-layout" id="screen-khoreport">
+        <!-- KPI Strip — trên cùng, chỉ hiện ở tab NXT -->
+        <div class="stats-row" id="kr-nxt-kpi" style="margin-bottom:var(--sp-3)"></div>
         <div class="card kr-card">
           <div class="kr-header">
             <div class="mode-tabs">
@@ -1822,7 +1824,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 
           <!-- Tab NXT -->
           <div id="kr-pane-nxt" class="kr-pane">
-            <div class="stats-row" id="kr-nxt-kpi"></div>
             <div class="card-sec">
               <div class="card-sec-left">
                 <div class="card-sec-icon" style="--ic:#F59E0B;--ic-bg:#F59E0B1A;--ic-border:#F59E0B4D">
@@ -3672,8 +3673,18 @@ async function doLogin() {
       state.user.key = key; // chỉ giữ trong memory phiên hiện tại — không persist
       checkExpiryWarning(res.days_left, res.expiry);
       // KHÔNG lưu localStorage/sessionStorage → mỗi lần F5 phải login lại
-      document.getElementById('sb-username').textContent = res.fullname || username;
+      var displayName = res.fullname || username;
+      document.getElementById('sb-username').textContent = displayName;
       document.getElementById('sb-expiry').textContent = res.title || ((res.role||'user') === 'admin' ? 'Quản trị viên' : 'Nhân viên');
+      // Avatar initials + fullname trong dropdown
+      var avatar = document.getElementById('tb-user-avatar');
+      if (avatar) {
+        var parts = String(displayName).trim().split(/\s+/);
+        var initials = (parts[0]||'').charAt(0) + (parts.length>1 ? parts[parts.length-1].charAt(0) : '');
+        avatar.textContent = initials.toUpperCase() || '?';
+      }
+      var fnEl = document.getElementById('tb-user-fullname');
+      if (fnEl) fnEl.textContent = displayName;
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
       // Hiện nav Quản lý User nếu admin
@@ -3823,7 +3834,7 @@ function nav(screen, el) {
   var screenEl = document.getElementById('screen-' + screen);
   screenEl.classList.add('active');
   // Toggle no-scroll cho #content khi vào kho-screen (cần để inner tbl-wrap scroll)
-  contentEl.classList.toggle('content-no-scroll', screenEl.classList.contains('kho-screen') || screenEl.classList.contains('fixed-layout') || screenEl.classList.contains('pic-screen'));
+  contentEl.classList.toggle('content-no-scroll', screenEl.classList.contains('kho-screen') || screenEl.classList.contains('fixed-layout') || screenEl.classList.contains('pic-screen') || screen === 'trend-table');
 
   // Reset transient state khi rời màn để tránh memory leak / state stale.
   // Chỉ reset khi rời CHÍNH màn liên quan (không reset khi nav vào lại nó).
@@ -4606,9 +4617,10 @@ async function onReviseInput(val, estDate) {
     const tbody = document.getElementById('rev-rows');
     tbody.innerHTML = '';
     res.data.forEach((r, i) => tbody.appendChild(makeReviseRow(i, r)));
-    document.getElementById('rev-total-row').style.display = 'block';
+    document.getElementById('rev-total-row').style.display = 'flex';
     document.getElementById('btn-compare').style.display = 'inline-block';
-    document.getElementById('rev-compare-panel').style.display = 'none';
+    var legendInit = document.getElementById('rev-diff-legend');
+    if (legendInit) legendInit.style.display = 'none';
     _compareVisible = false;
     calcReviseTotal();
   } else {
@@ -4622,144 +4634,188 @@ async function onReviseInput(val, estDate) {
 var _compareVisible = false;
 var _revRawData = []; // lưu data gốc để compare
 
+// ===================== INLINE DIFF (replaces 2-table comparison) =====================
+// Bật/tắt highlight thay đổi trực tiếp trên #rev-rows: dòng đổi giá trị (vàng), dòng mới (xanh), dòng xoá (đỏ + restore).
 function toggleCompare() {
   _compareVisible = !_compareVisible;
-  var panel = document.getElementById('rev-compare-panel');
   var btn = document.getElementById('btn-compare');
+  var legend = document.getElementById('rev-diff-legend');
   if (_compareVisible) {
-    renderCompare();
-    panel.style.display = 'block';
-    btn.textContent = 'Đóng so sánh';
+    btn.textContent = 'Tắt highlight';
     btn.classList.add('btn-toggle-active');
+    if (legend) legend.style.display = 'flex';
+    applyInlineDiff();
   } else {
-    panel.style.display = 'none';
-    btn.textContent = 'So sánh thay đổi';
+    btn.textContent = 'Highlight thay đổi';
     btn.classList.remove('btn-toggle-active');
+    if (legend) legend.style.display = 'none';
+    clearInlineDiff();
   }
 }
 
-function renderCompare() {
-  var tbody = document.getElementById('rev-compare-rows');
-  // Không return sớm — vẫn cần render dòng mới thêm dù _revRawData trống
-  var hasNewRows = document.querySelectorAll('#rev-rows tr[data-seq^="new_"]').length > 0;
-  if ((!_revRawData || !_revRawData.length) && !hasNewRows) {
-    tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:16px">Không có dữ liệu để so sánh</td></tr>';
-    return;
+// Chỉ những field user có thể sửa → so sánh để mark cell-changed.
+// Map: input index → cell index (cùng index 0..8 trong cells, vì cells[0]=STT cells[1..9] là 9 input fields).
+// Nhưng cells[1..7] là input, cells[8] = qty, cells[9..12] auto values, cells[13]=Total Est, cells[14]=Total App,
+// cells[15]=Resp Party (input[8]), cells[16]=Status (select), cells[17]=Remark (input[9]), cells[18]=delete btn.
+// Chỉ check 9 ô input + qty: dl, co, dt, rt, len, wid, uni, qty, resp.
+var _DIFF_FIELDS = [
+  { idx: 0, cellIdx: 1, key: 'dl', upper: true },
+  { idx: 1, cellIdx: 2, key: 'co', upper: true },
+  { idx: 2, cellIdx: 3, key: 'dt', upper: true },
+  { idx: 3, cellIdx: 4, key: 'rt', upper: true },
+  { idx: 4, cellIdx: 5, key: 'len', num: true },
+  { idx: 5, cellIdx: 6, key: 'wid', num: true },
+  { idx: 6, cellIdx: 7, key: 'uni', upper: true },
+  { idx: 7, cellIdx: 8, key: 'qty', num: true },
+  { idx: 8, cellIdx: 14, key: 'rsp', upper: true } // Resp. Party là input[8], cell index 14
+];
+
+function _normVal(v, opts) {
+  v = String(v == null ? '' : v).trim();
+  if (opts && opts.upper) v = v.toUpperCase();
+  if (opts && opts.num) {
+    var n = parseFloat(v);
+    return isNaN(n) ? '' : String(n);
   }
+  return v;
+}
 
-  function makeCell(orig, app, isDeleted, center, cls) {
-    var o = String(orig||'—'); var a = String(app||'—');
-    var cx = center ? 'text-align:center;' : '';
-    // cls: 'auto' = td-auto style, 'total' = td-total style, 'est' = grey right
-    // Map cls → base style + bg override khi diff. Thay chain ternary cho dễ maintain.
-    var BASE_BY_CLS = {
-      auto:  'background:var(--green-light);color:var(--green);text-align:right;',
-      total: 'background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right;',
-      est:   'text-align:right;color:var(--gray);'
-    };
-    var DIFF_BG_BY_CLS = {
-      auto:  'background:#d1fae5;',
-      total: 'background:#FDF6E8;'
-    };
-    var baseCls = BASE_BY_CLS[cls] || cx;
-    if (isDeleted) return '<td style="' + baseCls + 'text-decoration:line-through;color:#f87171;background:#fff1f2">' + o + '</td>';
-    if (String(orig||'').trim() !== String(app||'').trim()) {
-      var bgOverride = DIFF_BG_BY_CLS[cls] || 'background:#fef9c3;';
-      return '<td style="' + baseCls + bgOverride + '"><span style="text-decoration:line-through;color:#6b7280">' + o + '</span><br><span style="font-weight:600;color:var(--error-text)">' + a + '</span></td>';
-    }
-    return '<td style="' + baseCls + '">' + a + '</td>';
-  }
-
-  function emptyCell(isDeleted) {
-    return '<td style="' + (isDeleted ? 'background:#fff1f2' : '') + '"></td>';
-  }
-
-  var appSeqs = new Set();
-  document.querySelectorAll('#rev-rows tr').forEach(function(tr) {
-    if (tr.dataset.seq) appSeqs.add(String(tr.dataset.seq));
-  });
-
-  var rows = [];
-
-  _revRawData.forEach(function(r, idx) {
-    var seq = String(r.repair_seq);
-    var isDeleted = !appSeqs.has(seq);
-
-    var dl  = [r.damage_location||'',  r.app_damage_location||''];
-    var co  = [r.component||'',        r.app_component||''];
-    var dt  = [r.damage_type||'',      r.app_damage_type||''];
-    var rt  = [r.repair_type||'',      r.app_repair_type||''];
-    var len = [String(r.length||''), String(r.app_length !== undefined && r.app_length !== null && r.app_length !== '' ? r.app_length : '')];
-    var wid = [String(r.width||''),  String(r.app_width  !== undefined && r.app_width  !== null && r.app_width  !== '' ? r.app_width  : '')];
-    var uni = [r.unit||'', r.app_unit||''];
-    var qty = [String(r.quantity||''), String(r.app_quantity !== undefined && r.app_quantity !== null && r.app_quantity !== '' ? r.app_quantity : '')];
-    var _n = function(v){ var x=parseFloat(v); return isNaN(x)?0:x; };
-    var h   = [_n(r.labour_hours ).toFixed(2), _n(r.app_labour_hours ).toFixed(2)];
-    var m   = [_n(r.material_cost).toFixed(2), _n(r.app_material_cost).toFixed(2)];
-    var l   = [_n(r.labour_cost  ).toFixed(2), _n(r.app_labour_cost  ).toFixed(2)];
-    var est = [_n(r.total_cost).toFixed(2), _n(r.total_cost).toFixed(2)];
-    var tot = [_n(r.app_total_approved).toFixed(2), _n(r.app_total_approved).toFixed(2)];
-    var rsp = [r.responsible_party||'', r.app_responsible_party||''];
-
-    var allPairs = [dl,co,dt,rt,len,wid,uni,qty,h,m,l,rsp];
-    var hasChange = !isDeleted && allPairs.some(function(p){ return String(p[0]||'').trim() !== String(p[1]||'').trim(); });
-
-    var rowBg = isDeleted ? 'background:#fff1f2' : (hasChange ? 'background:#fefce8' : '');
-    var staBg = isDeleted ? 'text-decoration:line-through;color:#f87171;background:#fff1f2' : '';
-
-    rows.push('<tr style="' + rowBg + '">'
-      + '<td>' + (idx+1) + '</td>'
-      + makeCell(dl[0],  dl[1],  isDeleted)
-      + makeCell(co[0],  co[1],  isDeleted)
-      + makeCell(dt[0],  dt[1],  isDeleted)
-      + makeCell(rt[0],  rt[1],  isDeleted)
-      + makeCell(len[0], len[1], isDeleted)
-      + makeCell(wid[0], wid[1], isDeleted)
-      + makeCell(uni[0], uni[1], isDeleted, true)
-      + makeCell(qty[0], qty[1], isDeleted, true)
-      + makeCell(h[0],   h[1],   isDeleted, false, 'auto')
-      + makeCell(m[0],   m[1],   isDeleted, false, 'auto')
-      + makeCell(l[0],   l[1],   isDeleted, false, 'auto')
-      + makeCell(est[0], est[1], isDeleted, false, 'est')
-      + makeCell(tot[0], tot[1], isDeleted, false, 'total')
-      + makeCell(rsp[0], rsp[1], isDeleted, true)
-      + '<td style="' + staBg + '">' + (r.approval_status||'—') + '</td>'
-      + '<td style="color:var(--gray);font-style:italic;' + (isDeleted?'background:#fff1f2':'') + '">' + (r.app_remark_details||'') + '</td>'
-      + '<td></td>'
-      + '</tr>');
-  });
-
-  // Dòng mới trong app (seq dạng new_xxx)
+function applyInlineDiff() {
+  clearInlineDiff();
+  // 1. Loop từng row hiện có → so sánh với _revOrigData để tìm cell thay đổi
   document.querySelectorAll('#rev-rows tr').forEach(function(tr) {
     var seq = tr.dataset.seq || '';
-    if (seq.startsWith('new_')) {
-      var inputs = tr.querySelectorAll('input');
-      var rvH = tr.querySelector('.rv-h'); var rvM = tr.querySelector('.rv-m');
-      var rvL = tr.querySelector('.rv-l'); var rvT = tr.querySelector('.rv-t');
-      var g = function(i){ return inputs[i] ? inputs[i].value : ''; };
-      rows.push('<tr style="background:#f0fdf4">'
-        + '<td style="color:var(--success-text);font-weight:600">+</td>'
-        + '<td style="color:var(--success-text);font-weight:500">' + g(0) + '</td>'
-        + '<td style="color:var(--success-text);font-weight:500">' + g(1) + '</td>'
-        + '<td style="color:var(--success-text);font-weight:500">' + g(2) + '</td>'
-        + '<td style="color:var(--success-text);font-weight:500">' + g(3) + '</td>'
-        + '<td style="color:var(--success-text);font-weight:500">' + g(4) + '</td>'
-        + '<td style="color:var(--success-text);font-weight:500">' + g(5) + '</td>'
-        + '<td style="color:var(--success-text);text-align:center">' + g(6) + '</td>'
-        + '<td style="color:var(--success-text);text-align:center">' + g(7) + '</td>'
-        + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvH?rvH.textContent:'—') + '</td>'
-        + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvM?rvM.textContent:'—') + '</td>'
-        + '<td style="background:var(--green-light);color:var(--green);text-align:right">' + (rvL?rvL.textContent:'—') + '</td>'
-        + '<td style="text-align:right;color:var(--gray)">—</td>'
-        + '<td style="background:var(--blue-light);color:var(--blue);font-weight:600;text-align:right">' + (rvT?rvT.textContent:'—') + '</td>'
-        + '<td style="color:var(--success-text);text-align:center">' + g(8) + '</td>'
-        + '<td style="color:var(--gray-500);font-style:italic"></td>'
-        + '<td></td>'
-        + '</tr>');
+    var inputs = tr.querySelectorAll('input');
+    var cells = tr.cells;
+    if (!inputs.length || !cells.length) return;
+    if (seq.indexOf('new_') === 0) {
+      tr.classList.add('row-new');
+      return;
     }
+    var orig = _revOrigData[seq];
+    if (!orig) return;
+    var anyChanged = false;
+    _DIFF_FIELDS.forEach(function(f) {
+      var inp = inputs[f.idx];
+      var cell = cells[f.cellIdx];
+      if (!inp || !cell) return;
+      var curVal = _normVal(inp.value, f);
+      var origVal = _normVal(orig[f.key], f);
+      if (curVal !== origVal) {
+        cell.classList.add('cell-changed');
+        // Strikethrough giá trị gốc bên dưới input (pattern git diff)
+        var origDisplay = String(orig[f.key] == null ? '' : orig[f.key]).trim() || '—';
+        var span = document.createElement('span');
+        span.className = 'diff-orig';
+        span.textContent = origDisplay;
+        cell.appendChild(span);
+        anyChanged = true;
+      }
+    });
+    if (anyChanged) tr.classList.add('row-changed');
   });
 
-  tbody.innerHTML = rows.join('');
+  // 2. Inject "deleted" rows — seqs có trong _revRawData nhưng không có trong rev-rows
+  var existingSeqs = {};
+  document.querySelectorAll('#rev-rows tr[data-seq]').forEach(function(tr) {
+    existingSeqs[String(tr.dataset.seq)] = true;
+  });
+  var tbody = document.getElementById('rev-rows');
+  (_revRawData || []).forEach(function(r) {
+    var seq = String(r.repair_seq);
+    if (existingSeqs[seq]) return;
+    // Tạo readonly row hiển thị giá trị Approved gốc
+    var trDel = makeRemovedDiffRow(r);
+    tbody.appendChild(trDel);
+  });
+  updateReviseNumbers();
+}
+
+function clearInlineDiff() {
+  document.querySelectorAll('#rev-rows tr').forEach(function(tr) {
+    tr.classList.remove('row-changed','row-new','row-removed');
+    Array.prototype.forEach.call(tr.cells, function(c) {
+      c.classList.remove('cell-changed');
+    });
+  });
+  // Xoá tất cả strikethrough labels gốc
+  document.querySelectorAll('#rev-rows .diff-orig').forEach(function(el) {
+    el.parentNode.removeChild(el);
+  });
+  // Xoá các deleted rows đã inject
+  document.querySelectorAll('#rev-rows tr[data-removed="1"]').forEach(function(tr) {
+    tr.parentNode.removeChild(tr);
+  });
+  updateReviseNumbers();
+}
+
+// Tạo 1 row hiển thị dòng đã xoá (readonly, có nút restore)
+function makeRemovedDiffRow(r) {
+  var tr = document.createElement('tr');
+  tr.dataset.seq = String(r.repair_seq);
+  tr.dataset.removed = '1';
+  tr.className = 'row-removed';
+  var seqStr = String(r.repair_seq);
+  var _hasVal = function(v){ return v !== undefined && v !== null && v !== ''; };
+  var pick = function(a, b){ return _hasVal(a) ? a : (b || ''); };
+  var n = function(v){ var x=parseFloat(v); return isNaN(x) ? '0.00' : x.toFixed(2); };
+  var dl  = pick(r.app_damage_location, r.damage_location);
+  var co  = pick(r.app_component, r.component);
+  var dt  = pick(r.app_damage_type, r.damage_type);
+  var rt  = pick(r.app_repair_type, r.repair_type);
+  var len = pick(r.app_length, r.length);
+  var wid = pick(r.app_width, r.width);
+  var uni = pick(r.app_unit, r.unit);
+  var qty = pick(r.app_quantity, r.quantity) || 1;
+  var rsp = pick(r.app_responsible_party, r.responsible_party);
+  var h = n(r.app_labour_hours || r.labour_hours);
+  var m = n(r.app_material_cost || r.material_cost);
+  var l = n(r.app_labour_cost || r.labour_cost);
+  var est = parseFloat(r.total_cost) > 0 ? n(r.total_cost) : '—';
+  var tot = n(r.app_total_approved || r.total_cost);
+  var sta = r.approval_status || 'Partially Approved';
+  var rem = r.app_remark_details || '';
+  tr.innerHTML = ''
+    + '<td style="position:relative">'
+    +   '<button class="rv-restore" title="Khôi phục dòng này" onclick="restoreRemovedRow(\'' + esc(seqStr) + '\')">↩</button>'
+    + '</td>'
+    + '<td><input value="' + esc(dl) + '" readonly></td>'
+    + '<td><input value="' + esc(co) + '" readonly></td>'
+    + '<td><input value="' + esc(dt) + '" readonly></td>'
+    + '<td><input value="' + esc(rt) + '" readonly></td>'
+    + '<td><input value="' + esc(len) + '" readonly></td>'
+    + '<td><input value="' + esc(wid) + '" readonly></td>'
+    + '<td style="text-align:center"><input value="' + esc(uni) + '" readonly></td>'
+    + '<td style="text-align:center"><input value="' + esc(qty) + '" readonly></td>'
+    + '<td class="td-auto">' + h + '</td>'
+    + '<td class="td-auto">' + m + '</td>'
+    + '<td class="td-auto">' + l + '</td>'
+    + '<td style="text-align:right;color:var(--gray)">' + est + '</td>'
+    + '<td class="td-total">' + tot + '</td>'
+    + '<td style="text-align:center"><input value="' + esc(rsp) + '" readonly></td>'
+    + '<td><input value="' + esc(sta) + '" readonly></td>'
+    + '<td><input value="' + esc(rem) + '" readonly></td>'
+    + '<td></td>';
+  return tr;
+}
+
+// Khôi phục dòng đã xoá (chỉ trong session — chưa lưu): chuyển từ readonly row → makeReviseRow đầy đủ.
+function restoreRemovedRow(seq) {
+  var tr = document.querySelector('#rev-rows tr[data-removed="1"][data-seq="' + seq + '"]');
+  if (!tr) return;
+  var rawRow = (_revRawData || []).find(function(r) { return String(r.repair_seq) === String(seq); });
+  if (!rawRow) return;
+  var newTr = makeReviseRow(0, rawRow); // i sẽ được fix lại bởi updateReviseNumbers
+  tr.parentNode.replaceChild(newTr, tr);
+  // Re-apply diff highlight cho row vừa restore
+  if (_compareVisible) {
+    newTr.classList.remove('row-removed');
+    // Row mới này có thể có changes vs orig → re-mark
+    setTimeout(applyInlineDiff, 0);
+  }
+  calcReviseTotal();
+  updateReviseNumbers();
+  toast('Đã khôi phục dòng STT ' + seq, 1500);
 }
 
 
@@ -4885,7 +4941,10 @@ function resetRevise() {
   document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
   document.getElementById('rev-total-row').style.display = 'none';
   document.getElementById('btn-compare').style.display = 'none';
-  document.getElementById('rev-compare-panel').style.display = 'none';
+  document.getElementById('btn-compare').textContent = 'Highlight thay đổi';
+  document.getElementById('btn-compare').classList.remove('btn-toggle-active');
+  var legendReset = document.getElementById('rev-diff-legend');
+  if (legendReset) legendReset.style.display = 'none';
   _compareVisible = false; _revRawData = [];
   _revOrigData = {}; _revTrkTotal = 0;
 }
@@ -6873,6 +6932,7 @@ function genDashboard() {
 
   // Show dashboard, hide summary
   document.getElementById('rpt-dashboard').style.display = 'block';
+  document.getElementById('rpt-kpi').style.display = '';
   document.getElementById('rpt-summary-card').style.display = 'none';
 
   // (Phase 6 báo cáo kho đã chuyển sang screen riêng "khoreport")
@@ -7028,12 +7088,12 @@ function genDashboard() {
     }
   });
 
-  // --- Chart 3: Xu hướng Doanh thu sửa chữa — 6 tháng ---
+  // --- Chart 3: Xu hướng Doanh thu sửa chữa — build 12 tháng (chart hiện 6 cuối, table view dùng full 12) ---
   const trendLabels = [];
   const trendVals   = [];
   const trendCounts = [];
   var trendVat10 = [], trendVat8 = [];
-  for (let i = 5; i >= 0; i--) {
+  for (let i = 11; i >= 0; i--) {
     let m = monthIdx - i; let y = year;
     while (m < 0) { m += 12; y--; }
     const label = MONTHS[m].slice(0,3) + ' ' + String(y).slice(2);
@@ -7051,7 +7111,7 @@ function genDashboard() {
 
   window._trendData = {labels:trendLabels, vals:trendVals, counts:trendCounts, vat10:trendVat10, vat8:trendVat8};
   if (_rptCharts.trend) _rptCharts.trend.destroy();
-  _rptCharts.trend = new Chart(document.getElementById('chartTrend'), _trendChartConfig(trendLabels, trendVals, trendCounts));
+  _rptCharts.trend = new Chart(document.getElementById('chartTrend'), _trendChartConfig(trendLabels.slice(-6), trendVals.slice(-6), trendCounts.slice(-6)));
 
   // --- Chart 3: Weekly trend (last 12 weeks, Mon-Sun) ---
   var weekLabels = [];
@@ -7072,7 +7132,7 @@ function genDashboard() {
     return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
   }
 
-  for (var w = 5; w >= 0; w--) {
+  for (var w = 11; w >= 0; w--) {
     var wMon = new Date(monday);
     wMon.setDate(monday.getDate() - w * 7);
     var wSun = new Date(wMon);
@@ -7093,7 +7153,7 @@ function genDashboard() {
 
   window._weekData = {labels:weekLabels, vals:weekVals, counts:weekCounts, vat10:weekVat10, vat8:weekVat8};
   if (_rptCharts.weekly) _rptCharts.weekly.destroy();
-  _rptCharts.weekly = new Chart(document.getElementById('chartWeekly'), _trendChartConfig(weekLabels, weekVals, weekCounts));
+  _rptCharts.weekly = new Chart(document.getElementById('chartWeekly'), _trendChartConfig(weekLabels.slice(-6), weekVals.slice(-6), weekCounts.slice(-6)));
 
   // VÙNG 4 — Top VT + Alert list (async load từ getKhoAnalytics)
   loadDashAuxData(month, year);
@@ -7315,6 +7375,7 @@ function renderDashAux(data) {
 
 function genSummaryReport() {
   document.getElementById('rpt-dashboard').style.display = 'none';
+  document.getElementById('rpt-kpi').style.display = 'none';
   document.getElementById('rpt-summary-card').style.display = 'block';
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
@@ -7413,6 +7474,7 @@ function genSummaryReport() {
 
 function genDetailedReport() {
   document.getElementById('rpt-dashboard').style.display = 'none';
+  document.getElementById('rpt-kpi').style.display = 'none';
   document.getElementById('rpt-summary-card').style.display = 'block';
   const month = document.getElementById('rpt-month').value;
   const year = document.getElementById('rpt-year').value;
@@ -7889,10 +7951,8 @@ function goRevise(containerNo, estDate) {
   var ni = document.querySelector('.nav-item[onclick*="revise"]');
   if (ni) ni.classList.add('active');
   document.getElementById('screen-revise').classList.add('active');
-  setTopbar('Chỉnh sửa Báo Giá', [
-    { label: 'Xoá form', fn: 'resetRevise()' },
-    { label: 'Lưu Revise', cls: 'btn-blue', fn: 'saveRevise()' }
-  ]);
+  var reviseIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+  setTopbar('Chỉnh sửa Báo Giá', [], 'Cập nhật báo giá đã có · so sánh diff với bản gốc inline', reviseIcon, '#7C3AED');
 
   // Điền cont số và load data
   var revEq = document.getElementById('rev-eq');
@@ -8072,6 +8132,31 @@ async function deleteEstimate(containerNo, estDate) {
 
 
 // ===================== LOGOUT =====================
+// Toggle user dropdown menu in topbar (click to open/close, click outside to close)
+function toggleUserMenu(ev) {
+  if (ev) ev.stopPropagation();
+  var menu = document.getElementById('tb-user-menu');
+  if (!menu) return;
+  var isOpen = menu.style.display === 'block';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // Click outside listener — once
+    setTimeout(function() {
+      document.addEventListener('click', _closeUserMenuOutside, { once: true });
+    }, 0);
+  }
+}
+function _closeUserMenuOutside(ev) {
+  var wrap = document.getElementById('tb-user-wrap');
+  if (wrap && wrap.contains(ev.target)) {
+    // Re-arm next click outside
+    document.addEventListener('click', _closeUserMenuOutside, { once: true });
+    return;
+  }
+  var menu = document.getElementById('tb-user-menu');
+  if (menu) menu.style.display = 'none';
+}
+
 function doLogout() {
   localStorage.removeItem('mnr_session');
   sessionStorage.removeItem('mnr_key');
@@ -9316,6 +9401,9 @@ function krSwitchTab(tab) {
     if (pane) pane.style.display = (t === tab) ? '' : 'none';
     if (btn) btn.classList.toggle('active', t === tab);
   });
+  // KPI strip chỉ hiện ở tab NXT
+  var kpiEl = document.getElementById('kr-nxt-kpi');
+  if (kpiEl) kpiEl.style.display = (tab === 'nxt') ? '' : 'none';
   // Lazy load lần đầu vào tab
   if (tab === 'nxt' && !_krState.nxt) krLoadNxt();
   if (tab === 'sokho') krInitSoKho();
