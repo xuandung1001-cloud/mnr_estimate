@@ -2550,7 +2550,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <table style="table-layout:fixed">
               <colgroup>
                 <col style="width:150px"><col><col style="width:170px"><col style="width:85px">
-                <col style="width:100px"><col style="width:120px"><col style="width:110px">
+                <col style="width:100px"><col style="width:140px"><col style="width:120px"><col style="width:110px">
                 <col style="width:80px"><col style="width:160px">
               </colgroup>
               <thead>
@@ -2560,13 +2560,14 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th style="text-align:left">Model/Serial</th>
                   <th>Ngày mua</th>
                   <th style="text-align:right">Nguyên giá</th>
+                  <th title="Khấu hao theo phương pháp đường thẳng">Khấu hao</th>
                   <th>Trạng thái</th>
                   <th>Người giữ</th>
                   <th>Ảnh</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
-              <tbody id="ccm-rows"><tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
+              <tbody id="ccm-rows"><tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr></tbody>
             </table>
           </div>
           <div class="page-foot" id="cc-pagefoot" style="display:none">
@@ -10830,12 +10831,12 @@ async function deleteVatTu(maVT) {
 
 // ═════════════════════ DM CÔNG CỤ ═════════════════════
 async function loadDmCongCu(force) {
-  document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
     var res = await apiGet({ action: 'getDmCongCu', _t: Date.now() });
     if (res && res.success) { _dmCongCu = res.data || []; filterDmCongCu(); }
-    else document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
-  } catch(e) { document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>'; }
+    else document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:20px">Lỗi: '+(res&&res.error||'')+'</td></tr>';
+  } catch(e) { document.getElementById('ccm-rows').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:20px">Lỗi kết nối</td></tr>'; }
 }
 
 function filterDmCongCu() {
@@ -10872,7 +10873,7 @@ function renderDmCongCu(data) {
   var tbody = document.getElementById('ccm-rows');
   var foot = document.getElementById('cc-pagefoot');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px">Không có công cụ nào</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--gray);padding:20px">Không có công cụ nào</td></tr>';
     if (foot) foot.style.display = 'none';
     return;
   }
@@ -10900,13 +10901,39 @@ function renderDmCongCu(data) {
     var stCfg = _ccStatusCfg(r.trang_thai);
     var bg = i%2===1 ? 'background:#FAFAFA' : '';
     var dash = '<span style="color:var(--gray-300)">—</span>';
+
+    // Khấu hao + đề xuất thanh lý
+    var repairTotal = _getCcRepairTotal(r.ma_cong_cu); // null nếu chưa load _btList
+    var liq = _evalCcLiquidate(r, repairTotal);
+    var d = liq.dep;
+    var khCell;
+    if (!d.hasData) {
+      khCell = dash;
+    } else {
+      var pct = Math.round(d.percentKH * 100);
+      var barColor = d.isExpired ? '#DC2626' : (pct >= 80 ? '#F59E0B' : '#10B981');
+      khCell = '<div style="display:flex;flex-direction:column;gap:2px;align-items:stretch">'
+        + '<div style="display:flex;justify-content:space-between;font-size:11px;line-height:1">'
+        +   '<span style="color:var(--gray-700);font-weight:600">'+pct+'%</span>'
+        +   '<span style="color:var(--gray-600)">'+_fmtVnd(d.gtcl)+'</span>'
+        + '</div>'
+        + '<div style="height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden">'
+        +   '<div style="height:100%;width:'+pct+'%;background:'+barColor+'"></div>'
+        + '</div>'
+        + '</div>';
+    }
+    var liqBadge = liq.should
+      ? '<div style="margin-top:3px"><span class="badge" style="background:#FEE2E2;color:#991B1B;font-weight:700;font-size:10px;padding:2px 6px" title="'+esc(liq.reasons.join(' · '))+'">⚠ Nên thanh lý</span></div>'
+      : '';
+
     return '<tr class="cc-row" style="'+bg+';cursor:pointer" onclick="openCongCuDetail(\''+esc(r.ma_cong_cu)+'\')" title="Click để xem chi tiết & lịch sử">'
       + '<td style="text-align:left;font-weight:600;color:var(--blue)">'+esc(r.ma_cong_cu)+'</td>'
       + '<td style="text-align:left;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.ten_cong_cu)+'">'+esc(r.ten_cong_cu)+'</td>'
       + '<td style="text-align:left;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.model_serial)+'">'+(r.model_serial?esc(r.model_serial):dash)+'</td>'
       + '<td>'+(r.ngay_mua?esc(r.ngay_mua):dash)+'</td>'
       + '<td style="text-align:right">'+(r.nguyen_gia>0?r.nguyen_gia.toLocaleString('vi-VN'):dash)+'</td>'
-      + '<td><span class="badge" style="background:'+stCfg.bg+';color:'+stCfg.color+';font-weight:600">'+esc(stCfg.label)+'</span></td>'
+      + '<td>'+khCell+'</td>'
+      + '<td><span class="badge" style="background:'+stCfg.bg+';color:'+stCfg.color+';font-weight:600">'+esc(stCfg.label)+'</span>'+liqBadge+'</td>'
       + '<td>'+(r.nguoi_giu?esc(r.nguoi_giu):dash)+'</td>'
       + '<td>'+imgCell+'</td>'
       + '<td><button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openCongCuDetail(\''+esc(r.ma_cong_cu)+'\')" title="Mở chi tiết">Mở</button> '
@@ -10940,6 +10967,89 @@ function _normalizeCcStatus(raw) {
 function _ccStatusCfg(raw) {
   var key = _normalizeCcStatus(raw);
   return CC_STATUS_CFG[key] || { label:key, bg:'#F1F5F9', color:'#64748B' };
+}
+
+// =====================================================================
+// KHẤU HAO CCDC — straight-line depreciation + đề xuất thanh lý
+// =====================================================================
+// Ngưỡng đề xuất thanh lý — chỉnh ở đây nếu đổi chính sách kế toán
+var CC_LIQUIDATE_REPAIR_LIFETIME_PCT = 0.5;   // Σ chi phí sửa / nguyên giá ≥ 50% → nên thanh lý
+var CC_LIQUIDATE_REPAIR_SINGLE_PCT  = 0.7;   // 1 lần sửa / GT còn lại ≥ 70% → mua mới hơn
+
+// Parse ngay_mua (string dd/MM/yyyy hoặc yyyy-MM-dd hoặc Date) → Date object
+function _ccParseDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  var s = String(v).trim();
+  if (s.indexOf('/') > 0) {
+    var p = s.split('/');
+    if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s);
+  return null;
+}
+
+// Tính khấu hao straight-line cho 1 CC
+// Returns { hasData, nguyenGia, soThangKH, monthsElapsed, percentKH, gtcl, isExpired }
+function _calcCcDepreciation(cc) {
+  var nguyenGia = parseFloat(cc.nguyen_gia) || 0;
+  var soThangKH = parseInt(cc.so_thang_kh) || 0;
+  var ngayMua   = _ccParseDate(cc.ngay_mua);
+  if (nguyenGia <= 0 || soThangKH <= 0 || !ngayMua) {
+    return { hasData:false, nguyenGia:nguyenGia, soThangKH:soThangKH, monthsElapsed:0, percentKH:0, gtcl:nguyenGia, isExpired:false };
+  }
+  var now = new Date();
+  var monthsElapsed = (now.getFullYear() - ngayMua.getFullYear()) * 12 + (now.getMonth() - ngayMua.getMonth());
+  if (now.getDate() < ngayMua.getDate()) monthsElapsed -= 1;
+  if (monthsElapsed < 0) monthsElapsed = 0;
+  var percentKH = Math.min(1, monthsElapsed / soThangKH);
+  var gtcl = Math.max(0, Math.round(nguyenGia * (1 - percentKH)));
+  return {
+    hasData:true,
+    nguyenGia:nguyenGia,
+    soThangKH:soThangKH,
+    monthsElapsed:monthsElapsed,
+    percentKH:percentKH,
+    gtcl:gtcl,
+    isExpired: percentKH >= 1
+  };
+}
+
+// Tổng chi phí sửa lũy kế của 1 CC (lấy từ _btList nếu đã load, else trả về null)
+function _getCcRepairTotal(maCC) {
+  if (!Array.isArray(_btList) || !_btList.length) return null;
+  var total = 0;
+  for (var i = 0; i < _btList.length; i++) {
+    if (_btList[i].ma_cong_cu === maCC) {
+      total += parseFloat(_btList[i].chi_phi_sc) || 0;
+    }
+  }
+  return total;
+}
+
+// Đánh giá có nên thanh lý không
+// Returns { should:bool, reasons:[string] }
+function _evalCcLiquidate(cc, repairTotal) {
+  var d = _calcCcDepreciation(cc);
+  var reasons = [];
+  // Loại trừ những CC đã thanh lý / mất rồi
+  var st = _normalizeCcStatus(cc.trang_thai);
+  if (st === 'Thanh lý' || st === 'Mất') return { should:false, reasons:[], dep:d };
+  // 1) Hết khấu hao
+  if (d.hasData && d.isExpired) reasons.push('Hết khấu hao');
+  // 2) Chi phí sửa lũy kế ≥ ngưỡng × nguyên giá
+  if (d.hasData && repairTotal != null && d.nguyenGia > 0) {
+    var lifetimePct = repairTotal / d.nguyenGia;
+    if (lifetimePct >= CC_LIQUIDATE_REPAIR_LIFETIME_PCT) {
+      reasons.push('Σ chi phí sửa = ' + Math.round(lifetimePct*100) + '% nguyên giá');
+    }
+  }
+  return { should: reasons.length > 0, reasons:reasons, dep:d };
+}
+
+function _fmtVnd(v) {
+  v = parseFloat(v) || 0;
+  return v.toLocaleString('vi-VN');
 }
 
 // =====================================================================
@@ -10991,6 +11101,13 @@ async function openCongCuDetail(maCC) {
   document.getElementById('ccd-hinhanh').value     = cc.hinh_anh || '';
   _khoRenderImgPreview('ccd-img-preview', cc.hinh_anh && cc.hinh_anh.indexOf('http')===0 ? cc.hinh_anh : '');
 
+  // Khấu hao panel — render + bind live update
+  renderCcdDepreciationPanel();
+  ['ccd-ngaymua','ccd-nguyengia','ccd-thangkh','ccd-trangthai'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && !el._depBound) { el.addEventListener('input', renderCcdDepreciationPanel); el.addEventListener('change', renderCcdDepreciationPanel); el._depBound = true; }
+  });
+
   // Reset tabs
   switchCcdTab('info');
   document.getElementById('ccd-cnt-ccdc').textContent = '—';
@@ -11007,6 +11124,64 @@ function _ccdParseNgay(s) {
   }
   if (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   return '';
+}
+
+// Render bảng khấu hao trong CC detail modal (live update khi input thay đổi)
+function renderCcdDepreciationPanel() {
+  var panel = document.getElementById('ccd-dep-panel');
+  var body  = document.getElementById('ccd-dep-body');
+  if (!panel || !body || !_ccdState) return;
+
+  // Đọc value hiện tại trong form (có thể user đang chỉnh chưa save)
+  var currentCc = {
+    ma_cong_cu: _ccdState.ma_cc,
+    nguyen_gia: parseFloat(document.getElementById('ccd-nguyengia').value) || 0,
+    so_thang_kh: parseInt(document.getElementById('ccd-thangkh').value) || 0,
+    ngay_mua:   document.getElementById('ccd-ngaymua').value || '',
+    trang_thai: document.getElementById('ccd-trangthai').value || ''
+  };
+  var d = _calcCcDepreciation(currentCc);
+  if (!d.hasData) {
+    panel.style.display = 'block';
+    body.innerHTML = '<div style="font-size:12px;color:var(--gray-600);font-style:italic">Chưa đủ dữ liệu để tính khấu hao (cần Ngày mua, Nguyên giá &gt; 0, Số tháng KH &gt; 0).</div>';
+    return;
+  }
+
+  var pct = Math.round(d.percentKH * 100);
+  var barColor = d.isExpired ? '#DC2626' : (pct >= 80 ? '#F59E0B' : '#10B981');
+  var monthsLeft = Math.max(0, d.soThangKH - d.monthsElapsed);
+
+  // Tính tổng chi phí sửa từ _btList
+  var repairTotal = _getCcRepairTotal(_ccdState.ma_cc);
+  var repairTotalDisplay = (repairTotal == null) ? '—' : _fmtVnd(repairTotal) + ' đ';
+  var liq = _evalCcLiquidate(currentCc, repairTotal);
+
+  var rowsHtml = ''
+    + _depRow('Nguyên giá', _fmtVnd(d.nguyenGia) + ' đ')
+    + _depRow('Tuổi thọ KH', d.soThangKH + ' tháng (đã dùng <b>' + d.monthsElapsed + '</b>, còn <b>' + monthsLeft + '</b>)')
+    + _depRow('Đã khấu hao', '<b style="color:'+barColor+'">' + pct + '%</b>')
+    + _depRow('Giá trị còn lại', '<b style="color:var(--gray-900);font-size:14px">' + _fmtVnd(d.gtcl) + ' đ</b>')
+    + _depRow('Σ chi phí sửa', repairTotalDisplay + (repairTotal != null && d.nguyenGia > 0 ? ' <span style="color:var(--gray-600)">(' + Math.round(repairTotal/d.nguyenGia*100) + '% nguyên giá)</span>' : ''));
+
+  var bar = '<div style="margin:8px 0 12px"><div style="height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';transition:width .3s"></div></div></div>';
+
+  var liqAlert = '';
+  if (liq.should) {
+    liqAlert = '<div style="margin-top:var(--sp-3);padding:10px 12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px">'
+      + '<div style="font-weight:700;color:#991B1B;font-size:13px;margin-bottom:4px">⚠ Đề xuất thanh lý</div>'
+      + '<ul style="margin:0;padding-left:20px;font-size:12px;color:#7F1D1D">'
+      + liq.reasons.map(function(r){ return '<li>'+esc(r)+'</li>'; }).join('')
+      + '</ul></div>';
+  } else if (d.hasData && repairTotal != null) {
+    liqAlert = '<div style="margin-top:var(--sp-3);padding:8px 12px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:6px;font-size:12px;color:#166534">✓ Tình trạng khấu hao &amp; chi phí sửa trong ngưỡng — chưa cần thanh lý.</div>';
+  }
+
+  panel.style.display = 'block';
+  body.innerHTML = bar + '<div style="display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:12px">' + rowsHtml + '</div>' + liqAlert;
+}
+
+function _depRow(label, value) {
+  return '<div style="color:var(--gray-600)">'+label+'</div><div style="color:var(--gray-800)">'+value+'</div>';
 }
 
 function hideCongCuDetail() { document.getElementById('ccd-modal').style.display = 'none'; _ccdState = null; }
@@ -12665,10 +12840,29 @@ async function saveBaoTri() {
   var noiDung = String(document.getElementById('bt-noi-dung').value||'').trim();
   if (!noiDung) { toast('Thiếu Nội dung sửa', 'err'); return; }
   var loaiBT = (document.querySelector('input[name="bt-loai"]:checked')||{}).value || 'SUA_CHUA';
+  var chiPhiRaw = String(document.getElementById('bt-chi-phi').value||'').replace(/[^\d]/g, '');
+  var chiPhi = chiPhiRaw ? parseInt(chiPhiRaw) : 0;
+
+  // Cảnh báo: chi phí sửa lần này ≥ ngưỡng × GT còn lại → nên cân nhắc thanh lý
+  if (chiPhi > 0 && !_btEditing) {
+    var cc = (_dmCongCu||[]).find(function(c){ return c.ma_cong_cu === maCC; });
+    if (cc) {
+      var d = _calcCcDepreciation(cc);
+      if (d.hasData && d.gtcl > 0) {
+        var ratio = chiPhi / d.gtcl;
+        if (ratio >= CC_LIQUIDATE_REPAIR_SINGLE_PCT) {
+          var warnMsg = '⚠ Chi phí sửa lần này (' + _fmtVnd(chiPhi) + ' đ) = ' + Math.round(ratio*100)
+            + '% giá trị còn lại của CC (' + _fmtVnd(d.gtcl) + ' đ).\n\n'
+            + 'Mua mới có thể kinh tế hơn. Bạn vẫn muốn lưu phiếu sửa?';
+          if (!confirm(warnMsg)) return;
+        }
+      }
+    }
+  }
+
   var btn = document.getElementById('bt-save-btn');
   btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
   try {
-    var chiPhiRaw = String(document.getElementById('bt-chi-phi').value||'').replace(/[^\d]/g, '');
     var res = await apiPost({
       action:        'saveBaoTri',
       username:      state.user && state.user.username || '',
@@ -13870,9 +14064,17 @@ window.permDefault   = function(){ setPermCheckboxes(DEFAULT_USER_PERMS); };
         <div class="kho-fg"><label>Nguyên giá (đ)</label><input id="ccd-nguyengia" type="number" min="0"></div>
       </div>
       <div class="kho-grid-2">
-        <div class="kho-fg"><label>Số tháng KH</label><input id="ccd-thangkh" type="number" min="0"></div>
+        <div class="kho-fg"><label>Số tháng KH</label><input id="ccd-thangkh" type="number" min="0" oninput="renderCcdDepreciationPanel()"></div>
         <div class="kho-fg"><label>Số tháng BH</label><input id="ccd-thangbh" type="number" min="0"></div>
       </div>
+
+      <div id="ccd-dep-panel" style="margin:var(--sp-3) 0;padding:var(--sp-3);border:1px solid var(--gray-200);border-radius:8px;background:#FAFBFC;display:none">
+        <div style="font-weight:700;font-size:13px;color:var(--gray-800);margin-bottom:var(--sp-2);display:flex;align-items:center;gap:6px">
+          📊 Khấu hao &amp; Đề xuất thanh lý
+        </div>
+        <div id="ccd-dep-body"></div>
+      </div>
+
       <div class="kho-fg"><label>Người giữ hiện tại</label><select id="ccd-nguoigiu"><option value="">— Chưa giao —</option></select></div>
       <div class="kho-fg"><label>Thông tin BH</label><input id="ccd-thongtinbh"></div>
     </div>
