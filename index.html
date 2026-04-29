@@ -2535,9 +2535,9 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="tbl-wrap">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:150px"><col><col style="width:85px">
-                <col style="width:100px"><col style="width:140px"><col style="width:120px"><col style="width:110px">
-                <col style="width:80px"><col style="width:160px">
+                <col style="width:140px"><col><col style="width:100px">
+                <col style="width:110px"><col style="width:155px"><col style="width:135px"><col style="width:160px">
+                <col style="width:75px"><col style="width:150px">
               </colgroup>
               <thead>
                 <tr>
@@ -10904,6 +10904,9 @@ function renderDmCongCu(data) {
     document.getElementById('cc-pf-last').disabled  = _ccPage >= totalPages;
     document.getElementById('cc-pf-size').value = String(_ccPageSize);
   }
+  // Map username → fullname để hiển thị Người giữ đẹp (giống Lịch sử CCDC)
+  var uMap = {};
+  (_khoUsersList||[]).forEach(function(u){ uMap[u.username] = u.fullname || u.username; });
   tbody.innerHTML = display.map(function(r,i){
     var imgCell = (r.hinh_anh && r.hinh_anh.indexOf('http')===0)
       ? '<img src="'+esc(r.hinh_anh)+'" style="width:32px;height:32px;object-fit:cover;border-radius:4px;cursor:zoom-in" onclick="event.stopPropagation();openLightbox(\''+esc(r.hinh_anh)+'\',\''+esc(r.ma_cong_cu)+'\')">'
@@ -10911,6 +10914,15 @@ function renderDmCongCu(data) {
     var stCfg = _ccStatusCfg(r.trang_thai);
     var bg = i%2===1 ? 'background:#FAFAFA' : '';
     var dash = '<span style="color:var(--gray-300)">—</span>';
+    // Map username → fullname; nếu không có trong users list (legacy) → giữ nguyên + style xám
+    var nguoiGiuCell;
+    if (!r.nguoi_giu) {
+      nguoiGiuCell = dash;
+    } else if (uMap[r.nguoi_giu]) {
+      nguoiGiuCell = esc(uMap[r.nguoi_giu]);
+    } else {
+      nguoiGiuCell = '<span style="color:var(--gray-500);font-style:italic" title="Legacy — chưa map sang user account">'+esc(r.nguoi_giu)+'</span>';
+    }
 
     // Khấu hao + đề xuất thanh lý
     var repairTotal = _getCcRepairTotal(r.ma_cong_cu); // null nếu chưa load _btList
@@ -10945,7 +10957,7 @@ function renderDmCongCu(data) {
       + '<td style="text-align:right">'+(r.nguyen_gia>0?r.nguyen_gia.toLocaleString('vi-VN'):dash)+'</td>'
       + '<td>'+khCell+'</td>'
       + '<td><span class="badge" style="background:'+stCfg.bg+';color:'+stCfg.color+';font-weight:600">'+esc(stCfg.label)+'</span>'+liqBadge+'</td>'
-      + '<td>'+(r.nguoi_giu?esc(r.nguoi_giu):dash)+'</td>'
+      + '<td style="overflow:hidden;text-overflow:ellipsis" title="'+esc(uMap[r.nguoi_giu]||r.nguoi_giu||'')+'">'+nguoiGiuCell+'</td>'
       + '<td>'+imgCell+'</td>'
       + '<td><button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openCongCuDetail(\''+esc(r.ma_cong_cu)+'\')" title="Mở chi tiết">Mở</button> '
       + '<button class="btn btn-sm btn-tag" onclick="event.stopPropagation();printBarcodeForCongCu(\''+esc(r.ma_cong_cu)+'\')" title="In tem barcode">Tem</button> '
