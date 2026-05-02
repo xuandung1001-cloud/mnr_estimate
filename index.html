@@ -1025,6 +1025,10 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
         Báo cáo Kho
       </div>
+      <div class="nav-item" id="nav-baocao-tong" style="--ic:#0EA5E9" onclick="nav('baocao-tong',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+        Báo cáo Tổng
+      </div>
     </div>
 
     <!-- HỆ THỐNG — gộp Hệ thống + Báo cáo (Xuất/Xem hình → tiện ích) -->
@@ -2027,6 +2031,130 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
         </div>
       </div>
       <!-- ═════════════ END PHASE 6 ═════════════ -->
+
+
+      <!-- ═════════════ BÁO CÁO TỔNG ═════════════ -->
+      <div class="screen fixed-layout" id="screen-baocao-tong">
+        <div class="fb-card">
+          <div class="fb-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+            <div>
+              <label class="fb-lbl" style="font-size:11px;color:var(--gray-700);font-weight:600;display:block;margin-bottom:4px">Từ ngày</label>
+              <input type="date" id="bt-from" class="inp" style="width:100%">
+            </div>
+            <div>
+              <label class="fb-lbl" style="font-size:11px;color:var(--gray-700);font-weight:600;display:block;margin-bottom:4px">Đến ngày</label>
+              <input type="date" id="bt-to" class="inp" style="width:100%">
+            </div>
+            <div>
+              <label class="fb-lbl" style="font-size:11px;color:var(--gray-700);font-weight:600;display:block;margin-bottom:4px">Quick</label>
+              <select id="bt-quick" class="inp" style="width:100%" onchange="btQuickPeriod()">
+                <option value="">— Chọn nhanh —</option>
+                <option value="this_month">Tháng này</option>
+                <option value="last_month">Tháng trước</option>
+                <option value="this_quarter">Quý này</option>
+                <option value="this_year">Năm nay</option>
+                <option value="last_30">30 ngày gần nhất</option>
+                <option value="last_90">90 ngày gần nhất</option>
+              </select>
+            </div>
+          </div>
+          <div class="fb-bottom">
+            <button class="btn btn-primary" onclick="btLoad()" id="bt-btn-load">📊 Tải báo cáo</button>
+            <button class="btn" onclick="btExportExcel()" id="bt-btn-export" disabled>⬇️ Export Excel</button>
+            <span id="bt-period-label" style="font-size:12px;color:var(--gray-700);margin-left:auto"></span>
+          </div>
+        </div>
+
+        <div id="bt-content" style="overflow-y:auto;flex:1;padding-bottom:16px">
+          <div id="bt-empty" style="padding:60px 20px;text-align:center;color:var(--gray-500)">
+            <div style="font-size:42px;margin-bottom:12px;opacity:.5">📊</div>
+            <div style="font-size:13px">Chọn kỳ báo cáo và nhấn <b>Tải báo cáo</b> để xem.</div>
+          </div>
+          <div id="bt-result" style="display:none">
+            <!-- KPI Grid -->
+            <div id="bt-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px"></div>
+
+            <!-- Charts row -->
+            <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:16px">
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:10px">📈 Doanh thu vs Chi phí theo tháng</div>
+                <div style="height:280px;position:relative"><canvas id="bt-chart-month"></canvas></div>
+              </div>
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:10px">🥧 Cơ cấu chi phí</div>
+                <div style="height:280px;position:relative"><canvas id="bt-chart-cost"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Tables row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:8px">🚢 Doanh thu theo Carrier</div>
+                <div style="max-height:300px;overflow-y:auto">
+                  <table style="width:100%;font-size:12px;border-collapse:collapse">
+                    <thead><tr style="background:var(--gray-50);position:sticky;top:0">
+                      <th style="text-align:left;padding:6px 8px">Carrier</th>
+                      <th style="text-align:right;padding:6px 8px">Cont</th>
+                      <th style="text-align:right;padding:6px 8px">Repaired</th>
+                      <th style="text-align:right;padding:6px 8px">Doanh thu (USD)</th>
+                    </tr></thead>
+                    <tbody id="bt-tbl-carrier"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:8px">🔧 Top 10 Vật tư xuất nhiều</div>
+                <div style="max-height:300px;overflow-y:auto">
+                  <table style="width:100%;font-size:12px;border-collapse:collapse">
+                    <thead><tr style="background:var(--gray-50);position:sticky;top:0">
+                      <th style="text-align:left;padding:6px 8px">Mã VT</th>
+                      <th style="text-align:left;padding:6px 8px">Tên</th>
+                      <th style="text-align:right;padding:6px 8px">SL</th>
+                      <th style="text-align:right;padding:6px 8px">Giá trị (VND)</th>
+                    </tr></thead>
+                    <tbody id="bt-tbl-vattu"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom row: Status + CCDC + Stock -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:8px">📋 Trạng thái Báo Giá</div>
+                <div id="bt-status-list" style="font-size:12px"></div>
+              </div>
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:8px">⚙️ Giao dịch CCDC</div>
+                <div id="bt-ccdc-list" style="font-size:12px"></div>
+              </div>
+              <div class="fb-card" style="margin-bottom:0">
+                <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:8px">📦 Tồn rỗng theo Grade (snapshot)</div>
+                <div id="bt-grade-list" style="font-size:12px"></div>
+              </div>
+            </div>
+
+            <!-- Monthly detail table -->
+            <div class="fb-card" style="margin-bottom:0">
+              <div style="font-size:13px;font-weight:700;color:var(--gray-900);margin-bottom:8px">📅 Chi tiết theo tháng</div>
+              <div style="overflow-x:auto">
+                <table style="width:100%;font-size:12px;border-collapse:collapse">
+                  <thead><tr style="background:var(--gray-50)">
+                    <th style="text-align:left;padding:8px 10px">Tháng</th>
+                    <th style="text-align:right;padding:8px 10px">Số cont</th>
+                    <th style="text-align:right;padding:8px 10px">Doanh thu (USD)</th>
+                    <th style="text-align:right;padding:8px 10px">Chi phí VT (VND)</th>
+                    <th style="text-align:right;padding:8px 10px">Chi phí BT (VND)</th>
+                    <th style="text-align:right;padding:8px 10px">Lãi gộp (USD)</th>
+                  </tr></thead>
+                  <tbody id="bt-tbl-month"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ═════════════ END BÁO CÁO TỔNG ═════════════ -->
 
 
       <!-- TREND TABLE SCREEN -->
@@ -3963,7 +4091,8 @@ function nav(screen, el) {
     'baotri':      { title: 'Bảo trì sửa chữa', icon: ICONS.baotri, iconColor: '#EF4444', actions: [] },
     'kiemke':      { title: 'Kiểm kê tồn', icon: ICONS.kiemke, iconColor: '#16A34A', actions: [] },
     'kkdetail':    { title: 'Chi tiết đợt kiểm kê', icon: ICONS.kiemke, iconColor: '#16A34A', actions: [] },
-    'khoreport':   { title: 'Báo cáo Kho MNR', icon: ICONS.khoreport, iconColor: '#6366F1', actions: [] }
+    'khoreport':   { title: 'Báo cáo Kho MNR', icon: ICONS.khoreport, iconColor: '#6366F1', actions: [] },
+    'baocao-tong': { title: 'Báo cáo Tổng', icon: ICONS.khoreport, iconColor: '#0EA5E9', subtitle: 'Doanh thu · Chi phí · Kho · Bảo trì', actions: [] }
   };
 
   const cfg = configs[screen] || { title: screen, actions: [] };
@@ -3991,6 +4120,7 @@ function nav(screen, el) {
   if (screen === 'baotri')      { if (_btList.length) { renderBtStats(); renderBtList(); } else loadBaoTriList(); }
   if (screen === 'kiemke')      { if (_kkList.length) { renderKkStats(); renderKkList(); } else loadKiemKeList(); }
   if (screen === 'khoreport')   { krInitScreen(); }
+  if (screen === 'baocao-tong') { btInitScreen(); }
   if (screen === 'actlog') { _actLogData = []; document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Nhấn Refresh để tải log</td></tr>'; document.getElementById('log-count').textContent = ''; }
   if (screen === 'stock') renderStock();
   if (screen === 'tariff') renderTariffScreen();
@@ -8922,16 +9052,16 @@ async function handleStockUpload(input) {
 const ALL_SCREENS = [
   'report',
   'estimate','revise','ovm','tracking','summary','bulk','pictures',
-  'stock','dm-vattu','dm-congcu','pk','ccdc','baotri','kiemke','khoreport',
+  'stock','dm-vattu','dm-congcu','pk','ccdc','baotri','kiemke','khoreport','baocao-tong',
   'tariff','users','actlog','inventory','photos'
 ];
-const DEFAULT_USER_PERMS = 'report,estimate,revise,ovm,tracking,summary,bulk,pictures,stock,dm-vattu,dm-congcu,pk,ccdc,baotri,kiemke,khoreport,inventory,photos'; // tariff/users/actlog ẩn mặc định
+const DEFAULT_USER_PERMS = 'report,estimate,revise,ovm,tracking,summary,bulk,pictures,stock,dm-vattu,dm-congcu,pk,ccdc,baotri,kiemke,khoreport,baocao-tong,inventory,photos'; // tariff/users/actlog ẩn mặc định
 const SCREEN_LABELS = {
   report:'Tổng quan',
   estimate:'Nhập BG', revise:'Sửa BG', ovm:'OVM',
   tracking:'DS Báo giá', summary:'Tổng hợp', bulk:'Xuất Bulk', pictures:'Xuất hình',
   stock:'Tồn rỗng', 'dm-vattu':'DM Vật tư', 'dm-congcu':'DM Công cụ',
-  pk:'Phiếu N/X', ccdc:'Lịch sử CCDC', baotri:'Bảo trì SC', kiemke:'Kiểm kê tồn', khoreport:'Báo cáo Kho',
+  pk:'Phiếu N/X', ccdc:'Lịch sử CCDC', baotri:'Bảo trì SC', kiemke:'Kiểm kê tồn', khoreport:'Báo cáo Kho', 'baocao-tong':'Báo cáo Tổng',
   tariff:'Bảng giá', users:'Quản lý User', actlog:'Nhật ký',
   inventory:'MSC Inv', photos:'Xem hình'
 };
@@ -8940,7 +9070,7 @@ const SCREEN_GROUP_COLOR = {
   estimate:'#22d3ee', revise:'#22d3ee', ovm:'#22d3ee',
   tracking:'#22d3ee', summary:'#22d3ee', bulk:'#22d3ee', pictures:'#22d3ee',
   stock:'#34d399', 'dm-vattu':'#34d399', 'dm-congcu':'#34d399',
-  pk:'#34d399', ccdc:'#34d399', baotri:'#34d399', kiemke:'#34d399', khoreport:'#34d399',
+  pk:'#34d399', ccdc:'#34d399', baotri:'#34d399', kiemke:'#34d399', khoreport:'#34d399', 'baocao-tong':'#0ea5e9',
   tariff:'#a78bfa', users:'#a78bfa', actlog:'#a78bfa',
   inventory:'#a78bfa', photos:'#a78bfa'
 };
@@ -10117,6 +10247,281 @@ function krRenderSoKho(d) {
     + '</tr>';
   }).join('');
   tb.innerHTML = html;
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// BÁO CÁO TỔNG — Dashboard tổng hợp doanh thu/chi phí/kho/bảo trì
+// ═════════════════════════════════════════════════════════════════════
+var _btState = { data: null, charts: {} };
+
+function btInitScreen() {
+  // Default = tháng hiện tại nếu chưa có
+  if (!document.getElementById('bt-from').value) {
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth();
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    document.getElementById('bt-from').value = y + '-' + pad(m+1) + '-01';
+    var lastDay = new Date(y, m+1, 0).getDate();
+    document.getElementById('bt-to').value = y + '-' + pad(m+1) + '-' + pad(lastDay);
+    document.getElementById('bt-quick').value = 'this_month';
+  }
+  if (!_btState.data) btLoad();
+}
+
+function btQuickPeriod() {
+  var v = document.getElementById('bt-quick').value;
+  if (!v) return;
+  var now = new Date();
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  var iso = function(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); };
+  var from, to;
+  if (v === 'this_month')      { from = new Date(now.getFullYear(), now.getMonth(), 1); to = new Date(now.getFullYear(), now.getMonth()+1, 0); }
+  else if (v === 'last_month') { from = new Date(now.getFullYear(), now.getMonth()-1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
+  else if (v === 'this_quarter') { var q = Math.floor(now.getMonth()/3); from = new Date(now.getFullYear(), q*3, 1); to = new Date(now.getFullYear(), q*3+3, 0); }
+  else if (v === 'this_year')  { from = new Date(now.getFullYear(), 0, 1); to = new Date(now.getFullYear(), 11, 31); }
+  else if (v === 'last_30')    { to = now; from = new Date(now.getTime() - 29*86400000); }
+  else if (v === 'last_90')    { to = now; from = new Date(now.getTime() - 89*86400000); }
+  document.getElementById('bt-from').value = iso(from);
+  document.getElementById('bt-to').value   = iso(to);
+}
+
+function _btFmtUsd(n) {
+  return '$' + (Number(n)||0).toLocaleString('en-US');
+}
+function _btFmtVnd(n) {
+  return (Number(n)||0).toLocaleString('vi-VN') + ' đ';
+}
+function _btFmtNum(n) {
+  return (Number(n)||0).toLocaleString('vi-VN');
+}
+
+async function btLoad() {
+  var from = document.getElementById('bt-from').value;
+  var to   = document.getElementById('bt-to').value;
+  if (!from || !to) { toast('Chọn khoảng ngày'); return; }
+  if (from > to)    { toast('Từ ngày > Đến ngày'); return; }
+  var btn = document.getElementById('bt-btn-load');
+  btn.disabled = true;
+  var oldHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle"></span> Đang tải...';
+  try {
+    var res = await apiGet({ action: 'getBaoCaoTong', from_iso: from, to_iso: to });
+    if (!res || !res.success) throw new Error((res && res.error) || 'Lỗi tải báo cáo');
+    _btState.data = res;
+    btRender(res);
+    document.getElementById('bt-btn-export').disabled = false;
+    toast('✅ Đã tải báo cáo');
+  } catch(e) {
+    toast('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = oldHtml;
+  }
+}
+
+function btRender(d) {
+  document.getElementById('bt-empty').style.display = 'none';
+  document.getElementById('bt-result').style.display = '';
+
+  var fmtRange = function(iso) {
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  };
+  document.getElementById('bt-period-label').textContent =
+    '📅 ' + fmtRange(d.from_iso) + ' → ' + fmtRange(d.to_iso);
+
+  // ── KPI Grid ──
+  var k = d.kpi;
+  var kpiCards = [
+    { label: 'DOANH THU PHÁT SINH',  val: _btFmtUsd(k.doanh_thu_phat_sinh), sub: k.so_cont_bao_gia + ' báo giá', color: '#0EA5E9' },
+    { label: 'DOANH THU HOÀN THÀNH', val: _btFmtUsd(k.doanh_thu_hoan_thanh), sub: k.so_cont_repaired + ' cont Repaired', color: '#10B981' },
+    { label: 'CHI PHÍ VẬT TƯ',       val: _btFmtVnd(k.chi_phi_vat_tu), sub: k.so_phieu_xuat + ' phiếu xuất', color: '#F97316' },
+    { label: 'CHI PHÍ BẢO TRÌ',      val: _btFmtVnd(k.chi_phi_bao_tri), sub: k.so_phieu_bao_tri + ' phiếu sửa', color: '#EF4444' },
+    { label: 'LÃI GỘP (USD)',        val: _btFmtUsd(k.lai_gop), sub: 'Biên LN ' + k.bien_loi_nhuan_pct + '%', color: k.lai_gop >= 0 ? '#22C55E' : '#DC2626' },
+    { label: 'GIÁ TRỊ TỒN KHO',      val: _btFmtVnd(k.gia_tri_ton_kho), sub: k.so_vat_tu + ' mã · ' + k.so_vat_tu_low + ' dưới min', color: '#A855F7' },
+    { label: 'GIÁ TRỊ NHẬP KHO',     val: _btFmtVnd(k.gia_tri_nhap_kho), sub: k.so_phieu_nhap + ' phiếu nhập', color: '#84CC16' },
+    { label: 'GIAO DỊCH CCDC / CONT RỖNG', val: k.so_gd_ccdc + ' / ' + k.tong_cont_rong, sub: 'GD trong kỳ · cont rỗng hiện tại', color: '#64748B' }
+  ];
+  document.getElementById('bt-kpi-grid').innerHTML = kpiCards.map(function(c) {
+    return '<div class="fb-card" style="margin:0;padding:12px 14px;border-left:3px solid '+c.color+'">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--gray-600);letter-spacing:.05em">'+c.label+'</div>'
+      + '<div style="font-size:18px;font-weight:800;color:'+c.color+';margin-top:4px">'+c.val+'</div>'
+      + '<div style="font-size:10px;color:var(--gray-500);margin-top:2px">'+c.sub+'</div>'
+      + '</div>';
+  }).join('');
+
+  // ── Chart 1: Doanh thu vs Chi phí theo tháng ──
+  if (_btState.charts.month) { _btState.charts.month.destroy(); _btState.charts.month = null; }
+  var months = d.by_month || [];
+  if (months.length && typeof Chart !== 'undefined') {
+    var ctx = document.getElementById('bt-chart-month').getContext('2d');
+    _btState.charts.month = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: months.map(function(m){ return m.month; }),
+        datasets: [
+          { label: 'Doanh thu (USD)', data: months.map(function(m){ return m.doanh_thu; }), backgroundColor: '#0EA5E9', yAxisID: 'y' },
+          { label: 'Chi phí VT (VND)', data: months.map(function(m){ return m.chi_phi_vt; }), backgroundColor: '#F97316', yAxisID: 'y1' },
+          { label: 'Chi phí BT (VND)', data: months.map(function(m){ return m.chi_phi_bt; }), backgroundColor: '#EF4444', yAxisID: 'y1' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } },
+        scales: {
+          y:  { type: 'linear', position: 'left',  title: { display: true, text: 'USD', font: { size: 10 } }, ticks: { font: { size: 9 } } },
+          y1: { type: 'linear', position: 'right', title: { display: true, text: 'VND', font: { size: 10 } }, ticks: { font: { size: 9 } }, grid: { drawOnChartArea: false } },
+          x:  { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  }
+
+  // ── Chart 2: Cơ cấu chi phí (donut) ──
+  if (_btState.charts.cost) { _btState.charts.cost.destroy(); _btState.charts.cost = null; }
+  if (typeof Chart !== 'undefined') {
+    var ctx2 = document.getElementById('bt-chart-cost').getContext('2d');
+    var costData = [k.chi_phi_vat_tu, k.chi_phi_bao_tri];
+    var hasCost = costData.some(function(v){ return v > 0; });
+    if (hasCost) {
+      _btState.charts.cost = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Vật tư', 'Bảo trì'],
+          datasets: [{ data: costData, backgroundColor: ['#F97316', '#EF4444'], borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: { callbacks: { label: function(ctx){ return ctx.label + ': ' + (ctx.raw||0).toLocaleString('vi-VN') + ' đ'; } } }
+          }
+        }
+      });
+    } else {
+      ctx2.canvas.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-500);font-size:12px">Không có chi phí trong kỳ</div>';
+    }
+  }
+
+  // ── Table: Carrier ──
+  var trCar = (d.by_carrier || []).map(function(c) {
+    return '<tr style="border-bottom:1px solid var(--gray-100)">'
+      + '<td style="padding:6px 8px;font-weight:600">'+esc(c.carrier)+'</td>'
+      + '<td style="padding:6px 8px;text-align:right">'+_btFmtNum(c.so_cont)+'</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:#10B981;font-weight:600">'+_btFmtNum(c.repaired)+'</td>'
+      + '<td style="padding:6px 8px;text-align:right;font-weight:700;color:#0EA5E9">'+_btFmtUsd(c.doanh_thu)+'</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('bt-tbl-carrier').innerHTML = trCar
+    || '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--gray-500)">Không có dữ liệu</td></tr>';
+
+  // ── Table: Top vật tư ──
+  var trVT = (d.top_vat_tu || []).map(function(v) {
+    return '<tr style="border-bottom:1px solid var(--gray-100)">'
+      + '<td style="padding:6px 8px;font-family:monospace;font-size:11px">'+esc(v.ma_vt)+'</td>'
+      + '<td style="padding:6px 8px;font-size:11px">'+esc(v.ten_vt)+'</td>'
+      + '<td style="padding:6px 8px;text-align:right">'+_btFmtNum(v.sl)+' '+esc(v.don_vi||'')+'</td>'
+      + '<td style="padding:6px 8px;text-align:right;font-weight:700;color:#F97316">'+_btFmtVnd(v.gia_tri)+'</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('bt-tbl-vattu').innerHTML = trVT
+    || '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--gray-500)">Không có vật tư xuất trong kỳ</td></tr>';
+
+  // ── Status, CCDC, Grade lists ──
+  var STATUS_COLORS = { 'Pending':'#94A3B8', 'Sent for Approval':'#0EA5E9', 'Approved':'#10B981', 'Partially Approved':'#22D3EE', 'Partially Approved - Revised':'#06B6D4', 'Repair Pending':'#F59E0B', 'Repaired':'#22C55E', 'Rejected':'#EF4444' };
+  var statusItems = Object.entries(d.status_breakdown || {}).sort(function(a,b){return b[1]-a[1];});
+  document.getElementById('bt-status-list').innerHTML = statusItems.length
+    ? statusItems.map(function(s) {
+        var c = STATUS_COLORS[s[0]] || '#64748B';
+        return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--gray-100)">'
+          + '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+c+';margin-right:6px"></span>'+esc(s[0])+'</span>'
+          + '<b style="color:'+c+'">'+_btFmtNum(s[1])+'</b></div>';
+      }).join('')
+    : '<div style="color:var(--gray-500);padding:8px;text-align:center">Không có dữ liệu</div>';
+
+  var ccItems = Object.entries(d.ccdc_by_loai || {}).sort(function(a,b){return b[1]-a[1];});
+  document.getElementById('bt-ccdc-list').innerHTML = ccItems.length
+    ? ccItems.map(function(c) {
+        return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--gray-100)">'
+          + '<span>'+esc(c[0])+'</span><b>'+_btFmtNum(c[1])+'</b></div>';
+      }).join('')
+    : '<div style="color:var(--gray-500);padding:8px;text-align:center">Không có giao dịch</div>';
+
+  var GRADE_COLORS = { 'A':'#10B981', 'B':'#0EA5E9', 'C':'#F59E0B', 'D':'#EF4444' };
+  var grItems = Object.entries(d.cont_by_grade || {}).sort(function(a,b){return b[1]-a[1];});
+  document.getElementById('bt-grade-list').innerHTML = grItems.length
+    ? grItems.map(function(g) {
+        var c = GRADE_COLORS[g[0]] || '#64748B';
+        return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--gray-100)">'
+          + '<span><b style="color:'+c+'">Grade '+esc(g[0])+'</b></span><b>'+_btFmtNum(g[1])+'</b></div>';
+      }).join('')
+    : '<div style="color:var(--gray-500);padding:8px;text-align:center">Không có cont rỗng</div>';
+
+  // ── Monthly detail table ──
+  var trMo = (d.by_month || []).map(function(m) {
+    var laiColor = m.lai_gop >= 0 ? '#22C55E' : '#DC2626';
+    return '<tr style="border-bottom:1px solid var(--gray-100)">'
+      + '<td style="padding:8px 10px;font-weight:600">'+esc(m.month)+'</td>'
+      + '<td style="padding:8px 10px;text-align:right">'+_btFmtNum(m.so_cont)+'</td>'
+      + '<td style="padding:8px 10px;text-align:right;color:#0EA5E9;font-weight:600">'+_btFmtUsd(m.doanh_thu)+'</td>'
+      + '<td style="padding:8px 10px;text-align:right;color:#F97316">'+_btFmtVnd(m.chi_phi_vt)+'</td>'
+      + '<td style="padding:8px 10px;text-align:right;color:#EF4444">'+_btFmtVnd(m.chi_phi_bt)+'</td>'
+      + '<td style="padding:8px 10px;text-align:right;font-weight:700;color:'+laiColor+'">'+_btFmtUsd(m.lai_gop)+'</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('bt-tbl-month').innerHTML = trMo
+    || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--gray-500)">Không có dữ liệu</td></tr>';
+}
+
+function btExportExcel() {
+  if (!_btState.data) { toast('Chưa có dữ liệu'); return; }
+  if (typeof XLSX === 'undefined') { toast('SheetJS chưa load'); return; }
+  var d = _btState.data;
+  var k = d.kpi;
+  var wb = XLSX.utils.book_new();
+
+  // Sheet 1: Tổng quan
+  var s1 = [
+    ['BÁO CÁO TỔNG'],
+    ['Kỳ:', d.from_iso + ' → ' + d.to_iso],
+    [],
+    ['CHỈ TIÊU', 'GIÁ TRỊ', 'GHI CHÚ'],
+    ['Doanh thu phát sinh (USD)',  k.doanh_thu_phat_sinh,  k.so_cont_bao_gia + ' báo giá'],
+    ['Doanh thu hoàn thành (USD)', k.doanh_thu_hoan_thanh, k.so_cont_repaired + ' cont Repaired'],
+    ['Chi phí vật tư (VND)',       k.chi_phi_vat_tu,       k.so_phieu_xuat + ' phiếu xuất'],
+    ['Chi phí bảo trì (VND)',      k.chi_phi_bao_tri,      k.so_phieu_bao_tri + ' phiếu sửa'],
+    ['Lãi gộp (USD)',              k.lai_gop,              'Biên LN ' + k.bien_loi_nhuan_pct + '%'],
+    ['Giá trị tồn kho (VND)',      k.gia_tri_ton_kho,      k.so_vat_tu + ' mã · ' + k.so_vat_tu_low + ' dưới min'],
+    ['Giá trị nhập kho (VND)',     k.gia_tri_nhap_kho,     k.so_phieu_nhap + ' phiếu nhập'],
+    ['Số GD CCDC',                 k.so_gd_ccdc,           ''],
+    ['Tổng cont rỗng',             k.tong_cont_rong,       'Snapshot hiện tại']
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s1), 'Tổng quan');
+
+  // Sheet 2: Theo tháng
+  var s2 = [['Tháng', 'Số cont', 'Doanh thu (USD)', 'Chi phí VT (VND)', 'Chi phí BT (VND)', 'Lãi gộp (USD)']];
+  (d.by_month || []).forEach(function(m) {
+    s2.push([m.month, m.so_cont, m.doanh_thu, m.chi_phi_vt, m.chi_phi_bt, m.lai_gop]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s2), 'Theo tháng');
+
+  // Sheet 3: Theo carrier
+  var s3 = [['Carrier', 'Số cont', 'Repaired', 'Doanh thu (USD)']];
+  (d.by_carrier || []).forEach(function(c) {
+    s3.push([c.carrier, c.so_cont, c.repaired, c.doanh_thu]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s3), 'Theo carrier');
+
+  // Sheet 4: Top vật tư
+  var s4 = [['Mã VT', 'Tên', 'Đơn vị', 'SL xuất', 'Giá trị (VND)']];
+  (d.top_vat_tu || []).forEach(function(v) {
+    s4.push([v.ma_vt, v.ten_vt, v.don_vi, v.sl, v.gia_tri]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s4), 'Top vật tư');
+
+  var fname = 'BaoCaoTong_' + d.from_iso + '_' + d.to_iso + '.xlsx';
+  XLSX.writeFile(wb, fname);
+  toast('✅ Đã export ' + fname);
 }
 
 // ───── Tỷ giá USD live từ Vietcombank ─────
@@ -13792,6 +14197,7 @@ async function reopenKkDetail() {
             <label class="u-chk"><input type="checkbox" id="perm-baotri" value="baotri"> Bảo trì sửa chữa</label>
             <label class="u-chk"><input type="checkbox" id="perm-kiemke" value="kiemke"> Kiểm kê tồn</label>
             <label class="u-chk"><input type="checkbox" id="perm-khoreport" value="khoreport"> Báo cáo Kho</label>
+            <label class="u-chk"><input type="checkbox" id="perm-baocao-tong" value="baocao-tong"> Báo cáo Tổng</label>
           </div>
         </div>
 
