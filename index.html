@@ -10308,7 +10308,7 @@ function btRender(d) {
     { label: 'Chi phí vật tư',   value: _btFmtVnd(k.chi_phi_vat_tu),      sub: k.so_phieu_xuat + ' phiếu xuất', color: 'orange' },
     { label: 'Chi phí bảo trì',  value: _btFmtVnd(k.chi_phi_bao_tri),     sub: k.so_phieu_bao_tri + ' phiếu sửa', color: 'red' },
     { label: 'Lãi gộp (VND)',    value: _btFmtVnd(k.lai_gop_vnd),         sub: 'Biên LN ' + k.bien_loi_nhuan_pct + '%', color: k.lai_gop_vnd >= 0 ? 'green' : 'red' },
-    { label: 'Khấu hao CCDC/tháng', value: _btFmtVnd(k.khau_hao_ccdc_thang||0), sub: (k.so_ccdc_khau_hao||0) + ' CCDC còn KH', color: 'purple' },
+    { label: 'Khấu hao CCDC trong kỳ', value: _btFmtVnd(k.khau_hao_ccdc_thang||0), sub: (k.so_ccdc_khau_hao||0) + ' CCDC khấu hao trong kỳ', color: 'purple' },
     { label: 'Giá trị nhập kho', value: _btFmtVnd(k.gia_tri_nhap_kho),    sub: k.so_phieu_nhap + ' phiếu nhập', color: 'green' }
   ];
   document.getElementById('bt-kpi-grid').innerHTML = kpiCards.map(function(c) {
