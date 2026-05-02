@@ -2091,7 +2091,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <div class="card-sec-left">
                   <div class="card-sec-text">
                     <div class="card-sec-title">Doanh thu vs Chi phí theo tháng</div>
-                    <div class="card-sec-sub" id="bt-chart-sub">Cột xanh = doanh thu (đã quy đổi VND) · Cột cam = chi phí VT · Cột đỏ = chi phí BT</div>
+                    <div class="card-sec-sub" id="bt-chart-sub">Đường xu hướng — xanh: doanh thu (VND) · cam: chi phí VT · đỏ: chi phí BT</div>
                   </div>
                 </div>
               </div>
@@ -10308,37 +10308,49 @@ function btRender(d) {
     { label: 'Chi phí vật tư',   value: _btFmtVnd(k.chi_phi_vat_tu),      sub: k.so_phieu_xuat + ' phiếu xuất', color: 'orange' },
     { label: 'Chi phí bảo trì',  value: _btFmtVnd(k.chi_phi_bao_tri),     sub: k.so_phieu_bao_tri + ' phiếu sửa', color: 'red' },
     { label: 'Lãi gộp (VND)',    value: _btFmtVnd(k.lai_gop_vnd),         sub: 'Biên LN ' + k.bien_loi_nhuan_pct + '%', color: k.lai_gop_vnd >= 0 ? 'green' : 'red' },
-    { label: 'Giá trị tồn kho',  value: _btFmtVnd(k.gia_tri_ton_kho),     sub: k.so_vat_tu + ' mã · ' + k.so_vat_tu_low + ' dưới min', color: 'purple' },
+    { label: 'Khấu hao CCDC/tháng', value: _btFmtVnd(k.khau_hao_ccdc_thang||0), sub: (k.so_ccdc_khau_hao||0) + ' CCDC còn KH', color: 'purple' },
     { label: 'Giá trị nhập kho', value: _btFmtVnd(k.gia_tri_nhap_kho),    sub: k.so_phieu_nhap + ' phiếu nhập', color: 'green' }
   ];
   document.getElementById('bt-kpi-grid').innerHTML = kpiCards.map(function(c) {
     return _kstat({ label: c.label, value: c.value, sub: c.sub, color: c.color });
   }).join('');
 
-  // ── Chart: Doanh thu vs Chi phí theo tháng (1 trục VND, doanh thu đã quy đổi) ──
+  // ── Chart: Doanh thu vs Chi phí theo tháng — line trends ──
+  // Format yyyy-MM → MM/yyyy cho x-axis
+  function _btFmtMonthLbl(s) {
+    var m = String(s||'').match(/^(\d{4})-(\d{2})$/);
+    return m ? (m[2] + '/' + m[1]) : (s || '');
+  }
   if (_btState.charts.month) { _btState.charts.month.destroy(); _btState.charts.month = null; }
   var months = d.by_month || [];
   if (months.length && typeof Chart !== 'undefined') {
     var ctx = document.getElementById('bt-chart-month').getContext('2d');
     _btState.charts.month = new Chart(ctx, {
-      type: 'bar',
+      type: 'line',
       data: {
-        labels: months.map(function(m){ return m.month; }),
+        labels: months.map(function(m){ return _btFmtMonthLbl(m.month); }),
         datasets: [
-          { label: 'Doanh thu (VND)', data: months.map(function(m){ return m.doanh_thu_vnd || 0; }), backgroundColor: '#0EA5E9' },
-          { label: 'Chi phí VT (VND)', data: months.map(function(m){ return m.chi_phi_vt; }), backgroundColor: '#F97316' },
-          { label: 'Chi phí BT (VND)', data: months.map(function(m){ return m.chi_phi_bt; }), backgroundColor: '#EF4444' }
+          { label: 'Doanh thu (VND)',  data: months.map(function(m){ return m.doanh_thu_vnd || 0; }),
+            borderColor: '#0EA5E9', backgroundColor: 'rgba(14,165,233,0.12)', borderWidth: 2.5,
+            pointBackgroundColor: '#0EA5E9', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: true },
+          { label: 'Chi phí VT (VND)', data: months.map(function(m){ return m.chi_phi_vt; }),
+            borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 2.5,
+            pointBackgroundColor: '#F97316', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false },
+          { label: 'Chi phí BT (VND)', data: months.map(function(m){ return m.chi_phi_bt; }),
+            borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 2.5,
+            pointBackgroundColor: '#EF4444', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
           tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label + ': ' + (ctx.raw||0).toLocaleString('vi-VN'); } } }
         },
         scales: {
           y: { beginAtZero: true, ticks: { font: { size: 10 }, callback: function(v){ return v.toLocaleString('vi-VN'); } }, grid: { color: '#F3F4F6' } },
-          x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+          x: { ticks: { font: { size: 11 }, align: 'center' }, grid: { display: false }, offset: true }
         }
       }
     });
