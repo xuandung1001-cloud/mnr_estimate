@@ -2091,7 +2091,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <div class="card-sec-left">
                   <div class="card-sec-text">
                     <div class="card-sec-title">Doanh thu vs Chi phí theo tháng</div>
-                    <div class="card-sec-sub" id="bt-chart-sub">Đường xu hướng — xanh: doanh thu (VND) · cam: chi phí VT · đỏ: chi phí BT</div>
+                    <div class="card-sec-sub" id="bt-chart-sub">Đường xu hướng — xanh: doanh thu (VND) · cam: chi phí VT</div>
                   </div>
                 </div>
               </div>
@@ -10335,10 +10335,7 @@ function btRender(d) {
             pointBackgroundColor: '#0EA5E9', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: true },
           { label: 'Chi phí VT (VND)', data: months.map(function(m){ return m.chi_phi_vt; }),
             borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 2.5,
-            pointBackgroundColor: '#F97316', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false },
-          { label: 'Chi phí BT (VND)', data: months.map(function(m){ return m.chi_phi_bt; }),
-            borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 2.5,
-            pointBackgroundColor: '#EF4444', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false }
+            pointBackgroundColor: '#F97316', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false }
         ]
       },
       options: {
