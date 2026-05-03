@@ -7221,12 +7221,12 @@ function genDashboard() {
   });
 
   const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
-  const noVatRaw = totalApp / 1.1;        // raw float — dùng tính VND để khớp BCT (round-once)
-  const noVat    = round2(noVatRaw);      // chỉ round cho hiển thị "$xxx.xx"
+  const noVat    = round2(totalApp / 1.1);   // round2 anchor — display + VND đều dùng số này
 
   // Tỷ giá + financial data từ warehouse report (lazy load nếu chưa có)
   var rate = (typeof _whGetRate === 'function') ? _whGetRate() : 25000;
-  var dtVND = Math.round(noVatRaw * rate); // raw × rate → khớp BCT (KHÔNG dùng noVat đã round2)
+  // VND = round2(USD) × rate → user nhân tay $53,446.03 × 26,368 KHỚP với card.
+  var dtVND = Math.round(noVat * rate);
   var mkey = year + '-' + String(monthIdx+1).padStart(2,'0');
   var xuatVND = 0, tonVND = 0;
   if (_whData && _whData.months) {
