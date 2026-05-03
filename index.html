@@ -2060,11 +2060,11 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <select id="bt-quick" class="fi" onchange="btQuickPeriod()">
                 <option value="">— Chọn nhanh —</option>
                 <option value="this_month">Tháng này</option>
-                <option value="last_month">Tháng trước</option>
-                <option value="this_quarter">Quý này</option>
+                <option value="q1">Quý 1</option>
+                <option value="q2">Quý 2</option>
+                <option value="q3">Quý 3</option>
+                <option value="q4">Quý 4</option>
                 <option value="this_year">Năm nay</option>
-                <option value="last_30">30 ngày gần nhất</option>
-                <option value="last_90">90 ngày gần nhất</option>
               </select>
             </div>
           </div>
@@ -10245,12 +10245,13 @@ function btQuickPeriod() {
   var pad = function(n){ return String(n).padStart(2,'0'); };
   var iso = function(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); };
   var from, to;
-  if (v === 'this_month')      { from = new Date(now.getFullYear(), now.getMonth(), 1); to = new Date(now.getFullYear(), now.getMonth()+1, 0); }
-  else if (v === 'last_month') { from = new Date(now.getFullYear(), now.getMonth()-1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
-  else if (v === 'this_quarter') { var q = Math.floor(now.getMonth()/3); from = new Date(now.getFullYear(), q*3, 1); to = new Date(now.getFullYear(), q*3+3, 0); }
-  else if (v === 'this_year')  { from = new Date(now.getFullYear(), 0, 1); to = new Date(now.getFullYear(), 11, 31); }
-  else if (v === 'last_30')    { to = now; from = new Date(now.getTime() - 29*86400000); }
-  else if (v === 'last_90')    { to = now; from = new Date(now.getTime() - 89*86400000); }
+  var Y = now.getFullYear();
+  if (v === 'this_month')      { from = new Date(Y, now.getMonth(), 1); to = new Date(Y, now.getMonth()+1, 0); }
+  else if (v === 'q1')         { from = new Date(Y, 0, 1);  to = new Date(Y, 3, 0); }
+  else if (v === 'q2')         { from = new Date(Y, 3, 1);  to = new Date(Y, 6, 0); }
+  else if (v === 'q3')         { from = new Date(Y, 6, 1);  to = new Date(Y, 9, 0); }
+  else if (v === 'q4')         { from = new Date(Y, 9, 1);  to = new Date(Y, 12, 0); }
+  else if (v === 'this_year')  { from = new Date(Y, 0, 1);  to = new Date(Y, 11, 31); }
   document.getElementById('bt-from').value = iso(from);
   document.getElementById('bt-to').value   = iso(to);
 }
