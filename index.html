@@ -7221,11 +7221,12 @@ function genDashboard() {
   });
 
   const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
-  const noVat    = round2(totalApp / 1.1);
+  const noVatRaw = totalApp / 1.1;        // raw float — dùng tính VND để khớp BCT (round-once)
+  const noVat    = round2(noVatRaw);      // chỉ round cho hiển thị "$xxx.xx"
 
   // Tỷ giá + financial data từ warehouse report (lazy load nếu chưa có)
   var rate = (typeof _whGetRate === 'function') ? _whGetRate() : 25000;
-  var dtVND = noVat * rate;
+  var dtVND = Math.round(noVatRaw * rate); // raw × rate → khớp BCT (KHÔNG dùng noVat đã round2)
   var mkey = year + '-' + String(monthIdx+1).padStart(2,'0');
   var xuatVND = 0, tonVND = 0;
   if (_whData && _whData.months) {
@@ -7247,6 +7248,11 @@ function genDashboard() {
       }
     }
   }
+  // Profit = doanh thu - xuất kho - chi phí bảo trì (đồng bộ với "Lãi gộp" ở Báo cáo Tổng).
+  // Chi phí bảo trì lấy từ getKhoAnalytics (loadDashAuxData) — render KPI 2 lần: lần đầu chưa trừ BT,
+  // sau khi aux data load xong sẽ update card profit qua _updateDashProfitCard().
+  // Cache snapshot để re-compute khi BT load xong.
+  window._dashKpiSnapshot = { dtVND: dtVND, xuatVND: xuatVND, year: year, monthIdx: monthIdx, isAllYear: isAllYear };
   var profit = dtVND - xuatVND;
   var fmtVND = (typeof _whFmtVND === 'function') ? _whFmtVND : function(v){ return v ? Math.round(v).toLocaleString('vi-VN') : '—'; };
 
@@ -7527,6 +7533,29 @@ async function loadDashAuxData(month, year) {
 }
 
 function renderDashAux(data) {
+  // Update Lợi nhuận card: trừ thêm chi phí bảo trì → đồng bộ với "Lãi gộp" ở Báo cáo Tổng.
+  // bt_monthly là 12 tháng kết thúc tại tháng filter — last entry = tháng đang xem (cho cả năm: sum 12).
+  var snap = window._dashKpiSnapshot;
+  if (snap && data && data.bt_monthly) {
+    var btCp = snap.isAllYear
+      ? data.bt_monthly.reduce(function(s,m){ return s + (m.chi_phi||0); }, 0)
+      : (data.bt_monthly.length ? (data.bt_monthly[data.bt_monthly.length-1].chi_phi||0) : 0);
+    var newProfit = snap.dtVND - snap.xuatVND - btCp;
+    var kpiEl = document.getElementById('rpt-kpi');
+    if (kpiEl) {
+      var cards = kpiEl.querySelectorAll('.kpi-card');
+      var profitCard = cards[5]; // index 5: Lợi nhuận gộp
+      if (profitCard) {
+        var v = profitCard.querySelector('.stat-value');
+        if (v) v.textContent = newProfit !== 0 ? Math.round(newProfit).toLocaleString('vi-VN') : '—';
+        profitCard.classList.remove('kpi-profit-pos','kpi-profit-neg','kpi-purple');
+        profitCard.classList.add(newProfit > 0 ? 'kpi-profit-pos' : (newProfit < 0 ? 'kpi-profit-neg' : 'kpi-purple'));
+        var sub = profitCard.querySelector('.stat-sub');
+        if (sub) sub.textContent = newProfit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho − bảo trì';
+      }
+    }
+  }
+
   // Chart Top 10 VT
   if (_rptCharts.topVT) _rptCharts.topVT.destroy();
   var topVT = (data && data.top_vt) || [];
