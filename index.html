@@ -5444,13 +5444,62 @@ function renderTracking() {
   const stats = calcTrackingStats(data);
   renderTrackingStats(stats);
 
-  // Populate carrier filter
+  // Populate carrier filter — preserve selection nếu user đã chọn
   const carriers = [...new Set(data.map(r => r.carrier).filter(Boolean))];
   const sel = document.getElementById('trk-carrier');
+  const prevCa = sel.value;
   sel.innerHTML = '<option value="">Tất cả Carrier</option>' + carriers.map(c => `<option>${c}</option>`).join('');
+  if (prevCa && carriers.indexOf(prevCa) >= 0) sel.value = prevCa;
 
   filterTracking();
+  _trkStartAutoRefresh();
 }
+
+// ── AUTO-REFRESH TRACKING ──
+// Polling 45s + refresh khi tab regain focus → user thấy báo giá mới không cần F5
+var _trkRefreshTimer = null;
+var _trkRefreshing = false;
+
+async function refreshTracking() {
+  if (_trkRefreshing) return;
+  _trkRefreshing = true;
+  try {
+    var res = await apiGet({ action: 'getTracking', _t: Date.now() });
+    if (res && res.success) {
+      var oldCount = (state.tracking||[]).length;
+      state.tracking = res.data || [];
+      var newCount = state.tracking.length;
+      renderTrackingStats(calcTrackingStats(state.tracking));
+      filterTracking();
+      if (newCount !== oldCount) {
+        var diff = newCount - oldCount;
+        toast(diff > 0 ? ('Có ' + diff + ' báo giá mới — đã cập nhật') : 'Danh sách đã cập nhật', 2500);
+      }
+    }
+  } catch(e) {} finally {
+    _trkRefreshing = false;
+  }
+}
+
+function _trkStartAutoRefresh() {
+  if (_trkRefreshTimer) clearInterval(_trkRefreshTimer);
+  if (!window._trkLastRefresh) window._trkLastRefresh = Date.now();
+  _trkRefreshTimer = setInterval(function() {
+    var screen = document.getElementById('screen-tracking');
+    if (!screen || !screen.classList.contains('active')) return;
+    if (document.hidden) return;
+    refreshTracking();
+  }, 45000);
+}
+
+// Refresh khi user quay lại tab
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) return;
+  var screen = document.getElementById('screen-tracking');
+  if (screen && screen.classList.contains('active')) {
+    refreshTracking();
+  }
+});
 
 function calcTrackingStats(data) {
   // Tối ưu: 1 vòng loop thay vì 9 lần filter
