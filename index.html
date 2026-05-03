@@ -7281,7 +7281,6 @@ function genDashboard() {
          + '<div class="stat-value">'+value+'</div>'
          + '<div class="stat-sub">'+subHtml+'</div></div>';
   }
-  var alertCount = (window._dashAlerts && window._dashAlerts.length) || 0;
   // Doanh thu MNR sub: kèm tỷ giá USD editable
   var rateLabel = '<span title="Click để đổi tỷ giá USD" onclick="event.stopPropagation();editUsdRate()" style="cursor:pointer;border-bottom:1px dashed var(--gray-400);color:var(--gray-700)">@'+rate.toLocaleString('vi-VN')+'</span>';
   var dtSub = noVat > 0
@@ -7295,8 +7294,8 @@ function genDashboard() {
     + _kpi('Cont đã sửa kỳ',  filtered.length,                    isAllYear ? ('cả năm ' + year) : (month + ' ' + year), { tone:'green' })
     + _kpi('Doanh thu MNR',   dtVND > 0 ? fmtVND(dtVND) : '—',    dtSub,                                                  { tone:'teal',  subRaw: true })
     + _kpi('Xuất kho kỳ',     xuatVND > 0 ? fmtVND(xuatVND) : '—', 'giá trị xuất (VNĐ)',                                  { tone:'orange' })
-    + _kpi('Lợi nhuận gộp',   profit !== 0 ? fmtVND(profit) : '—', profit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho', { tone: profitTone })
-    + _kpi('Cảnh báo',        alertCount,                         alertCount ? 'cần xử lý ngay' : 'không có',             { alert: alertCount > 0, tone: alertCount > 0 ? null : 'red', jump: "document.getElementById('rpt-alert-list').scrollIntoView({behavior:'smooth'})" });
+    + _kpi('Tồn kho cuối kỳ', tonVND  > 0 ? fmtVND(tonVND)  : '—', 'giá trị tồn (VNĐ)',                                   { tone:'purple' })
+    + _kpi('Lợi nhuận gộp',   profit !== 0 ? fmtVND(profit) : '—', profit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho', { tone: profitTone });
 
   // --- Chart 1: Stock emty donut theo container_status + grade combo ---
   const stockData = state.stock || [];
@@ -7628,21 +7627,8 @@ function renderDashAux(data) {
     });
   });
 
-  // Save số đếm để KPI strip update lần render kế
+  // Save số đếm để hiển thị badge ở khu Cảnh báo bên dưới
   window._dashAlerts = alerts;
-  // Cập nhật ngay card "Cảnh báo" số lượng + accent
-  var kpiEl = document.getElementById('rpt-kpi');
-  if (kpiEl) {
-    var cards = kpiEl.querySelectorAll('.kpi-card');
-    var lastCard = cards[cards.length - 1];
-    if (lastCard) {
-      var valueEl = lastCard.querySelector('.stat-value');
-      var subEl   = lastCard.querySelector('.stat-sub');
-      if (valueEl) valueEl.textContent = alerts.length;
-      if (subEl)   subEl.textContent = alerts.length ? 'cần xử lý ngay' : 'không có';
-      lastCard.classList.toggle('is-alert', alerts.length > 0);
-    }
-  }
 
   var listEl = document.getElementById('rpt-alert-list');
   document.getElementById('rpt-alert-count').textContent = alerts.length ? '(' + alerts.length + ')' : '';
