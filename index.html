@@ -6740,7 +6740,7 @@ async function exportBulkTemplate() {
         r.labour_hours      || 0,   // N
         r.labour_cost       || 0,   // O
         r.material_cost     || 0,   // P
-        r.tax               || '',  // Q
+        parseFloat(r.tax)   || 0,   // Q
         r.responsible_party || '',  // R
         r.upgrade_code      || '',  // S
         r.material_type     || 'SK',// T
@@ -6772,9 +6772,9 @@ async function exportBulkTemplate() {
       if (ws[cellAddr]) { ws[cellAddr].t = 's'; ws[cellAddr].z = '@'; }
     }
 
-    // Accounting format: H=7(Length), I=8(Width), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost)
+    // Accounting format: H=7(Length), I=8(Width), N=13(Labour Hours), O=14(Labour Cost), P=15(Material Cost), Q=16(Tax)
     var acctFmt = '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)';
-    [7, 8, 13, 14, 15].forEach(function(C) {
+    [7, 8, 13, 14, 15, 16].forEach(function(C) {
       for (var R = 1; R <= range.e.r; R++) {
         var addr = XLSX.utils.encode_cell({ r: R, c: C });
         if (ws[addr] && ws[addr].t === 'n') ws[addr].z = acctFmt;
@@ -7099,7 +7099,7 @@ async function exportApproveTemplate() {
         r.app_labour_hours       || 0,
         r.app_labour_cost        || 0,
         r.app_material_cost      || 0,
-        r.tax                    || '',
+        parseFloat(r.tax)        || 0,
         r.app_responsible_party  || r.responsible_party || '',
         r.upgrade_code           || '',
         r.app_material_type      || r.material_type     || 'SK',
@@ -7118,7 +7118,7 @@ async function exportApproveTemplate() {
       var ca = XLSX.utils.encode_cell({r:R,c:1}); if(ws[ca]){ws[ca].t='s';ws[ca].z='@';}
     }
     var acctFmt = '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)';
-    [7,8,13,14,15].forEach(function(C){ for(var R=1;R<=range.e.r;R++){ var addr=XLSX.utils.encode_cell({r:R,c:C}); if(ws[addr]&&ws[addr].t==='n') ws[addr].z=acctFmt; }});
+    [7,8,13,14,15,16].forEach(function(C){ for(var R=1;R<=range.e.r;R++){ var addr=XLSX.utils.encode_cell({r:R,c:C}); if(ws[addr]&&ws[addr].t==='n') ws[addr].z=acctFmt; }});
     ws['!cols']=[{wch:14},{wch:22},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:10},{wch:8},{wch:8},{wch:10},{wch:10},{wch:10},{wch:6},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12},{wch:10},{wch:14},{wch:14},{wch:10},{wch:10}];
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
