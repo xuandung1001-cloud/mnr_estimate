@@ -5452,12 +5452,10 @@ function renderTracking() {
   if (prevCa && carriers.indexOf(prevCa) >= 0) sel.value = prevCa;
 
   filterTracking();
-  _trkStartAutoRefresh();
 }
 
 // ── AUTO-REFRESH TRACKING ──
-// Polling 45s + refresh khi tab regain focus → user thấy báo giá mới không cần F5
-var _trkRefreshTimer = null;
+// Refresh khi user quay lại tab (visibilitychange) — không polling theo interval
 var _trkRefreshing = false;
 
 async function refreshTracking() {
@@ -5479,17 +5477,6 @@ async function refreshTracking() {
   } catch(e) {} finally {
     _trkRefreshing = false;
   }
-}
-
-function _trkStartAutoRefresh() {
-  if (_trkRefreshTimer) clearInterval(_trkRefreshTimer);
-  if (!window._trkLastRefresh) window._trkLastRefresh = Date.now();
-  _trkRefreshTimer = setInterval(function() {
-    var screen = document.getElementById('screen-tracking');
-    if (!screen || !screen.classList.contains('active')) return;
-    if (document.hidden) return;
-    refreshTracking();
-  }, 45000);
 }
 
 // Refresh khi user quay lại tab
