@@ -2166,6 +2166,9 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <option value="">Tất cả Carrier</option>
             </select>
             <input class="fi" id="trf-search" placeholder="Tìm Component, Dmg Type, Rep Type..." oninput="_filtTariff()" style="flex:1;min-width:200px">
+            <button class="btn btn-sm btn-gray" onclick="refreshCache()" title="Xoá cache và tải lại tariff + stock từ server">
+              ⟳ Tải lại Cache
+            </button>
             <button class="btn btn-sm btn-blue" onclick="document.getElementById('tariff-file').click()">
               + Import file Tariff
             </button>
@@ -5896,6 +5899,27 @@ const showPO = false;
     const matchCa = !ca || r.carrier === ca;
     if (!matchQ || !matchSt || !matchCa) return false;
 return true;
+  });
+  // Sort: báo giá mới nhất (est_date desc) lên đầu — fallback theo seq desc nếu cùng ngày
+  function _trkDateKey(v) {
+    if (!v) return 0;
+    if (v instanceof Date) return v.getTime();
+    var s = String(v).trim();
+    var datePart = s.split(' ')[0];
+    var p = datePart.split(/[\/\-]/);
+    if (p.length === 3) {
+      var d, mo, y;
+      if (p[0].length === 4) { y = +p[0]; mo = +p[1]; d = +p[2]; }       // YYYY-MM-DD
+      else                    { d = +p[0]; mo = +p[1]; y = +p[2]; if (y < 100) y += 2000; } // DD/MM/YYYY
+      return new Date(y, (mo||1)-1, d||1).getTime();
+    }
+    var t = Date.parse(s);
+    return isNaN(t) ? 0 : t;
+  }
+  filtered.sort(function(a, b) {
+    var ta = _trkDateKey(a.est_date), tb = _trkDateKey(b.est_date);
+    if (tb !== ta) return tb - ta;
+    return (parseInt(b.seq)||0) - (parseInt(a.seq)||0);
   });
   _trkPage = 1; // reset về page 1 khi đổi filter
   renderTrkChips({ q: q, st: st, ca: ca, infestation: showInfestation, showClosed: showClosed });
