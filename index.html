@@ -6702,9 +6702,11 @@ async function exportBulkTemplate() {
     ];
 
     var rows = [header];
-    var exportData = filterConts
+    var CLOSED_EXPORT = ['Rejected', 'Repaired'];
+    var exportData = (filterConts
       ? res.data.filter(function(r) { return filterConts.indexOf(r.equipment_number) !== -1; })
-      : res.data;
+      : res.data
+    ).filter(function(r) { return !CLOSED_EXPORT.includes(r.approval_status); });
 
     exportData.forEach(function(r) {
       // Format date dạng text dd/MM/yyyy
@@ -6845,6 +6847,11 @@ async function exportContList(type) {
     } catch(e) { toast('Lỗi tải dữ liệu: ' + e.message, 4000); return; }
   }
   if (!data.length) { toast('Không có dữ liệu! Bấm Tải danh sách lại.', 4000); return; }
+
+  // Lọc bỏ dòng thuộc job Rejected/Repaired (đồng bộ với screen filter)
+  var CLOSED_SUM = ['Rejected', 'Repaired'];
+  data = data.filter(function(r) { return !CLOSED_SUM.includes(r.approval_status); });
+  if (!data.length) { toast('Không có dòng active để xuất!', 4000); return; }
 
   function fmtD(v) {
     if (!v) return '';
@@ -7063,7 +7070,10 @@ async function exportApproveTemplate() {
       'Old Part Serial No','New Part Serial No','Damage Level','Old Part No'
     ];
     var rows = [header];
-    var exportData = res.data.filter(function(r) { return bulkFilteredConts.indexOf(r.equipment_number) !== -1; });
+    var CLOSED_APP_EXPORT = ['Rejected', 'Repaired'];
+    var exportData = res.data
+      .filter(function(r) { return bulkFilteredConts.indexOf(r.equipment_number) !== -1; })
+      .filter(function(r) { return !CLOSED_APP_EXPORT.includes(r.approval_status); });
 
     exportData.forEach(function(r) {
       // Xuất tất cả dòng, dùng app_* nếu có, fallback về est
