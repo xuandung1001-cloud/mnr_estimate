@@ -7248,11 +7248,7 @@ function genDashboard() {
       }
     }
   }
-  // Profit = doanh thu - xuất kho - chi phí bảo trì (đồng bộ với "Lãi gộp" ở Báo cáo Tổng).
-  // Chi phí bảo trì lấy từ getKhoAnalytics (loadDashAuxData) — render KPI 2 lần: lần đầu chưa trừ BT,
-  // sau khi aux data load xong sẽ update card profit qua _updateDashProfitCard().
-  // Cache snapshot để re-compute khi BT load xong.
-  window._dashKpiSnapshot = { dtVND: dtVND, xuatVND: xuatVND, year: year, monthIdx: monthIdx, isAllYear: isAllYear };
+  // Lợi nhuận gộp = doanh thu − chi phí VT. Chi phí bảo trì + khấu hao CCDC chỉ để xem, KHÔNG trừ vào.
   var profit = dtVND - xuatVND;
   var fmtVND = (typeof _whFmtVND === 'function') ? _whFmtVND : function(v){ return v ? Math.round(v).toLocaleString('vi-VN') : '—'; };
 
@@ -7533,29 +7529,6 @@ async function loadDashAuxData(month, year) {
 }
 
 function renderDashAux(data) {
-  // Update Lợi nhuận card: trừ thêm chi phí bảo trì → đồng bộ với "Lãi gộp" ở Báo cáo Tổng.
-  // bt_monthly là 12 tháng kết thúc tại tháng filter — last entry = tháng đang xem (cho cả năm: sum 12).
-  var snap = window._dashKpiSnapshot;
-  if (snap && data && data.bt_monthly) {
-    var btCp = snap.isAllYear
-      ? data.bt_monthly.reduce(function(s,m){ return s + (m.chi_phi||0); }, 0)
-      : (data.bt_monthly.length ? (data.bt_monthly[data.bt_monthly.length-1].chi_phi||0) : 0);
-    var newProfit = snap.dtVND - snap.xuatVND - btCp;
-    var kpiEl = document.getElementById('rpt-kpi');
-    if (kpiEl) {
-      var cards = kpiEl.querySelectorAll('.kpi-card');
-      var profitCard = cards[5]; // index 5: Lợi nhuận gộp
-      if (profitCard) {
-        var v = profitCard.querySelector('.stat-value');
-        if (v) v.textContent = newProfit !== 0 ? Math.round(newProfit).toLocaleString('vi-VN') : '—';
-        profitCard.classList.remove('kpi-profit-pos','kpi-profit-neg','kpi-purple');
-        profitCard.classList.add(newProfit > 0 ? 'kpi-profit-pos' : (newProfit < 0 ? 'kpi-profit-neg' : 'kpi-purple'));
-        var sub = profitCard.querySelector('.stat-sub');
-        if (sub) sub.textContent = newProfit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho − bảo trì';
-      }
-    }
-  }
-
   // Chart Top 10 VT
   if (_rptCharts.topVT) _rptCharts.topVT.destroy();
   var topVT = (data && data.top_vt) || [];
