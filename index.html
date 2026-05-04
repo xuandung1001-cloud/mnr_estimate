@@ -3972,7 +3972,9 @@ async function prefetchKhoData() {
       apiGet({ action: 'getPhieuKhoList' }).then(function(r){ if (r&&r.success) { _pkAllList = r.data || []; _pkList = _pkAllList.slice(); } }),
       apiGet({ action: 'getCcdcGdList' }).then(function(r){ if (r&&r.success) _ccdcList = r.data || []; }),
       apiGet({ action: 'getBaoTriList' }).then(function(r){ if (r&&r.success) _btList = r.data || []; }),
-      apiGet({ action: 'getDotKiemKeList' }).then(function(r){ if (r&&r.success) _kkList = r.data || []; })
+      apiGet({ action: 'getDotKiemKeList' }).then(function(r){ if (r&&r.success) _kkList = r.data || []; }),
+      // Users list cần cho _uFullName (map username → fullname) ở nhiều màn — load 1 lần ở đây
+      apiGet({ action: 'getKhoUsersList' }).then(function(r){ if (r&&r.success) _khoUsersList = r.data || []; })
     ];
     await Promise.all(calls.map(function(p){ return p.catch(function(){}); }));
   } catch(_){}
@@ -4090,7 +4092,7 @@ function nav(screen, el) {
   // Force reload chỉ qua nút Refresh hoặc filter onchange.
   if (screen === 'dm-vattu')    { if (_dmVatTu.length) filterDmVatTu(); else loadDmVatTu(); }
   if (screen === 'dm-congcu')   { if (_dmCongCu.length) filterDmCongCu(); else loadDmCongCu(); }
-  if (screen === 'pk')          { if (_pkAllList.length) { _pkApplyFilters(); } else loadPhieuKhoList(); }
+  if (screen === 'pk')          { if (_pkAllList.length) { _loadKhoUsersList().then(_pkApplyFilters); } else loadPhieuKhoList(); }
   if (screen === 'ccdc')        { if (_ccdcList.length) { renderCcdcStats(); renderCcdcList(); } else loadCcdcList(); }
   if (screen === 'baotri')      { if (_btList.length) { renderBtStats(); renderBtList(); } else loadBaoTriList(); }
   if (screen === 'kiemke')      { if (_kkList.length) { renderKkStats(); renderKkList(); } else loadKiemKeList(); }
@@ -11915,6 +11917,8 @@ async function loadPhieuKhoList() {
   var tbody = document.getElementById('pk-list-rows');
   tbody.innerHTML = '<tr><td colspan="10" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   try {
+    // Đảm bảo users list đã load để _uFullName map username → fullname đúng
+    await _loadKhoUsersList();
     var res = await apiGet({ action: 'getPhieuKhoList', _t: Date.now() });
     if (res && res.success) {
       _pkAllList = res.data || [];
