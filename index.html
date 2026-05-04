@@ -4040,6 +4040,8 @@ function nav(screen, el) {
     photos:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>',
     report:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>'
   };
+  // Hoist ra global để editEstimate / cancelEditEstimate truy cập được (chạy ngoài scope nav).
+  window.ICONS = ICONS;
 
   const configs = {
     estimate: { title: 'Nhập Báo Giá mới', icon: ICONS.estimate, iconColor: '#4F46E5', actions: [] },
@@ -8241,7 +8243,7 @@ async function editEstimate(containerNo, estDate) {
     var ni = document.querySelector('.nav-item[onclick*="estimate"]');
     if (ni) ni.classList.add('active');
     document.getElementById('screen-estimate').classList.add('active');
-    setTopbar('Ch\u1ec9nh s\u1eeda \u2014 ' + containerNo, [], '', ICONS.estimate, '#4F46E5');
+    setTopbar('Ch\u1ec9nh s\u1eeda \u2014 ' + containerNo, [], '', window.ICONS && window.ICONS.estimate, '#4F46E5');
     setEstimateMode('edit', containerNo, estDate);
     document.getElementById('eq-no').value       = containerNo;
     document.getElementById('size-type').value   = first.size_type || '';
@@ -8293,7 +8295,7 @@ async function editEstimate(containerNo, estDate) {
 
 function cancelEditEstimate() {
   resetEstimate();
-  setTopbar('Nhập Báo Giá mới', [], '', ICONS.estimate, '#4F46E5');
+  setTopbar('Nhập Báo Giá mới', [], '', window.ICONS && window.ICONS.estimate, '#4F46E5');
   setEstimateMode('new');
 }
 
