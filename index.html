@@ -2732,7 +2732,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div class="tbl-wrap">
             <table style="table-layout:fixed">
               <colgroup>
-                <col style="width:130px"><col style="width:80px"><col style="width:65px">
+                <col style="width:130px"><col style="width:100px"><col style="width:65px">
                 <col style="width:160px"><col style="width:190px"><col style="width:150px"><col>
                 <col style="width:70px"><col style="width:120px"><col style="width:170px">
               </colgroup>
@@ -10862,6 +10862,13 @@ async function _loadKhoUsersList() {
   return _khoUsersList;
 }
 
+// Map username → fullname. Fallback: trả raw nếu user không có trong list.
+function _uFullName(username) {
+  if (!username) return '';
+  var u = (_khoUsersList||[]).find(function(x){ return x.username === username; });
+  return (u && (u.fullname || u.username)) || username;
+}
+
 // ───── Image upload helper: resize + compress + base64 → backend ─────
 async function _khoCompressImage(file, maxDim) {
   maxDim = maxDim || 1280;
@@ -11008,7 +11015,7 @@ function exportDmCongCu() {
   var rows = data.map(function(r){
     return [r.ma_cong_cu||'', r.ten_cong_cu||'', r.model_serial||'',
             r.ngay_mua||'', r.nguyen_gia||0, r.so_thang_kh||'',
-            _normalizeCcStatus(r.trang_thai), r.nguoi_giu||'',
+            _normalizeCcStatus(r.trang_thai), _uFullName(r.nguoi_giu),
             r.so_thang_bh||'', r.thong_tin_bh||''];
   });
   _khoExportXLSX('DM_CongCu',
@@ -11019,7 +11026,7 @@ function exportDmCongCu() {
 // Phiếu Nhập/Xuất — export header phiếu (không kèm chi tiết)
 function exportPhieuKho() {
   var rows = (_pkList||[]).map(function(r){
-    return [r.ma_phieu||'', r.ngay||'', r.loai||'', r.nguoi_thuc_hien||'',
+    return [r.ma_phieu||'', r.ngay||'', r.loai||'', _uFullName(r.nguoi_thuc_hien),
             r.doi_tuong||'', r.bp_su_dung||'', r.ghi_chu||'',
             r.so_dong||0, r.tong_tien||0];
   });
@@ -11974,9 +11981,9 @@ function renderPhieuKhoList() {
       + '<td style="text-align:left"><a href="#" onclick="openPhieuKhoForm(null,\''+esc(r.ma_phieu)+'\');return false" style="color:var(--blue);font-weight:600;text-decoration:none">'+esc(r.ma_phieu)+'</a></td>'
       + '<td>'+esc(r.ngay)+'</td>'
       + '<td>'+loaiBadge+'</td>'
-      + '<td style="text-align:left;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.nguoi_thuc_hien)+'">'+esc(r.nguoi_thuc_hien)+'</td>'
+      + '<td style="text-align:left;color:var(--gray-600);overflow:hidden;text-overflow:ellipsis" title="'+esc(_uFullName(r.nguoi_thuc_hien))+'">'+esc(_uFullName(r.nguoi_thuc_hien))+'</td>'
       + '<td style="text-align:left;font-weight:600;color:var(--gray-900);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.doi_tuong||'')+'">'+nccCell+'</td>'
-      + '<td style="text-align:left;color:var(--gray-700);overflow:hidden;text-overflow:ellipsis" title="'+esc(r.bp_su_dung||'')+'">'+bpCell+'</td>'
+      + '<td style="text-align:left;color:var(--gray-700);overflow:hidden;text-overflow:ellipsis" title="'+esc(_uFullName(r.bp_su_dung)||r.bp_su_dung||'')+'">'+(r.bp_su_dung ? esc(_uFullName(r.bp_su_dung)) : dashCell)+'</td>'
       + '<td style="text-align:left;color:var(--gray-600);font-size:11px;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.ghi_chu||'')+'">'+(r.ghi_chu ? esc(r.ghi_chu) : dashCell)+'</td>'
       + '<td>'+slCell+'</td>'
       + '<td style="text-align:right">'+ttCell+'</td>'
