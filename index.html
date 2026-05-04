@@ -1196,6 +1196,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th style="width:60px" class="td-auto">Hours</th>
                   <th style="width:72px" class="td-auto">Material</th>
                   <th style="width:68px" class="td-auto">Labour</th>
+                  <th style="width:58px" class="td-auto">Tax 8%</th>
                   <th style="width:70px" class="td-auto">Total</th>
                   <th style="width:80px;text-align:center">Resp. Party</th>
                   <th style="width:28px"></th>
@@ -1218,8 +1219,12 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <span class="tot-pill-label">Labour</span>
               <span class="tot-pill-value" id="tot-lab">0.00</span>
             </div>
+            <div class="tot-pill">
+              <span class="tot-pill-label">Tax 8%</span>
+              <span class="tot-pill-value" id="tot-tax">0.00</span>
+            </div>
             <div class="tot-pill tot-pill-primary">
-              <span class="tot-pill-label">Total</span>
+              <span class="tot-pill-label">Total (gross)</span>
               <span class="tot-pill-value" id="tot-total">0.00</span>
             </div>
           </div>
@@ -4361,6 +4366,7 @@ function addEstRow() {
     <td class="td-auto"><span class="h-val">—</span></td>
     <td class="td-auto"><span class="m-val">—</span></td>
     <td class="td-auto"><span class="l-val">—</span></td>
+    <td class="td-auto"><span class="x-val">—</span></td>
     <td class="td-auto"><span class="t-val">—</span></td>
     <td><input list="dl-resp" style="text-align:center;text-transform:uppercase" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','PO','S','SU','T','U','V','W'])"></td>
     <td style="text-align:center"><button onclick="this.closest('tr').remove();updateEstNumbers();calcEstTotal()" style="border:none;background:none;color:#fc8181;cursor:pointer;font-size:14px">×</button></td>
@@ -4476,6 +4482,7 @@ function lookupTariff(row) {
     row.querySelector('.h-val').textContent = '—';
     row.querySelector('.m-val').textContent = '—';
     row.querySelector('.l-val').textContent = '—';
+    row.querySelector('.x-val').textContent = '—';
     row.querySelector('.t-val').textContent = '—';
     document.getElementById('est-notfound').style.display = 'none';
     calcEstTotal();
@@ -4551,13 +4558,16 @@ function lookupTariff(row) {
   const match = _allMatches[0] || null;
 
   if (match) {
-    const h   = round2(parseFloat(match.hour     || 0) * qty);
-    const m   = round2(parseFloat(match.material || 0) * qty);
-    const l   = round2(parseFloat(match.labour   || 0) * qty);
-    const tot = round2(m + l);
+    const h        = round2(parseFloat(match.hour     || 0) * qty);
+    const m        = round2(parseFloat(match.material || 0) * qty);
+    const l        = round2(parseFloat(match.labour   || 0) * qty);
+    const subtotal = round2(m + l);                  // no-VAT
+    const tax      = round2(subtotal * 0.08);        // VAT 8%
+    const tot      = round2(subtotal + tax);         // gross
     row.querySelector('.h-val').textContent = h.toFixed(2);
     row.querySelector('.m-val').textContent = m.toFixed(2);
     row.querySelector('.l-val').textContent = l.toFixed(2);
+    row.querySelector('.x-val').textContent = tax.toFixed(2);
     row.querySelector('.t-val').textContent = tot.toFixed(2);
     row.style.background = '';
     document.getElementById('est-notfound').style.display = 'none';
@@ -4573,6 +4583,7 @@ function lookupTariff(row) {
     row.querySelector('.h-val').textContent = '—';
     row.querySelector('.m-val').textContent = '—';
     row.querySelector('.l-val').textContent = '—';
+    row.querySelector('.x-val').textContent = '—';
     row.querySelector('.t-val').textContent = '—';
     row.style.background = '';
     document.getElementById('est-notfound').style.display = 'block';
@@ -4584,17 +4595,19 @@ function lookupTariff(row) {
 
 
 function calcEstTotal() {
-  let totH = 0, totM = 0, totL = 0, totT = 0;
+  let totH = 0, totM = 0, totL = 0, totX = 0, totT = 0;
   document.querySelectorAll('#est-rows tr').forEach(row => {
     const h = parseFloat(row.querySelector('.h-val')?.textContent) || 0;
     const m = parseFloat(row.querySelector('.m-val')?.textContent) || 0;
     const l = parseFloat(row.querySelector('.l-val')?.textContent) || 0;
+    const x = parseFloat(row.querySelector('.x-val')?.textContent) || 0;
     const t = parseFloat(row.querySelector('.t-val')?.textContent) || 0;
-    totH += h; totM += m; totL += l; totT += t;
+    totH += h; totM += m; totL += l; totX += x; totT += t;
   });
   document.getElementById('tot-hours').textContent = totH.toFixed(2);
   document.getElementById('tot-mat').textContent = totM.toFixed(2);
   document.getElementById('tot-lab').textContent = totL.toFixed(2);
+  var taxEl = document.getElementById('tot-tax'); if (taxEl) taxEl.textContent = totX.toFixed(2);
   document.getElementById('tot-total').textContent = totT.toFixed(2);
   document.getElementById('est-total-row').style.display = 'flex';
 }
@@ -4648,7 +4661,8 @@ async function saveEstimate() {
       labour_hours: parseFloat(row.querySelector('.h-val')?.textContent) || 0,
       material_cost: parseFloat(row.querySelector('.m-val')?.textContent) || 0,
       labour_cost: parseFloat(row.querySelector('.l-val')?.textContent) || 0,
-      total_cost: parseFloat(row.querySelector('.t-val')?.textContent) || 0,
+      tax: parseFloat(row.querySelector('.x-val')?.textContent) || 0,         // VAT 8%
+      total_cost: parseFloat(row.querySelector('.t-val')?.textContent) || 0,  // gross (= subtotal + tax)
       responsible_party: inputs[8]?.value.trim() || ''
     });
   });
