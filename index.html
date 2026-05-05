@@ -7259,8 +7259,8 @@ function genDashboard() {
     return matchMonth && matchCarrier && r.approval_status === 'Repaired';
   });
 
-  const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
-  const noVat    = round2(totalApp / 1.1);   // round2 anchor — display + VND đều dùng số này
+  // Per-row VAT divisor (V1=1.10 / V2=1.08) theo est_date vs cutoff 01/05/2026
+  const noVat = round2(filtered.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/_vatDivFE(r.est_date), 0));
 
   // Tỷ giá + financial data từ warehouse report (lazy load nếu chưa có)
   var rate = (typeof _whGetRate === 'function') ? _whGetRate() : 25000;
@@ -7416,9 +7416,9 @@ function genDashboard() {
       const d = parseReportDate(r.po_date);
       return d && d.getMonth() === m && d.getFullYear() === y && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
     });
-    var tNoVat = round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/1.1, 0));
+    var tNoVat = round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/_vatDivFE(r.est_date), 0));
     trendVals.push(tNoVat);
-    trendVat10.push(round2(rows.reduce((s,r) => s + (parseFloat(r.total_approved)||0), 0)));
+    trendVat10.push(round2(tNoVat * 1.10));
     trendVat8.push(round2(tNoVat * 1.08));
     trendCounts.push(rows.length);
   }
@@ -7458,9 +7458,9 @@ function genDashboard() {
       if (!d) return false;
       return d >= wMon && d <= wSun && r.approval_status === 'Repaired' && (!carrier || r.carrier === carrier);
     });
-    var wNoVat = round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/1.1; }, 0));
+    var wNoVat = round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0)/_vatDivFE(r.est_date); }, 0));
     weekVals.push(wNoVat);
-    weekVat10.push(round2(wRows.reduce(function(s,r){ return s + (parseFloat(r.total_approved)||0); }, 0)));
+    weekVat10.push(round2(wNoVat * 1.10));
     weekVat8.push(round2(wNoVat * 1.08));
     weekCounts.push(wRows.length);
   }
@@ -7692,20 +7692,19 @@ function genSummaryReport() {
     return matchMonth && matchCarrier;
   });
 
-  // Group by carrier
+  // Group by carrier — per-row chia VAT divisor theo cutoff (V1=1.10 / V2=1.08)
   const groups = {};
   filtered.forEach(r => {
     const c = r.carrier || 'Unknown';
-    if (!groups[c]) groups[c] = { count: 0, totalCost: 0, totalApp: 0 };
+    if (!groups[c]) groups[c] = { count: 0, totalCost: 0, noVat: 0 };
     groups[c].count++;
     groups[c].totalCost += parseFloat(r.total_cost) || 0;
-    groups[c].totalApp += parseFloat(r.total_approved) || 0;
+    groups[c].noVat    += (parseFloat(r.total_approved) || 0) / _vatDivFE(r.est_date);
   });
 
-  const totalApp = filtered.reduce((s,r) => s+(parseFloat(r.total_approved)||0), 0);
-  const vat10 = totalApp;
-  const vat8 = round2(totalApp / 1.1 * 1.08);
-  const noVat = round2(totalApp / 1.1);
+  const noVat = round2(filtered.reduce((s,r) => s + (parseFloat(r.total_approved)||0)/_vatDivFE(r.est_date), 0));
+  const vat10 = round2(noVat * 1.10);
+  const vat8  = round2(noVat * 1.08);
 
   document.getElementById('rpt-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">Tổng containers</div><div class="stat-value">${filtered.length}</div></div>
@@ -7722,10 +7721,10 @@ function genSummaryReport() {
   let rows = Object.entries(groups).map(([carrier, g], i) => ({
     stt: i+1, carrier,
     qty: g.count,
-    vat10: round2(g.totalApp),
-    vat8: round2(g.totalApp / 1.1 * 1.08),
-    noVat: round2(g.totalApp / 1.1),
-    unitCost: g.count ? round2(g.totalApp / 1.1 / g.count) : 0
+    vat10: round2(g.noVat * 1.10),
+    vat8:  round2(g.noVat * 1.08),
+    noVat: round2(g.noVat),
+    unitCost: g.count ? round2(g.noVat / g.count) : 0
   }));
 
   document.getElementById('rpt-result').innerHTML = `
@@ -8766,6 +8765,15 @@ function parseReportDate(val) {
   var m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (m2) return new Date(parseInt(m2[1]), parseInt(m2[2])-1, parseInt(m2[3]));
   return null;
+}
+
+// VAT divisor theo cutoff 01/05/2026 (sync với TARIFF_TAX_CUTOFF ở 00_Config.js):
+//   - est_date <  cutoff → V1, total_approved include VAT 10% → 1.10
+//   - est_date >= cutoff → V2, include VAT 8% → 1.08
+function _vatDivFE(estDateRaw) {
+  var d = parseReportDate(estDateRaw);
+  var cutoff = new Date(2026, 4, 1); // 01/05/2026 (month 0-indexed)
+  return (d && d >= cutoff) ? 1.08 : 1.10;
 }
 
 function todayStr() {
