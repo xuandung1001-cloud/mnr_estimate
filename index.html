@@ -1304,8 +1304,8 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 <col style="width:72px"><col style="width:72px"><col style="width:58px">
                 <col style="width:58px"><col style="width:58px"><col style="width:48px">
                 <col style="width:60px"><col style="width:72px"><col style="width:68px">
-                <col style="width:70px"><col style="width:70px"><col style="width:80px">
-                <col style="width:120px"><col style="width:100px"><col style="width:28px">
+                <col style="width:60px"><col style="width:70px"><col style="width:70px">
+                <col style="width:80px"><col style="width:120px"><col style="width:100px"><col style="width:28px">
               </colgroup>
               <thead>
                 <tr>
@@ -1321,6 +1321,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                   <th style="width:60px" class="td-auto">Hours</th>
                   <th style="width:72px" class="td-auto">Material</th>
                   <th style="width:68px" class="td-auto">Labour</th>
+                  <th style="width:60px" class="td-auto">Tax 8%</th>
                   <th style="width:70px">Total Est.</th>
                   <th style="width:70px" class="td-total">Total App.</th>
                   <th style="width:80px;text-align:center">Resp. Party</th>
@@ -1330,7 +1331,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                 </tr>
               </thead>
               <tbody id="rev-rows">
-                <tr><td colspan="18" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
+                <tr><td colspan="19" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1346,6 +1347,10 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <div class="tot-pill">
               <span class="tot-pill-label">Labour</span>
               <span class="tot-pill-value" id="rev-tot-lab">0.00</span>
+            </div>
+            <div class="tot-pill">
+              <span class="tot-pill-label">Tax 8%</span>
+              <span class="tot-pill-value" id="rev-tot-tax">0.00</span>
             </div>
             <div class="tot-pill">
               <span class="tot-pill-label">Total Est.</span>
@@ -4725,6 +4730,10 @@ function makeReviseRow(i, r) {
   const h   = isRej ? '0.00' : (r ? _num(r.app_labour_hours  || r.labour_hours ).toFixed(2) : '0.00');
   const m   = isRej ? '0.00' : (r ? _num(r.app_material_cost || r.material_cost).toFixed(2) : '0.00');
   const l   = isRej ? '0.00' : (r ? _num(r.app_labour_cost   || r.labour_cost  ).toFixed(2) : '0.00');
+  // Tax 8%: ưu tiên app_tax (load từ BE), fallback compute (m+l)*0.08 cho dòng cũ chưa có app_tax
+  const _taxFromR = r ? _num(r.app_tax || r.tax) : 0;
+  const _taxAuto  = r ? round2((_num(r.app_material_cost || r.material_cost) + _num(r.app_labour_cost || r.labour_cost)) * 0.08) : 0;
+  const x   = isRej ? '0.00' : (r ? (_taxFromR > 0 ? _taxFromR : _taxAuto).toFixed(2) : '0.00');
   // Dòng mới thêm (không có est gốc) → hiện '—' thay vì '0.00'
   const est = (r && !isRej && parseFloat(r.total_cost||0) > 0) ? parseFloat(r.total_cost).toFixed(2) : '—';
   const tot = isRej ? '0.00' : (r ? parseFloat(r.app_total_approved || r.total_cost || 0).toFixed(2) : '0.00');
@@ -4743,6 +4752,7 @@ function makeReviseRow(i, r) {
     <td class="td-auto"><span class="rv-h">${esc(h)}</span></td>
     <td class="td-auto"><span class="rv-m">${esc(m)}</span></td>
     <td class="td-auto"><span class="rv-l">${esc(l)}</span></td>
+    <td class="td-auto"><span class="rv-x">${esc(x)}</span></td>
     <td style="text-align:right;color:var(--gray)"><span class="rv-e">${esc(est)}</span></td>
     <td class="td-total"><span class="rv-t">${esc(tot)}</span></td>
     <td style="text-align:center"><input list="dl-resp" value="${esc(rsp)}" placeholder="S" onblur="validateField(this,['C','D','H','I','O','OT','PO','S','SU','T','U','V','W'])" style="text-align:center;text-transform:uppercase"></td>
@@ -4763,6 +4773,7 @@ function onReviseStatusChange(sel) {
     row.querySelector('.rv-h').textContent = '0.00';
     row.querySelector('.rv-m').textContent = '0.00';
     row.querySelector('.rv-l').textContent = '0.00';
+    row.querySelector('.rv-x').textContent = '0.00';
     row.querySelector('.rv-t').textContent = '0.00';
     calcReviseTotal();
   } else {
@@ -4781,13 +4792,13 @@ async function onReviseInput(val, estDate) {
     return (t.container_no||'').toUpperCase() === val && !['Repaired','Rejected'].includes(t.approval_status);
   });
   if (trkRow && !REVISE_ALLOWED.includes(trkRow.approval_status)) {
-    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" style="text-align:center;padding:20px"><div class="alert alert-warn">Container <strong>' + val + '</strong> chưa nhận được approval từ MSC.</div></td></tr>';
+    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="19" style="text-align:center;padding:20px"><div class="alert alert-warn">Container <strong>' + val + '</strong> chưa nhận được approval từ MSC.</div></td></tr>';
     document.getElementById('rev-total-row').style.display = 'none';
     document.getElementById('btn-compare').style.display = 'none';
     return;
   }
 
-  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="19" class="loading"><div class="spinner"></div><div>Đang tải...</div></td></tr>';
   const res = await apiGet({ action: 'getEstimates', container_no: val, est_date: estDate || '' });
   if (res.success && res.data.length > 0) {
     const first = res.data[0];
@@ -4817,7 +4828,7 @@ async function onReviseInput(val, estDate) {
     _compareVisible = false;
     calcReviseTotal();
   } else {
-    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
+    document.getElementById('rev-rows').innerHTML = '<tr><td colspan="19" style="text-align:center;color:var(--gray);padding:20px">Không tìm thấy dữ liệu cho container này</td></tr>';
     document.getElementById('rev-total-row').style.display = 'none';
     document.getElementById('btn-compare').style.display = 'none';
   }
@@ -4964,6 +4975,8 @@ function makeRemovedDiffRow(r) {
   var h = n(r.app_labour_hours || r.labour_hours);
   var m = n(r.app_material_cost || r.material_cost);
   var l = n(r.app_labour_cost || r.labour_cost);
+  var _xv = parseFloat(r.app_tax || r.tax) || 0;
+  var x = _xv > 0 ? _xv.toFixed(2) : (round2((parseFloat(r.app_material_cost || r.material_cost)||0) + (parseFloat(r.app_labour_cost || r.labour_cost)||0)) * 0.08).toFixed(2);
   var est = parseFloat(r.total_cost) > 0 ? n(r.total_cost) : '—';
   var tot = n(r.app_total_approved || r.total_cost);
   var sta = r.approval_status || 'Partially Approved';
@@ -4983,6 +4996,7 @@ function makeRemovedDiffRow(r) {
     + '<td class="td-auto">' + h + '</td>'
     + '<td class="td-auto">' + m + '</td>'
     + '<td class="td-auto">' + l + '</td>'
+    + '<td class="td-auto">' + x + '</td>'
     + '<td style="text-align:right;color:var(--gray)">' + est + '</td>'
     + '<td class="td-total">' + tot + '</td>'
     + '<td style="text-align:center"><input value="' + esc(rsp) + '" readonly></td>'
@@ -5076,20 +5090,25 @@ function lookupRevise(row) {
     const h   = round2(parseFloat(match.hour    ||0) * qty);
     const m   = round2(parseFloat(match.material||0) * qty);
     const l   = round2(parseFloat(match.labour  ||0) * qty);
+    const sub = round2(m + l);
+    const x   = round2(sub * 0.08);
+    const tot = round2(sub + x);
     row.querySelector('.rv-h').textContent = h.toFixed(2);
     row.querySelector('.rv-m').textContent = m.toFixed(2);
     row.querySelector('.rv-l').textContent = l.toFixed(2);
-    row.querySelector('.rv-t').textContent = round2(m + l).toFixed(2);
+    row.querySelector('.rv-x').textContent = x.toFixed(2);
+    row.querySelector('.rv-t').textContent = tot.toFixed(2);
   }
   calcReviseTotal();
 }
 
 function calcReviseTotal() {
-  let totH = 0, totM = 0, totL = 0, totE = 0, totT = 0;
+  let totH = 0, totM = 0, totL = 0, totX = 0, totE = 0, totT = 0;
   document.querySelectorAll('#rev-rows tr').forEach(function(row) {
     totH += parseFloat(row.querySelector('.rv-h')?.textContent || 0);
     totM += parseFloat(row.querySelector('.rv-m')?.textContent || 0);
     totL += parseFloat(row.querySelector('.rv-l')?.textContent || 0);
+    totX += parseFloat(row.querySelector('.rv-x')?.textContent || 0);
     var eVal = row.querySelector('.rv-e')?.textContent || '0';
     totE += eVal === '—' ? 0 : (parseFloat(eVal) || 0);
     totT += parseFloat(row.querySelector('.rv-t')?.textContent || 0);
@@ -5097,6 +5116,7 @@ function calcReviseTotal() {
   document.getElementById('rev-tot-hours').textContent = round2(totH).toFixed(2);
   document.getElementById('rev-tot-mat').textContent   = round2(totM).toFixed(2);
   document.getElementById('rev-tot-lab').textContent   = round2(totL).toFixed(2);
+  document.getElementById('rev-tot-tax').textContent   = round2(totX).toFixed(2);
   document.getElementById('rev-tot-est').textContent   = round2(totE).toFixed(2);
   document.getElementById('rev-tot-total').textContent = round2(totT).toFixed(2);
   const trkTot = _revTrkTotal;
@@ -5131,7 +5151,7 @@ function resetRevise() {
   document.getElementById('rev-carrier').value  = '';
   document.getElementById('rev-size').value     = '';
   document.getElementById('rev-remarks').value  = '';
-  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="18" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
+  document.getElementById('rev-rows').innerHTML = '<tr><td colspan="19" class="loading">Nhập Equipment No để load dữ liệu...</td></tr>';
   document.getElementById('rev-total-row').style.display = 'none';
   document.getElementById('btn-compare').style.display = 'none';
   document.getElementById('btn-compare').textContent = 'Highlight thay đổi';
@@ -5188,6 +5208,7 @@ async function saveRevise() {
       app_labour_hours:      isRej ? 0 : parseFloat(row.querySelector('.rv-h')?.textContent || 0),
       app_material_cost:     isRej ? 0 : parseFloat(row.querySelector('.rv-m')?.textContent || 0),
       app_labour_cost:       isRej ? 0 : parseFloat(row.querySelector('.rv-l')?.textContent || 0),
+      app_tax:               isRej ? 0 : parseFloat(row.querySelector('.rv-x')?.textContent || 0),
       app_total_approved:    isRej ? 0 : parseFloat(row.querySelector('.rv-t')?.textContent || 0),
       app_responsible_party: inputs[8]?.value.trim().toUpperCase() || '',
       approval_status:       lineStatus,
