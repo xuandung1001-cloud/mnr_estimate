@@ -8323,6 +8323,10 @@ async function editEstimate(containerNo, estDate) {
       var hv = tr.querySelector('.h-val'); if (hv) hv.textContent = parseFloat(line.labour_hours  || 0).toFixed(2);
       var mv = tr.querySelector('.m-val'); if (mv) mv.textContent = parseFloat(line.material_cost || 0).toFixed(2);
       var lv = tr.querySelector('.l-val'); if (lv) lv.textContent = parseFloat(line.labour_cost   || 0).toFixed(2);
+      // Tax 8%: ưu tiên line.tax (đã lưu); fallback compute (m+l)*0.08 cho data cũ chưa có tax
+      var _taxBE = parseFloat(line.tax) || 0;
+      var _taxFb = round2(((parseFloat(line.material_cost)||0) + (parseFloat(line.labour_cost)||0)) * 0.08);
+      var xv = tr.querySelector('.x-val'); if (xv) xv.textContent = (_taxBE > 0 ? _taxBE : _taxFb).toFixed(2);
       var tv = tr.querySelector('.t-val'); if (tv) tv.textContent = parseFloat(line.total_cost    || 0).toFixed(2);
     });
     calcEstTotal();
