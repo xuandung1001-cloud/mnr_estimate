@@ -8371,6 +8371,7 @@ async function saveEditEstimate(containerNo, estDate) {
     var hv = row.querySelector('.h-val');
     var mv = row.querySelector('.m-val');
     var lv = row.querySelector('.l-val');
+    var xv = row.querySelector('.x-val');
     var tv = row.querySelector('.t-val');
     lines.push({
       repair_seq:        idx + 1,
@@ -8386,6 +8387,7 @@ async function saveEditEstimate(containerNo, estDate) {
       labour_hours:  hv ? (parseFloat(hv.textContent) || 0) : 0,
       material_cost: mv ? (parseFloat(mv.textContent) || 0) : 0,
       labour_cost:   lv ? (parseFloat(lv.textContent) || 0) : 0,
+      tax:           xv ? (parseFloat(xv.textContent) || 0) : 0,
       total_cost:    tv ? (parseFloat(tv.textContent) || 0) : 0
     });
   });
