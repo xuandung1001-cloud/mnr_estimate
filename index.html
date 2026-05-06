@@ -12062,8 +12062,14 @@ async function openPhieuKhoForm(loaiGD, maPhieu) {
   _pkfState = null;
   _pkfDirty = false;
 
-  // Load users dropdown nếu chưa có
-  await _loadKhoUsersList();
+  // Tối ưu: kick off TẤT CẢ requests song song NGAY ĐẦU — tiết kiệm 1-2 round-trips.
+  var usersP  = _loadKhoUsersList();
+  var avgP    = apiGet({ action: 'getAvgVatTuPrices', _t: Date.now() });
+  var dmP     = apiGet({ action: 'getDmVatTu',         _t: Date.now() });
+  var detailP = maPhieu ? apiGet({ action: 'getPhieuKhoDetail', ma_phieu: maPhieu }) : null;
+
+  // Build users dropdown trước (rapid render)
+  await usersP;
   var sel = document.getElementById('pkf-nguoi');
   sel.innerHTML = '<option value="">— Chọn người TH —</option>'
     + (_khoUsersList||[]).map(function(u){
@@ -12079,21 +12085,17 @@ async function openPhieuKhoForm(loaiGD, maPhieu) {
       }).join('');
   }
 
-  // Load DM Vật tư + WAC prices song song — luôn refresh để có ton_hien_tai mới nhất
-  // (sau khi vừa save phiếu khác, tồn kho đã thay đổi)
-  var results = await Promise.all([
-    apiGet({ action: 'getAvgVatTuPrices', _t: Date.now() }),
-    apiGet({ action: 'getDmVatTu',         _t: Date.now() })
-  ]);
-  if (results[0] && results[0].success) _pkfAvgPrices = results[0].data || {};
-  if (results[1] && results[1].success) _dmVatTu = results[1].data || [];
+  // Đợi DM + AvgPrices + Detail (đã fire ở trên — chạy parallel với users fetch)
+  var allRes = await Promise.all([avgP, dmP, detailP || Promise.resolve(null)]);
+  if (allRes[0] && allRes[0].success) _pkfAvgPrices = allRes[0].data || {};
+  if (allRes[1] && allRes[1].success) _dmVatTu = allRes[1].data || [];
   _buildPkfDatalist();
 
   if (maPhieu) {
     // Sửa
     document.getElementById('pkform-title').textContent = 'Chỉnh sửa phiếu';
     document.getElementById('pkf-mapieu').value = maPhieu;
-    var detail = await apiGet({ action: 'getPhieuKhoDetail', ma_phieu: maPhieu });
+    var detail = allRes[2];
     if (!detail || !detail.success) { toast('Lỗi tải phiếu: '+(detail&&detail.error||''), 4000); closePhieuKhoForm(); return; }
     _fillPkForm(detail.header, detail.lines);
   } else {
@@ -12565,8 +12567,11 @@ function closePhieuKhoForm() {
 async function printPhieuKho(maPhieu) {
   if (!maPhieu) return;
   toast('Đang tải phiếu để in...', 1500);
-  await _loadKhoUsersList();
-  var detail = await apiGet({ action: 'getPhieuKhoDetail', ma_phieu: maPhieu });
+  // Parallel: users + detail (tiết kiệm 1 round-trip)
+  var usersP  = _loadKhoUsersList();
+  var detailP = apiGet({ action: 'getPhieuKhoDetail', ma_phieu: maPhieu });
+  await usersP;
+  var detail = await detailP;
   if (!detail || !detail.success) { toast('Lỗi: '+(detail&&detail.error||''), 4000); return; }
   var h = detail.header, lines = detail.lines || [];
   var loaiUp = String(h.loai||'').toUpperCase();
