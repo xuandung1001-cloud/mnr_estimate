@@ -2912,6 +2912,27 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <span>TỔNG CỘNG</span>
             <strong id="pkf-total-mobile-val">0 đ</strong>
           </div>
+          <!-- PAGINATION — chỉ hiện khi nhiều dòng -->
+          <div class="page-foot" id="pkf-pagefoot" style="display:none">
+            <div class="page-foot-info" id="pkf-pf-info">—</div>
+            <div class="page-foot-nav">
+              <button class="pf-btn" id="pkf-pf-first" onclick="pkfGoPage(1)" title="Trang đầu">«</button>
+              <button class="pf-btn" id="pkf-pf-prev" onclick="pkfGoPage(_pkfPage-1)" title="Trang trước">‹</button>
+              <span class="pf-info">Page <b id="pkf-pf-cur">1</b> / <b id="pkf-pf-total">1</b></span>
+              <button class="pf-btn" id="pkf-pf-next" onclick="pkfGoPage(_pkfPage+1)" title="Trang sau">›</button>
+              <button class="pf-btn" id="pkf-pf-last" onclick="pkfGoPage(9999)" title="Trang cuối">»</button>
+            </div>
+            <div class="page-foot-size">
+              <span>Show:</span>
+              <select id="pkf-pf-size" onchange="pkfSetPageSize(this.value)">
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="9999">All</option>
+              </select>
+              <span>per page</span>
+            </div>
+          </div>
         </div>
         <!-- MOBILE STICKY ACTION BAR — chỉ hiện trên mobile, fixed bottom -->
         <div id="pkform-mobile-actions" style="display:none">
@@ -11917,6 +11938,58 @@ var _pkfDirty = false;
 var _pkSearchTimer = null;
 var _pkfAvgPrices = {};     // { ma_vt: avg_price } — WAC từ phiếu Nhập, cho XUẤT auto-fill
 
+// Pagination cho form lines (show/hide DOM thay vì re-render — giữ logic save/calc nguyên)
+var _pkfPage = 1;
+var _pkfPageSize = 25;
+
+function pkfGoPage(p) {
+  var total = document.querySelectorAll('#pkf-lines tr').length;
+  var totalPages = Math.max(1, Math.ceil(total / _pkfPageSize));
+  _pkfPage = Math.max(1, Math.min(parseInt(p)||1, totalPages));
+  _pkfApplyPage();
+}
+function pkfSetPageSize(sz) {
+  _pkfPageSize = parseInt(sz) || 25;
+  _pkfPage = 1;
+  _pkfApplyPage();
+}
+function _pkfApplyPage() {
+  var rows  = document.querySelectorAll('#pkf-lines tr');
+  var cards = document.querySelectorAll('#pkf-lines-cards .pkf-line-card');
+  var total = rows.length;
+  var foot  = document.getElementById('pkf-pagefoot');
+  if (!total) { if (foot) foot.style.display = 'none'; return; }
+  var totalPages = Math.max(1, Math.ceil(total / _pkfPageSize));
+  if (_pkfPage > totalPages) _pkfPage = totalPages;
+  var start = (_pkfPage - 1) * _pkfPageSize;
+  var end   = Math.min(start + _pkfPageSize, total);
+  for (var i = 0; i < total; i++) {
+    var show = (i >= start && i < end);
+    if (rows[i])  rows[i].style.display  = show ? '' : 'none';
+    if (cards[i]) cards[i].style.display = show ? '' : 'none';
+    // Update STT theo vị trí thực (giữ index gốc, không renumber theo page)
+    if (rows[i] && rows[i].cells[0]) rows[i].cells[0].textContent = (i+1);
+    var numEl = cards[i] ? cards[i].querySelector('.pkf-line-card-num') : null;
+    if (numEl) numEl.textContent = 'STT ' + (i+1);
+  }
+  // Show/hide footer (chỉ hiện khi > 1 page hoặc > pageSize)
+  if (foot) {
+    if (total > _pkfPageSize) {
+      foot.style.display = 'flex';
+      document.getElementById('pkf-pf-info').innerHTML = 'Hiển thị <b>' + (start+1) + '–' + end + '</b> / <b>' + total + '</b> dòng';
+      document.getElementById('pkf-pf-cur').textContent = _pkfPage;
+      document.getElementById('pkf-pf-total').textContent = totalPages;
+      document.getElementById('pkf-pf-first').disabled = _pkfPage <= 1;
+      document.getElementById('pkf-pf-prev').disabled  = _pkfPage <= 1;
+      document.getElementById('pkf-pf-next').disabled  = _pkfPage >= totalPages;
+      document.getElementById('pkf-pf-last').disabled  = _pkfPage >= totalPages;
+      document.getElementById('pkf-pf-size').value = String(_pkfPageSize);
+    } else {
+      foot.style.display = 'none';
+    }
+  }
+}
+
 // Search → filter local, không gọi API. Debounce ngắn vì chỉ filter in-memory.
 function _pkSearchDebounce() {
   clearTimeout(_pkSearchTimer);
@@ -12139,6 +12212,8 @@ function _fillPkForm(header, lines) {
   } else {
     addPkfLine();
   }
+  _pkfPage = 1;
+  _pkfApplyPage();
   calcPkfTotal();
   // Show Print + Delete khi đang sửa phiếu cũ (cả desktop header + mobile sticky bar)
   var hasMa = !!(_pkfState && _pkfState.ma_phieu);
@@ -12277,6 +12352,13 @@ function addPkfLine(data) {
     cardX.querySelector('.pkf-dongia-m').readOnly = true;
   }
 
+  // Auto-jump tới page chứa dòng vừa add — chỉ khi user click "+ Thêm dòng"/scanner (no pre-fill).
+  // Khi load phiếu cũ (_fillPkForm gọi addPkfLine với data có sẵn) → skip, _fillPkForm tự reset page=1 sau loop.
+  if (!data || !data.ma_vt) {
+    var totalRows = document.querySelectorAll('#pkf-lines tr').length;
+    _pkfPage = Math.max(1, Math.ceil(totalRows / _pkfPageSize));
+    _pkfApplyPage();
+  }
   calcPkfTotal();
 }
 
@@ -12311,6 +12393,7 @@ function removePkfLine(btn) {
   var card = document.querySelector('#pkf-lines-cards .pkf-line-card[data-idx="'+idx+'"]');
   if (tr) tr.remove();
   if (card) card.remove();
+  _pkfApplyPage();
   calcPkfTotal();
 }
 
@@ -13721,6 +13804,9 @@ function _scnFillPhieuLine(code) {
       var newSL = (parseFloat(slInp.value) || 0) + 1;
       slInp.value = newSL;
       onPkfQtyOrPriceChange(slInp);
+      // Auto-jump tới page chứa dòng này để user thấy SL vừa tăng
+      _pkfPage = Math.floor(i / _pkfPageSize) + 1;
+      _pkfApplyPage();
       _scnPhieuCount++;
       document.getElementById('scn-status').textContent = '✓ +1 ' + vt.ten_vat_tu + ' (SL: ' + newSL + ') · Đã quét: ' + _scnPhieuCount;
       return;
