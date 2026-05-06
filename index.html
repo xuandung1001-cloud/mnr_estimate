@@ -668,6 +668,7 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 .loading{text-align:center;padding:var(--sp-10);color:var(--gray-500)}
 .spinner{display:inline-block;width:24px;height:24px;border:2.5px solid var(--gray-200);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:var(--sp-2)}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes loadingDots{0%,100%{opacity:.3}50%{opacity:1}}
 
 /* SCREENS */
 .screen{display:none}
@@ -2393,13 +2394,66 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;flex-shrink:0">
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <input id="log-filter-user" class="fi" placeholder="Tìm user..." style="width:140px" oninput="renderActLog()">
-              <select id="log-filter-action" class="fi" style="width:180px" onchange="renderActLog()">
+              <select id="log-filter-action" class="fi" style="width:220px" onchange="renderActLog()">
                 <option value="">Tất cả thao tác</option>
-                <option>Tạo Estimate</option>
-                <option>Revise Estimate</option>
-                <option>Xoá Estimate</option>
-                <option>Cập nhật OVM</option>
-                <option>Cập nhật Tracking</option>
+                <optgroup label="Báo giá">
+                  <option>Tạo Estimate</option>
+                  <option>Sửa Estimate</option>
+                  <option>Revise Estimate</option>
+                  <option>Xoá Estimate</option>
+                  <option>Đổi Status Tracking</option>
+                  <option>Sửa Repair Date</option>
+                  <option>Sửa Remark Tracking</option>
+                  <option>Cập nhật OVM</option>
+                </optgroup>
+                <optgroup label="Kho - Vật tư">
+                  <option>Tạo Vật tư</option>
+                  <option>Sửa Vật tư</option>
+                  <option>Xoá Vật tư</option>
+                  <option>Tạo Công cụ</option>
+                  <option>Sửa Công cụ</option>
+                  <option>Xoá Công cụ</option>
+                </optgroup>
+                <optgroup label="Phiếu kho">
+                  <option>Tạo Phiếu NHẬP</option>
+                  <option>Sửa Phiếu NHẬP</option>
+                  <option>Tạo Phiếu XUẤT</option>
+                  <option>Sửa Phiếu XUẤT</option>
+                  <option>Xoá Phiếu kho</option>
+                </optgroup>
+                <optgroup label="CCDC">
+                  <option>Cấp phát CCDC</option>
+                  <option>Thu hồi CCDC</option>
+                  <option>Báo hỏng CCDC</option>
+                  <option>Mang đi sửa CCDC</option>
+                  <option>BD định kỳ CCDC</option>
+                  <option>Báo mất CCDC</option>
+                  <option>Thanh lý CCDC</option>
+                  <option>Tìm thấy CCDC</option>
+                  <option>Xoá GD CCDC</option>
+                </optgroup>
+                <optgroup label="Bảo trì">
+                  <option>Tạo Phiếu sửa</option>
+                  <option>Sửa Phiếu sửa</option>
+                  <option>Đóng Phiếu sửa</option>
+                  <option>Xoá Phiếu sửa</option>
+                </optgroup>
+                <optgroup label="Kiểm kê">
+                  <option>Tạo Đợt KK</option>
+                  <option>Cập nhật KQ KK</option>
+                  <option>Đóng Đợt KK</option>
+                  <option>Mở lại Đợt KK</option>
+                  <option>Xoá Đợt KK</option>
+                </optgroup>
+                <optgroup label="Hệ thống">
+                  <option>Tạo User</option>
+                  <option>Sửa User</option>
+                  <option>Xoá User</option>
+                  <option>Đổi mật khẩu</option>
+                  <option>Import Tariff</option>
+                  <option>Import TOS Stock</option>
+                  <option>Xoá ảnh container</option>
+                </optgroup>
               </select>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
@@ -4272,7 +4326,7 @@ function loadEstPhotos(contNo, carrier) {
     var label   = document.getElementById('est-photos-label');
     var cacheKey = contNo + '|' + carrier;
 
-    grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:8px 0">Đang tải ảnh...</div>';
+    grid.innerHTML = '<div style="color:var(--gray-600);font-size:12px;padding:16px;display:flex;align-items:center;gap:10px;grid-column:1/-1"><div class="spinner" style="width:18px;height:18px;border-width:2.5px;margin:0;flex-shrink:0"></div>Đang tải ảnh trước sửa chữa...</div>';
     section.style.display = 'block';
 
     try {
@@ -7347,13 +7401,22 @@ function genDashboard() {
 
   // Lợi nhuận tone: dương → green, âm → red, = 0 → purple neutral
   var profitTone = profit > 0 ? 'profit-pos' : (profit < 0 ? 'profit-neg' : 'purple');
+  // Warehouse data đang load → skeleton ⏳ thay vì "—" để user biết app đang làm việc
+  var whLoading = !_whData;
+  var skel = '<span style="color:var(--gray-400);font-size:18px;animation:loadingDots 1.4s infinite">⋯</span>';
+  var xuatCell = xuatVND > 0 ? fmtVND(xuatVND) : (whLoading ? skel : '—');
+  var tonCell  = tonVND  > 0 ? fmtVND(tonVND)  : (whLoading ? skel : '—');
+  var profitCell = profit !== 0 ? fmtVND(profit) : (whLoading ? skel : '—');
+  var xuatSub = whLoading ? '<span style="color:var(--gray-500);font-style:italic">đang tải dữ liệu kho...</span>' : 'giá trị xuất (VNĐ)';
+  var tonSub  = whLoading ? '<span style="color:var(--gray-500);font-style:italic">đang tải dữ liệu kho...</span>' : 'giá trị tồn (VNĐ)';
+  var profitSub = whLoading ? '<span style="color:var(--gray-500);font-style:italic">đang tính...</span>' : (profit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho');
   document.getElementById('rpt-kpi').innerHTML =
       _kpi('Cont chờ duyệt',  pendingCount,                       'tất cả carrier · chưa close', { tone:'blue',   jump: "var n=document.querySelector('.nav-item[onclick*=tracking]');if(n)nav('tracking',n)" })
     + _kpi('Cont đã sửa kỳ',  filtered.length,                    isAllYear ? ('cả năm ' + year) : (month + ' ' + year), { tone:'green' })
     + _kpi('Doanh thu MNR',   dtVND > 0 ? fmtVND(dtVND) : '—',    dtSub,                                                  { tone:'teal',  subRaw: true })
-    + _kpi('Xuất kho kỳ',     xuatVND > 0 ? fmtVND(xuatVND) : '—', 'giá trị xuất (VNĐ)',                                  { tone:'orange' })
-    + _kpi('Tồn kho cuối kỳ', tonVND  > 0 ? fmtVND(tonVND)  : '—', 'giá trị tồn (VNĐ)',                                   { tone:'purple' })
-    + _kpi('Lợi nhuận gộp',   profit !== 0 ? fmtVND(profit) : '—', profit < 0 ? 'âm — chi nhiều hơn thu' : 'doanh thu − xuất kho', { tone: profitTone });
+    + _kpi('Xuất kho kỳ',     xuatCell,   xuatSub,   { tone:'orange', subRaw: true })
+    + _kpi('Tồn kho cuối kỳ', tonCell,    tonSub,    { tone:'purple', subRaw: true })
+    + _kpi('Lợi nhuận gộp',   profitCell, profitSub, { tone: profitTone, subRaw: true });
 
   // --- Chart 1: Stock emty donut theo container_status + grade combo ---
   const stockData = state.stock || [];
@@ -9079,7 +9142,7 @@ async function confirmTariff() {
   btn.textContent = 'Đang import...';
 
   try {
-    const res = await apiPost({ action: 'appendTariff', rows: tariffImportData });
+    const res = await apiPost({ action: 'appendTariff', username: state.user && state.user.username || '', rows: tariffImportData });
     if (res.success) {
       // Reload tariff
       const tariffRes = await apiGet({ action: 'getTariff' });
@@ -9136,6 +9199,7 @@ async function handleStockUpload(input) {
 
       const res = await apiPost({
         action: 'importStockFromTOS',
+        username: state.user && state.user.username || '',
         rows: dataRows
       });
 
@@ -9348,6 +9412,9 @@ var _actLogData = [];
 
 async function loadActLog() {
   document.getElementById('log-count').textContent = 'Đang tải...';
+  document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div><div>Đang tải nhật ký...</div></td></tr>';
+  var foot = document.getElementById('log-pagefoot');
+  if (foot) foot.style.display = 'none';
   try {
     var filterUser = document.getElementById('log-filter-user').value.trim();
     var filterAction = document.getElementById('log-filter-action').value;
@@ -9357,9 +9424,11 @@ async function loadActLog() {
       renderActLog();
     } else {
       document.getElementById('log-count').textContent = 'Lỗi tải log';
+      document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--error-text)">Lỗi tải log: '+esc(res&&res.error||'unknown')+'</td></tr>';
     }
   } catch(e) {
     document.getElementById('log-count').textContent = 'Lỗi kết nối';
+    document.getElementById('log-tbody').innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--error-text)">Lỗi kết nối: '+esc(e.message)+'</td></tr>';
   }
 }
 
@@ -9792,7 +9861,7 @@ function openPhotoLightbox(idx) {
 async function deletePhotoScreen(fileId, idx) {
   if (!confirm('Xoá ảnh này? Không thể hoàn tác!')) return;
   try {
-    var res = await apiPost({ action: 'deletePhoto', file_id: fileId });
+    var res = await apiPost({ action: 'deletePhoto', username: state.user && state.user.username || '', file_id: fileId });
     if (res && res.success) {
       // Xóa khỏi data
       var arr = _phTab === 'before' ? _phData.before : _phData.after;
@@ -10416,6 +10485,21 @@ async function btLoad() {
   btn.disabled = true;
   var oldHtml = btn.innerHTML;
   btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle"></span> Đang tải...';
+  // Loading overlay full-area (giấu empty + result, hiện spinner lớn)
+  document.getElementById('bt-empty').style.display = 'none';
+  document.getElementById('bt-result').style.display = 'none';
+  var btContent = document.getElementById('bt-content');
+  var loader = document.getElementById('bt-loader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'bt-loader';
+    loader.className = 'loading';
+    loader.style.cssText = 'padding:80px 20px';
+    loader.innerHTML = '<div class="spinner"></div><div>Đang tải báo cáo tổng...</div>';
+    btContent.appendChild(loader);
+  } else {
+    loader.style.display = '';
+  }
   try {
     var res = await apiGet({ action: 'getBaoCaoTong', from_iso: from, to_iso: to });
     if (!res || !res.success) throw new Error((res && res.error) || 'Lỗi tải báo cáo');
@@ -10425,9 +10509,13 @@ async function btLoad() {
     toast('✅ Đã tải báo cáo');
   } catch(e) {
     toast('❌ ' + e.message);
+    // Lỗi → khôi phục empty state
+    document.getElementById('bt-empty').style.display = '';
   } finally {
     btn.disabled = false;
     btn.innerHTML = oldHtml;
+    var lo = document.getElementById('bt-loader');
+    if (lo) lo.style.display = 'none';
   }
 }
 
@@ -12141,6 +12229,16 @@ async function openPhieuKhoForm(loaiGD, maPhieu) {
 
   _pkfState = null;
   _pkfDirty = false;
+
+  // Loading state cho table lines (khi load detail phiếu cũ) — báo user app đang tải
+  if (maPhieu) {
+    document.getElementById('pkform-title').textContent = 'Đang tải phiếu ' + maPhieu + '...';
+    document.getElementById('pkf-mapieu').value = maPhieu;
+    document.getElementById('pkf-lines').innerHTML = '<tr><td colspan="11" class="loading"><div class="spinner"></div><div>Đang tải chi tiết phiếu...</div></td></tr>';
+    document.getElementById('pkf-lines-cards').innerHTML = '<div style="padding:30px;text-align:center;color:var(--gray-500)"><div class="spinner"></div><div style="margin-top:8px;font-size:13px">Đang tải chi tiết phiếu...</div></div>';
+    var pkfPgFt = document.getElementById('pkf-pagefoot');
+    if (pkfPgFt) pkfPgFt.style.display = 'none';
+  }
 
   // Tối ưu: kick off TẤT CẢ requests song song NGAY ĐẦU — tiết kiệm 1-2 round-trips.
   var usersP  = _loadKhoUsersList();
