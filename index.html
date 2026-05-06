@@ -2925,9 +2925,10 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <div class="page-foot-size">
               <span>Show:</span>
               <select id="pkf-pf-size" onchange="pkfSetPageSize(this.value)">
-                <option value="25" selected>25</option>
-                <option value="50">50</option>
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
                 <option value="100">100</option>
+                <option value="250">250</option>
                 <option value="9999">All</option>
               </select>
               <span>per page</span>
@@ -11940,7 +11941,7 @@ var _pkfAvgPrices = {};     // { ma_vt: avg_price } — WAC từ phiếu Nhập,
 
 // Pagination cho form lines (show/hide DOM thay vì re-render — giữ logic save/calc nguyên)
 var _pkfPage = 1;
-var _pkfPageSize = 25;
+var _pkfPageSize = 50;
 
 function pkfGoPage(p) {
   var total = document.querySelectorAll('#pkf-lines tr').length;
@@ -11949,7 +11950,7 @@ function pkfGoPage(p) {
   _pkfApplyPage();
 }
 function pkfSetPageSize(sz) {
-  _pkfPageSize = parseInt(sz) || 25;
+  _pkfPageSize = parseInt(sz) || 50;
   _pkfPage = 1;
   _pkfApplyPage();
 }
@@ -11972,21 +11973,17 @@ function _pkfApplyPage() {
     var numEl = cards[i] ? cards[i].querySelector('.pkf-line-card-num') : null;
     if (numEl) numEl.textContent = 'STT ' + (i+1);
   }
-  // Show/hide footer (chỉ hiện khi > 1 page hoặc > pageSize)
+  // Footer luôn hiện (đồng bộ với pattern Danh sách Báo Giá)
   if (foot) {
-    if (total > _pkfPageSize) {
-      foot.style.display = 'flex';
-      document.getElementById('pkf-pf-info').innerHTML = 'Hiển thị <b>' + (start+1) + '–' + end + '</b> / <b>' + total + '</b> dòng';
-      document.getElementById('pkf-pf-cur').textContent = _pkfPage;
-      document.getElementById('pkf-pf-total').textContent = totalPages;
-      document.getElementById('pkf-pf-first').disabled = _pkfPage <= 1;
-      document.getElementById('pkf-pf-prev').disabled  = _pkfPage <= 1;
-      document.getElementById('pkf-pf-next').disabled  = _pkfPage >= totalPages;
-      document.getElementById('pkf-pf-last').disabled  = _pkfPage >= totalPages;
-      document.getElementById('pkf-pf-size').value = String(_pkfPageSize);
-    } else {
-      foot.style.display = 'none';
-    }
+    foot.style.display = 'flex';
+    document.getElementById('pkf-pf-info').innerHTML = 'Hiển thị <b>' + (start+1) + '–' + end + '</b> trong tổng <b>' + total + '</b> dòng';
+    document.getElementById('pkf-pf-cur').textContent = _pkfPage;
+    document.getElementById('pkf-pf-total').textContent = totalPages;
+    document.getElementById('pkf-pf-first').disabled = _pkfPage <= 1;
+    document.getElementById('pkf-pf-prev').disabled  = _pkfPage <= 1;
+    document.getElementById('pkf-pf-next').disabled  = _pkfPage >= totalPages;
+    document.getElementById('pkf-pf-last').disabled  = _pkfPage >= totalPages;
+    document.getElementById('pkf-pf-size').value = String(_pkfPageSize);
   }
 }
 
