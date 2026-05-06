@@ -2462,17 +2462,24 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             </div>
           </div>
           <div class="tbl-wrap">
-            <table style="width:100%;border-collapse:collapse" id="log-table">
+            <table id="log-table" style="table-layout:fixed">
+              <colgroup>
+                <col style="width:160px">
+                <col style="width:140px">
+                <col style="width:200px">
+                <col style="width:130px">
+                <col>
+              </colgroup>
               <thead>
-                <tr style="background:var(--bg2)">
-                  <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Thời gian</th>
-                  <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">User</th>
-                  <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">Thao tác</th>
-                  <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">Container</th>
-                  <th style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">Chi tiết</th>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>User</th>
+                  <th>Thao tác</th>
+                  <th>Container</th>
+                  <th style="text-align:left">Chi tiết</th>
                 </tr>
               </thead>
-              <tbody id="log-tbody"><tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray)">Nhấn Refresh để tải log...</td></tr></tbody>
+              <tbody id="log-tbody"><tr><td colspan="5" style="padding:20px;text-align:center;color:var(--gray-500)">Nhấn Refresh để tải log...</td></tr></tbody>
             </table>
           </div>
           <div class="page-foot" id="log-pagefoot" style="display:none">
@@ -9503,14 +9510,17 @@ function _renderActLogTable(rows) {
 
   var html = pageRows.map(function(r, i) {
     var color = ACTION_COLOR[r.action] || '#64748b';
-    return '<tr style="background:' + (i%2===0?'#fff':'#FAFAFA') + '">'
-      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;color:var(--gray);text-align:center">' + esc(r.timestamp) + '</td>'
-      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;text-align:center">' + esc(r.username||'—') + '</td>'
-      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">'
-      +   '<span style="background:' + color + '22;color:' + color + ';padding:2px 8px;border-radius:99px;font-weight:600">' + esc(r.action||'—') + '</span>'
-      + '</td>'
-      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">' + esc(r.container_no||'—') + '</td>'
-      + '<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--gray);text-align:center">' + esc(r.detail||'—') + '</td>'
+    var bg = i%2===1 ? 'background:#FAFAFA' : '';
+    var dash = '<span style="color:var(--gray-300)">—</span>';
+    var actBadge = r.action
+      ? '<span class="badge" style="background:' + color + '22;color:' + color + ';font-weight:600">' + esc(r.action) + '</span>'
+      : dash;
+    return '<tr style="' + bg + '">'
+      + '<td>' + esc(r.timestamp) + '</td>'
+      + '<td style="font-weight:600">' + (r.username ? esc(r.username) : dash) + '</td>'
+      + '<td>' + actBadge + '</td>'
+      + '<td>' + (r.container_no ? esc(r.container_no) : dash) + '</td>'
+      + '<td style="text-align:left;overflow:hidden;text-overflow:ellipsis" title="' + esc(r.detail||'') + '">' + (r.detail ? esc(r.detail) : dash) + '</td>'
       + '</tr>';
   }).join('');
 
