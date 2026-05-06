@@ -3946,11 +3946,11 @@ async function loadInitialData() {
     if (results[0] && results[0].success) state.tracking = results[0].data;
     if (results[1] && results[1].success) state.summary  = results[1].data;
     if (_expEl) _expEl.textContent = _expOrig;
-    // Pre-load warehouse data để màn Báo cáo tháng có số liệu Xuất/Tồn kho ngay lần đầu
+    // Render dashboard ngay với tracking+summary đã có — KHÔNG chờ warehouse.
+    // Warehouse KPI (Xuất/Tồn/Lợi nhuận) hiển thị "—" ban đầu, fill sau khi refreshWarehouse xong.
+    try { genDashboard(); } catch(e){}
     if (!_whData) {
-      refreshWarehouse().then(function(){ try { genDashboard(); } catch(e){} });
-    } else {
-      genDashboard();
+      refreshWarehouse().then(function(){ try { genDashboard(); } catch(_){} });
     }
     // Schedule auto-fetch tỷ giá USD lúc 7h sáng mỗi ngày
     scheduleDailyRateUpdate();
