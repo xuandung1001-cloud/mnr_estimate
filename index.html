@@ -2132,6 +2132,8 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
                     <th style="text-align:left;width:100px">Tháng</th>
                     <th style="width:80px">Số cont</th>
                     <th style="width:140px">Doanh thu (USD)</th>
+                    <th style="width:140px">KPI (USD)</th>
+                    <th style="width:90px">% Đạt</th>
                     <th style="width:160px">Doanh thu (VND)</th>
                     <th style="width:160px">Chi phí VT (VND)</th>
                     <th style="width:160px">Lãi gộp (VND)</th>
@@ -10444,6 +10446,15 @@ function krRenderSoKho(d) {
 // ═════════════════════════════════════════════════════════════════════
 var _btState = { data: null, charts: {} };
 
+// KPI doanh thu (USD) theo năm-tháng — chỉ tiêu Bộ phận MNR
+// Sửa tại đây khi KPI năm mới ban hành. Tháng không có KPI → so sánh ẩn.
+var MNR_KPI_REVENUE_USD = {
+  // 2026: H1 = 45,004 USD/tháng · H2 = 49,361 USD/tháng (tổng năm 566,187 USD)
+  '2026-01': 45004, '2026-02': 45004, '2026-03': 45004, '2026-04': 45004, '2026-05': 45004, '2026-06': 45004,
+  '2026-07': 49361, '2026-08': 49361, '2026-09': 49361, '2026-10': 49361, '2026-11': 49361, '2026-12': 49361
+};
+function _btKpiUsd(yyyymm) { return MNR_KPI_REVENUE_USD[yyyymm] || 0; }
+
 function btInitScreen() {
   // Default = tháng hiện tại nếu chưa có
   if (!document.getElementById('bt-from').value) {
@@ -10542,8 +10553,16 @@ function btRender(d) {
 
   // ── KPI Grid — dùng .kstat.kc-* đồng bộ với screen khác ──
   var k = d.kpi;
+  // Tính KPI USD cho khoảng kỳ — sum những tháng overlap với from-to
+  var totalKpiUsd = (d.by_month || []).reduce(function(s, m){ return s + _btKpiUsd(m.month); }, 0);
+  var kpiPct = totalKpiUsd > 0 ? (k.doanh_thu_phat_sinh / totalKpiUsd * 100) : 0;
+  var kpiPctTxt = totalKpiUsd > 0 ? kpiPct.toFixed(1) + '% đạt KPI' : 'Chưa có KPI';
+  var kpiCardColor = (totalKpiUsd > 0 && kpiPct >= 100) ? 'green'
+                   : (totalKpiUsd > 0 && kpiPct >= 80) ? 'orange' : (totalKpiUsd > 0 ? 'red' : 'purple');
+
   var kpiCards = [
     { label: 'Doanh thu (USD)',  value: _btFmtUsd(k.doanh_thu_phat_sinh), sub: k.so_cont_bao_gia + ' cont đã sửa (PO date · No VAT)', color: 'blue' },
+    { label: 'KPI Doanh thu (USD)', value: totalKpiUsd > 0 ? _btFmtUsd(totalKpiUsd) : '—', sub: kpiPctTxt, color: kpiCardColor },
     { label: 'Doanh thu (VND)',  value: _btFmtVnd(k.doanh_thu_vnd),       sub: 'Quy đổi @' + _btFmtVnd(d.usd_rate) + '/USD', color: 'blue' },
     { label: 'Chi phí vật tư',   value: _btFmtVnd(k.chi_phi_vat_tu),      sub: k.so_phieu_xuat + ' phiếu xuất', color: 'orange' },
     { label: 'Chi phí bảo trì',  value: _btFmtVnd(k.chi_phi_bao_tri),     sub: k.so_phieu_bao_tri + ' phiếu sửa', color: 'red' },
@@ -10575,7 +10594,11 @@ function btRender(d) {
             pointBackgroundColor: '#0EA5E9', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: true },
           { label: 'Chi phí VT (VND)', data: months.map(function(m){ return m.chi_phi_vt; }),
             borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 2.5,
-            pointBackgroundColor: '#F97316', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false }
+            pointBackgroundColor: '#F97316', pointRadius: 4, pointHoverRadius: 6, tension: 0.35, fill: false },
+          { label: 'KPI Doanh thu (VND)', data: months.map(function(m){ return _btKpiUsd(m.month) * (d.usd_rate||0); }),
+            borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.05)', borderWidth: 2,
+            borderDash: [6, 4], pointBackgroundColor: '#10B981', pointRadius: 3, pointHoverRadius: 5,
+            tension: 0, fill: false }
         ]
       },
       options: {
@@ -10600,18 +10623,27 @@ function btRender(d) {
     return m ? (m[2] + '/' + m[1]) : (s || '');
   }
   var months = d.by_month || [];
-  var totSoCont = 0, totDtUsd = 0, totDtVnd = 0, totCpVt = 0, totLai = 0;
+  var totSoCont = 0, totDtUsd = 0, totDtVnd = 0, totCpVt = 0, totLai = 0, totKpiUsd = 0;
   var trMo = months.map(function(m) {
     var laiColor = m.lai_gop_vnd >= 0 ? 'var(--success-text)' : 'var(--error-text)';
+    var kpiUsd = _btKpiUsd(m.month);
+    var pct = kpiUsd > 0 ? (m.doanh_thu||0) / kpiUsd * 100 : null;
+    var pctTxt = (pct === null) ? '—'
+               : (pct >= 100 ? '✅ ' + pct.toFixed(1) + '%' : pct.toFixed(1) + '%');
+    var pctColor = (pct === null) ? 'var(--gray-500)'
+                  : (pct >= 100 ? 'var(--success-text)' : (pct >= 80 ? '#D97706' : 'var(--error-text)'));
     totSoCont += m.so_cont || 0;
     totDtUsd  += m.doanh_thu || 0;
     totDtVnd  += m.doanh_thu_vnd || 0;
     totCpVt   += m.chi_phi_vt || 0;
     totLai    += m.lai_gop_vnd || 0;
+    totKpiUsd += kpiUsd;
     return '<tr>'
       + '<td class="code" style="text-align:left">'+esc(_btFmtMonth(m.month))+'</td>'
       + '<td class="num">'+_btFmtNum(m.so_cont)+'</td>'
       + '<td class="num" style="color:#0369A1;font-weight:600">'+_btFmtUsd(m.doanh_thu)+'</td>'
+      + '<td class="num" style="color:var(--gray-600)">'+(kpiUsd > 0 ? _btFmtUsd(kpiUsd) : '—')+'</td>'
+      + '<td class="num" style="font-weight:700;color:'+pctColor+'">'+pctTxt+'</td>'
       + '<td class="num">'+_btFmtVnd(m.doanh_thu_vnd || 0)+'</td>'
       + '<td class="num" style="color:#9A3412">'+_btFmtVnd(m.chi_phi_vt)+'</td>'
       + '<td class="num" style="font-weight:700;color:'+laiColor+'">'+_btFmtVnd(m.lai_gop_vnd || 0)+'</td>'
@@ -10619,17 +10651,24 @@ function btRender(d) {
   }).join('');
   if (months.length) {
     var totLaiColor = totLai >= 0 ? 'var(--success-text)' : 'var(--error-text)';
+    var totPct = totKpiUsd > 0 ? (totDtUsd / totKpiUsd * 100) : null;
+    var totPctTxt = (totPct === null) ? '—'
+                  : (totPct >= 100 ? '✅ ' + totPct.toFixed(1) + '%' : totPct.toFixed(1) + '%');
+    var totPctColor = (totPct === null) ? 'var(--gray-500)'
+                     : (totPct >= 100 ? 'var(--success-text)' : (totPct >= 80 ? '#D97706' : 'var(--error-text)'));
     trMo += '<tr style="background:var(--gray-50);font-weight:700;border-top:2px solid var(--gray-300)">'
       + '<td class="code" style="text-align:left">TỔNG CỘNG</td>'
       + '<td class="num">'+_btFmtNum(totSoCont)+'</td>'
       + '<td class="num" style="color:#0369A1">'+_btFmtUsd(totDtUsd)+'</td>'
+      + '<td class="num" style="color:var(--gray-600)">'+(totKpiUsd > 0 ? _btFmtUsd(totKpiUsd) : '—')+'</td>'
+      + '<td class="num" style="color:'+totPctColor+'">'+totPctTxt+'</td>'
       + '<td class="num">'+_btFmtVnd(totDtVnd)+'</td>'
       + '<td class="num" style="color:#9A3412">'+_btFmtVnd(totCpVt)+'</td>'
       + '<td class="num" style="color:'+totLaiColor+'">'+_btFmtVnd(totLai)+'</td>'
       + '</tr>';
   }
   document.getElementById('bt-tbl-month').innerHTML = trMo
-    || '<tr><td colspan="6" class="kr-empty">Không có dữ liệu</td></tr>';
+    || '<tr><td colspan="8" class="kr-empty">Không có dữ liệu</td></tr>';
 }
 
 function btExportExcel() {
@@ -10657,9 +10696,11 @@ function btExportExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s1), 'Tổng quan');
 
   // Sheet 2: Theo tháng
-  var s2 = [['Tháng', 'Số cont', 'Doanh thu (USD)', 'Doanh thu (VND)', 'Chi phí VT (VND)', 'Chi phí BT (VND)', 'Lãi gộp (VND)']];
+  var s2 = [['Tháng', 'Số cont', 'Doanh thu (USD)', 'KPI (USD)', '% Đạt', 'Doanh thu (VND)', 'Chi phí VT (VND)', 'Chi phí BT (VND)', 'Lãi gộp (VND)']];
   (d.by_month || []).forEach(function(m) {
-    s2.push([m.month, m.so_cont, m.doanh_thu, m.doanh_thu_vnd || 0, m.chi_phi_vt, m.chi_phi_bt, m.lai_gop_vnd || 0]);
+    var kpiUsd = _btKpiUsd(m.month);
+    var pct = kpiUsd > 0 ? +(m.doanh_thu / kpiUsd * 100).toFixed(1) : '';
+    s2.push([m.month, m.so_cont, m.doanh_thu, kpiUsd || '', pct, m.doanh_thu_vnd || 0, m.chi_phi_vt, m.chi_phi_bt, m.lai_gop_vnd || 0]);
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s2), 'Theo tháng');
 
