@@ -2129,14 +2129,14 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
               <div style="overflow-x:auto;border:1px solid var(--gray-200);border-radius:var(--r-md)">
                 <table class="kr-tbl">
                   <thead><tr>
-                    <th style="text-align:left;width:100px">Tháng</th>
-                    <th style="width:80px">Số cont</th>
-                    <th style="width:140px">Doanh thu (USD)</th>
-                    <th style="width:140px">KPI (USD)</th>
-                    <th style="width:90px">% Đạt</th>
-                    <th style="width:160px">Doanh thu (VND)</th>
-                    <th style="width:160px">Chi phí VT (VND)</th>
-                    <th style="width:160px">Lãi gộp (VND)</th>
+                    <th style="text-align:left;width:90px">Tháng</th>
+                    <th style="width:75px">Số cont</th>
+                    <th style="width:115px">Doanh thu (USD)</th>
+                    <th style="width:115px">KPI (USD)</th>
+                    <th style="width:95px">% Đạt</th>
+                    <th style="width:150px">Doanh thu (VND)</th>
+                    <th style="width:150px">Chi phí VT (VND)</th>
+                    <th style="width:150px">Lãi gộp (VND)</th>
                   </tr></thead>
                   <tbody id="bt-tbl-month"></tbody>
                 </table>
@@ -10624,12 +10624,13 @@ function btRender(d) {
   }
   var months = d.by_month || [];
   var totSoCont = 0, totDtUsd = 0, totDtVnd = 0, totCpVt = 0, totLai = 0, totKpiUsd = 0;
+  // Tất cả cột số căn giữa cho cân đối; chỉ TỔNG CỘNG bold + nhấn màu.
+  var cellCenter = 'text-align:center;font-variant-numeric:tabular-nums;font-weight:400;color:var(--gray-800)';
   var trMo = months.map(function(m) {
-    var laiColor = m.lai_gop_vnd >= 0 ? 'var(--success-text)' : 'var(--error-text)';
     var kpiUsd = _btKpiUsd(m.month);
     var pct = kpiUsd > 0 ? (m.doanh_thu||0) / kpiUsd * 100 : null;
     var pctTxt = (pct === null) ? '—'
-               : (pct >= 100 ? '✅ ' + pct.toFixed(1) + '%' : pct.toFixed(1) + '%');
+               : (pct >= 100 ? '✓ ' + pct.toFixed(1) + '%' : pct.toFixed(1) + '%');
     var pctColor = (pct === null) ? 'var(--gray-500)'
                   : (pct >= 100 ? 'var(--success-text)' : (pct >= 80 ? '#D97706' : 'var(--error-text)'));
     totSoCont += m.so_cont || 0;
@@ -10639,32 +10640,33 @@ function btRender(d) {
     totLai    += m.lai_gop_vnd || 0;
     totKpiUsd += kpiUsd;
     return '<tr>'
-      + '<td class="code" style="text-align:left">'+esc(_btFmtMonth(m.month))+'</td>'
-      + '<td class="num">'+_btFmtNum(m.so_cont)+'</td>'
-      + '<td class="num" style="color:#0369A1;font-weight:600">'+_btFmtUsd(m.doanh_thu)+'</td>'
-      + '<td class="num" style="color:var(--gray-600)">'+(kpiUsd > 0 ? _btFmtUsd(kpiUsd) : '—')+'</td>'
-      + '<td class="num" style="font-weight:700;color:'+pctColor+'">'+pctTxt+'</td>'
-      + '<td class="num">'+_btFmtVnd(m.doanh_thu_vnd || 0)+'</td>'
-      + '<td class="num" style="color:#9A3412">'+_btFmtVnd(m.chi_phi_vt)+'</td>'
-      + '<td class="num" style="font-weight:700;color:'+laiColor+'">'+_btFmtVnd(m.lai_gop_vnd || 0)+'</td>'
+      + '<td style="text-align:left;color:var(--gray-800)">'+esc(_btFmtMonth(m.month))+'</td>'
+      + '<td style="'+cellCenter+'">'+_btFmtNum(m.so_cont)+'</td>'
+      + '<td style="'+cellCenter+'">'+_btFmtUsd(m.doanh_thu)+'</td>'
+      + '<td style="'+cellCenter+';color:var(--gray-600)">'+(kpiUsd > 0 ? _btFmtUsd(kpiUsd) : '—')+'</td>'
+      + '<td style="'+cellCenter+';color:'+pctColor+'">'+pctTxt+'</td>'
+      + '<td style="'+cellCenter+'">'+_btFmtVnd(m.doanh_thu_vnd || 0)+'</td>'
+      + '<td style="'+cellCenter+'">'+_btFmtVnd(m.chi_phi_vt)+'</td>'
+      + '<td style="'+cellCenter+'">'+_btFmtVnd(m.lai_gop_vnd || 0)+'</td>'
       + '</tr>';
   }).join('');
   if (months.length) {
     var totLaiColor = totLai >= 0 ? 'var(--success-text)' : 'var(--error-text)';
     var totPct = totKpiUsd > 0 ? (totDtUsd / totKpiUsd * 100) : null;
     var totPctTxt = (totPct === null) ? '—'
-                  : (totPct >= 100 ? '✅ ' + totPct.toFixed(1) + '%' : totPct.toFixed(1) + '%');
+                  : (totPct >= 100 ? '✓ ' + totPct.toFixed(1) + '%' : totPct.toFixed(1) + '%');
     var totPctColor = (totPct === null) ? 'var(--gray-500)'
                      : (totPct >= 100 ? 'var(--success-text)' : (totPct >= 80 ? '#D97706' : 'var(--error-text)'));
-    trMo += '<tr style="background:var(--gray-50);font-weight:700;border-top:2px solid var(--gray-300)">'
-      + '<td class="code" style="text-align:left">TỔNG CỘNG</td>'
-      + '<td class="num">'+_btFmtNum(totSoCont)+'</td>'
-      + '<td class="num" style="color:#0369A1">'+_btFmtUsd(totDtUsd)+'</td>'
-      + '<td class="num" style="color:var(--gray-600)">'+(totKpiUsd > 0 ? _btFmtUsd(totKpiUsd) : '—')+'</td>'
-      + '<td class="num" style="color:'+totPctColor+'">'+totPctTxt+'</td>'
-      + '<td class="num">'+_btFmtVnd(totDtVnd)+'</td>'
-      + '<td class="num" style="color:#9A3412">'+_btFmtVnd(totCpVt)+'</td>'
-      + '<td class="num" style="color:'+totLaiColor+'">'+_btFmtVnd(totLai)+'</td>'
+    var totCellCenter = 'text-align:center;font-variant-numeric:tabular-nums;font-weight:700';
+    trMo += '<tr style="background:var(--amber-bg);border-top:2px solid var(--amber-border)">'
+      + '<td style="text-align:left;font-weight:700;color:var(--amber-text)">TỔNG CỘNG</td>'
+      + '<td style="'+totCellCenter+';color:var(--gray-900)">'+_btFmtNum(totSoCont)+'</td>'
+      + '<td style="'+totCellCenter+';color:#0369A1">'+_btFmtUsd(totDtUsd)+'</td>'
+      + '<td style="'+totCellCenter+';color:var(--gray-700)">'+(totKpiUsd > 0 ? _btFmtUsd(totKpiUsd) : '—')+'</td>'
+      + '<td style="'+totCellCenter+';color:'+totPctColor+'">'+totPctTxt+'</td>'
+      + '<td style="'+totCellCenter+';color:var(--gray-900)">'+_btFmtVnd(totDtVnd)+'</td>'
+      + '<td style="'+totCellCenter+';color:#9A3412">'+_btFmtVnd(totCpVt)+'</td>'
+      + '<td style="'+totCellCenter+';color:'+totLaiColor+'">'+_btFmtVnd(totLai)+'</td>'
       + '</tr>';
   }
   document.getElementById('bt-tbl-month').innerHTML = trMo
