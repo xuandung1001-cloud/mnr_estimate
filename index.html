@@ -12906,11 +12906,14 @@ async function printPhieuKho(maPhieu) {
       + '<tfoot><tr><td colspan="6" style="text-align:right">TỔNG CỘNG</td><td style="text-align:right">'+totalAmt.toLocaleString('vi-VN')+'</td><td colspan="2"></td></tr></tfoot>'
     + '</table>'
     + '<div class="tien-chu"><b>Bằng chữ:</b> '+esc(tienBangChu)+' đồng.</div>'
-    + '<div class="sigs">'
-      + '<div class="box"><div class="role">Người lập phiếu</div><div class="hint">(Ký, họ tên)</div><div class="name">'+esc(nguoiTH)+'</div></div>'
-      + '<div class="box"><div class="role">Trưởng bộ phận</div><div class="hint">(Ký, họ tên)</div><div class="name"></div></div>'
-      + '<div class="box"><div class="role">Thủ kho</div><div class="hint">(Ký, họ tên)</div><div class="name"></div></div>'
-      + '<div class="box"><div class="role">Giám đốc</div><div class="hint">(Ký, họ tên)</div><div class="name"></div></div>'
+    + '<div class="sigs" style="grid-template-columns:repeat(3,1fr)">'
+      + (isNhap
+          ? '<div class="box"><div class="role">Người lập phiếu</div><div class="hint">(Ký, họ tên)</div><div class="name">'+esc(nguoiTH)+'</div></div>'
+            + '<div class="box"><div class="role">Người giao</div><div class="hint">(Ký, họ tên)</div><div class="name"></div></div>'
+            + '<div class="box"><div class="role">Thủ kho</div><div class="hint">(Ký, họ tên)</div><div class="name"></div></div>'
+          : '<div class="box"><div class="role">Người lập phiếu</div><div class="hint">(Ký, họ tên)</div><div class="name">'+esc(nguoiTH)+'</div></div>'
+            + '<div class="box"><div class="role">Thủ kho</div><div class="hint">(Ký, họ tên)</div><div class="name"></div></div>'
+            + '<div class="box"><div class="role">Người nhận</div><div class="hint">(Ký, họ tên)</div><div class="name">Tổ trưởng</div></div>')
     + '</div>'
     + '</body></html>';
 
