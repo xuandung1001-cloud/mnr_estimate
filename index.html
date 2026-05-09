@@ -128,7 +128,12 @@ body{
 /* Tổng quan — item bình thường, highlight khi .active như các nav khác */
 .nav-item.nav-primary.active{background:var(--amber-bg);color:var(--amber-text);font-weight:600;box-shadow:inset 3px 0 0 var(--amber)}
 /* GỠ border-bottom màu random (cam/xanh/tím/hồng) — chỉ uppercase label gray-400, đồng bộ */
-.nav-label{padding:var(--sp-2) var(--sp-3) var(--sp-1);font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--gray-600);margin:0 var(--sp-2);display:block}
+.nav-label{padding:var(--sp-2) var(--sp-3) var(--sp-1);font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--gray-600);margin:0 var(--sp-2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;border-radius:var(--r-sm);transition:background .12s}
+.nav-label:hover{background:var(--gray-100);color:var(--gray-900)}
+.nav-label::after{content:'';display:inline-block;width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform .2s ease;margin-right:4px;opacity:.6}
+.nav-section.collapsed > .nav-label::after{transform:rotate(-45deg)}
+.nav-section.collapsed > .nav-item{display:none !important}
+.nav-section.collapsed > .nav-label{color:var(--gray-500)}
 .nav-item{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);margin:1px var(--sp-2);font-size:var(--text-sm);color:var(--gray-700);cursor:pointer;transition:background .12s,color .12s;border-radius:var(--r-md)}
 .nav-item:hover{background:var(--gray-100);color:var(--gray-900)}
 .nav-item.active{background:var(--amber-bg);color:var(--amber-text);font-weight:600;box-shadow:inset 3px 0 0 var(--amber)}
@@ -2149,6 +2154,9 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 
       <!-- ═════════════ BÁO CÁO TỔNG ═════════════ -->
       <div class="screen fixed-layout" id="screen-baocao-tong">
+        <!-- KPI cards (di chuyển lên đầu — show sau khi load data) -->
+        <div class="kstat-row" id="bt-kpi-grid" style="display:none;margin-bottom:var(--sp-3)"></div>
+
         <div class="fb-card">
           <div class="card-sec">
             <div class="card-sec-left">
@@ -2196,9 +2204,6 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
             <div class="empty-state-sub">Chọn kỳ báo cáo và nhấn <b>Tải báo cáo</b> để xem tổng hợp doanh thu, chi phí, kho và bảo trì.</div>
           </div>
           <div id="bt-result" style="display:none">
-            <!-- KPI Grid -->
-            <div class="kstat-row" id="bt-kpi-grid"></div>
-
             <!-- Chart Doanh thu vs Chi phí (full width) -->
             <div class="fb-card" style="margin-bottom:var(--sp-3)">
               <div class="card-sec" style="margin-bottom:var(--sp-3)">
@@ -4213,6 +4218,31 @@ try {
     document.body.classList.add('sb-collapsed');
   }
 } catch(e) {}
+
+// Collapsible nav groups: click .nav-label → toggle section, persist per-group
+function _navGroupKey(lbl) {
+  return 'mnr_navgrp_' + (lbl.textContent || '').trim().replace(/\s+/g, '_');
+}
+function _initNavGroups() {
+  document.querySelectorAll('#sidebar .nav-section > .nav-label').forEach(function(lbl) {
+    try {
+      if (localStorage.getItem(_navGroupKey(lbl)) === '1') {
+        lbl.parentElement.classList.add('collapsed');
+      }
+    } catch(e) {}
+    lbl.addEventListener('click', function(ev) {
+      if (document.body.classList.contains('sb-collapsed')) return;
+      var sec = lbl.parentElement;
+      var nowCollapsed = sec.classList.toggle('collapsed');
+      try { localStorage.setItem(_navGroupKey(lbl), nowCollapsed ? '1' : '0'); } catch(e) {}
+    });
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initNavGroups);
+} else {
+  _initNavGroups();
+}
 
 function nav(screen, el) {
   var contentEl = document.getElementById('content');
@@ -10621,6 +10651,7 @@ async function btLoad() {
   // Loading overlay full-area (giấu empty + result, hiện spinner lớn)
   document.getElementById('bt-empty').style.display = 'none';
   document.getElementById('bt-result').style.display = 'none';
+  document.getElementById('bt-kpi-grid').style.display = 'none';
   var btContent = document.getElementById('bt-content');
   var loader = document.getElementById('bt-loader');
   if (!loader) {
@@ -10644,6 +10675,7 @@ async function btLoad() {
     toast('❌ ' + e.message);
     // Lỗi → khôi phục empty state
     document.getElementById('bt-empty').style.display = '';
+    document.getElementById('bt-kpi-grid').style.display = 'none';
   } finally {
     btn.disabled = false;
     btn.innerHTML = oldHtml;
@@ -10655,6 +10687,7 @@ async function btLoad() {
 function btRender(d) {
   document.getElementById('bt-empty').style.display = 'none';
   document.getElementById('bt-result').style.display = '';
+  document.getElementById('bt-kpi-grid').style.display = '';
 
   var fmtRange = function(iso) {
     var p = iso.split('-');
@@ -10674,7 +10707,6 @@ function btRender(d) {
 
   var kpiCards = [
     { label: 'Doanh thu (USD)',  value: _btFmtUsd(k.doanh_thu_phat_sinh), sub: k.so_cont_bao_gia + ' cont đã sửa (PO date · No VAT)', color: 'blue' },
-    { label: 'KPI Doanh thu (USD)', value: totalKpiUsd > 0 ? _btFmtUsd(totalKpiUsd) : '—', sub: kpiPctTxt, color: kpiCardColor },
     { label: 'Doanh thu (VND)',  value: _btFmtVnd(k.doanh_thu_vnd),       sub: 'Quy đổi @' + _btFmtVnd(d.usd_rate) + '/USD', color: 'blue' },
     { label: 'Chi phí vật tư',   value: _btFmtVnd(k.chi_phi_vat_tu),      sub: k.so_phieu_xuat + ' phiếu xuất', color: 'orange' },
     { label: 'Chi phí bảo trì',  value: _btFmtVnd(k.chi_phi_bao_tri),     sub: k.so_phieu_bao_tri + ' phiếu sửa', color: 'red' },
