@@ -2,7 +2,10 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
 <title>MNR Estimate — Cảng Thạnh Phước</title>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" defer></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
@@ -739,6 +742,16 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 
 /* ═══ PHIẾU KHO FORM (Phase 2) ═══ */
 /* Header grid responsive: 3 cột desktop, 2 cột tablet, 1 cột mobile */
+/* PK list tab strip — underline style, đồng bộ với pattern Customs sub-tabs */
+.pk-tabstrip{display:flex;gap:0;align-items:flex-end;margin-bottom:var(--sp-3);border-bottom:1px solid var(--gray-200);padding:0 var(--sp-1)}
+.pk-tab{display:inline-flex;align-items:center;gap:10px;background:transparent;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:11px 20px;font-size:14px;font-weight:600;color:var(--gray-500);cursor:pointer;font-family:inherit;transition:color .15s,border-color .15s;white-space:nowrap}
+.pk-tab:hover{color:var(--gray-800)}
+.pk-tab:hover .pk-tab-count{background:var(--gray-200);color:var(--gray-700)}
+.pk-tab.active{color:var(--amber-text);border-bottom-color:var(--amber)}
+.pk-tab.active .pk-tab-count{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border)}
+.pk-tab-icon{font-size:13px;line-height:1}
+.pk-tab-count{display:inline-flex;align-items:center;justify-content:center;background:var(--gray-100);color:var(--gray-600);padding:2px 10px;border-radius:11px;font-size:11.5px;font-weight:700;min-width:32px;line-height:1.5;border:1px solid transparent;transition:background .15s,color .15s}
+@media(max-width:600px){.pk-tab{padding:10px 14px;font-size:13px;gap:8px}.pk-tab-count{padding:1px 8px;min-width:28px}}
 .pkf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-3)}
 @media(max-width:900px){.pkf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.pkf-grid{grid-template-columns:1fr}}
@@ -857,6 +870,88 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
 .dr-actions .dr-apply:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:600px){
   .dr-popover{width:calc(100vw - 24px);max-width:340px}
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IPAD / TABLET MODE — iPad Pro M4 11"/13" cả portrait + landscape
+   Range: 769-1366px. iOS Safari + Chromium đều hit block này.
+   Mobile <769 đã có sticky drawer riêng. Desktop >1366 không cần đụng.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (min-width:769px) and (max-width:1440px) {
+  /* === LAYOUT === */
+  /* Sidebar nhỏ lại để chừa chỗ content */
+  #sidebar{width:200px}
+  body.sb-collapsed #sidebar{width:60px}
+  /* Content padding gọn lại */
+  #content{padding:var(--sp-3)}
+  /* Topbar compact */
+  #topbar{padding:0 var(--sp-3);height:56px}
+  .tb-title{font-size:16px}
+
+  /* === TOUCH TARGETS — iOS minimum 44×44 cho tap-friendly === */
+  .btn{min-height:36px;padding:0 14px;font-size:13px}
+  .btn-sm{min-height:32px;padding:0 10px;font-size:12px}
+  .fi,.fi-auto,select.fi,input.fi,textarea.fi{min-height:38px;font-size:14px}
+  .chip-toggle{min-height:38px;font-size:13px}
+  /* Sidebar nav-items touch-friendly + chữ không tràn */
+  #sidebar .nav-item{min-height:40px;font-size:13px;padding:8px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #sidebar .nav-label{font-size:10.5px;padding:8px 12px 4px}
+  .sb-title{font-size:13px}
+  .sb-sub{font-size:10.5px}
+
+  /* === STATS GRID — 3 cols thay 4-5 === */
+  .kstat-row{grid-template-columns:repeat(3,1fr);gap:10px}
+  .kstat{min-height:84px;padding:10px 12px}
+  .kstat .ks-value{font-size:22px}
+  .kstat .ks-label{font-size:10px}
+
+  /* === FILTER GRID — min-width nhỏ hơn để fit 3-4 cột === */
+  .fb-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px var(--sp-3)}
+  .fb-bottom{flex-wrap:wrap;gap:8px}
+
+  /* === TABLES === */
+  .tbl-wrap{font-size:12.5px}
+  .tbl-wrap thead th{padding:8px 6px;font-size:11px;letter-spacing:.02em;white-space:nowrap}
+  .tbl-wrap tbody td{padding:8px 6px;line-height:1.35}
+  .tbl-wrap tbody tr{height:auto;min-height:40px}
+  /* Action buttons trong table cell — không wrap */
+  .tbl-wrap .btn-sm{min-height:28px;padding:0 8px;font-size:11.5px}
+
+  /* === CARD SECTIONS === */
+  .card{padding:var(--sp-3) var(--sp-3) var(--sp-2)}
+  .card-sec{margin-bottom:var(--sp-2)}
+  .card-sec-title{font-size:14px}
+  .card-sec-actions{flex-wrap:wrap;gap:6px}
+
+  /* === FORM grids — fit 3 cols thay 4 === */
+  .pkf-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-2) var(--sp-3)}
+  .kho-fg label{font-size:11px}
+
+  /* === PAGINATION footer — không wrap thành 2 dòng === */
+  .page-foot{flex-wrap:wrap;gap:8px;padding:8px 12px;font-size:12px}
+  .page-foot-info{font-size:11.5px}
+
+  /* === Tab strip pk === */
+  .pk-tab{padding:10px 16px;font-size:13.5px;gap:8px}
+
+  /* === Modal/dialog full-width hơn === */
+  .kho-card{max-width:90vw}
+}
+
+/* PORTRAIT 11" (834px) hoặc 13" (1032px): chật hơn, stats 2 cols */
+@media (min-width:769px) and (max-width:1100px) and (orientation:portrait) {
+  #sidebar{width:180px}
+  body.sb-collapsed #sidebar{width:56px}
+  .kstat-row{grid-template-columns:repeat(2,1fr)}
+  .fb-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .pkf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* SAFARI iOS specific — tránh zoom auto khi focus input */
+@supports (-webkit-touch-callout: none) {
+  @media (min-width:769px) and (max-width:1440px) {
+    .fi,input,textarea,select{font-size:16px !important}
+  }
 }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -2764,6 +2859,23 @@ td input:focus,td select:focus{background:var(--amber-bg);border-radius:3px}
       <!-- ═══════════════ PHIẾU NHẬP / XUẤT — LIST ═══════════════ -->
       <div class="screen fixed-layout kho-group" id="screen-pk">
         <div class="kstat-row" id="pk-stats"></div>
+
+        <!-- TAB STRIP — phân vùng nghiệp vụ Nhập/Xuất + counter -->
+        <div class="pk-tabstrip">
+          <button class="pk-tab active" data-pk-tab="" onclick="_pkTabSwitch('')">
+            <span>Tất cả</span>
+            <span class="pk-tab-count" id="pk-tabcount-all">0</span>
+          </button>
+          <button class="pk-tab" data-pk-tab="NHẬP" onclick="_pkTabSwitch('NHẬP')">
+            <span class="pk-tab-icon">↓</span><span>Nhập</span>
+            <span class="pk-tab-count" id="pk-tabcount-nhap">0</span>
+          </button>
+          <button class="pk-tab" data-pk-tab="XUẤT" onclick="_pkTabSwitch('XUẤT')">
+            <span class="pk-tab-icon">↑</span><span>Xuất</span>
+            <span class="pk-tab-count" id="pk-tabcount-xuat">0</span>
+          </button>
+        </div>
+
         <div class="fb-card">
           <div class="card-sec">
             <div class="card-sec-left">
@@ -12149,6 +12261,8 @@ function _pkApplyFilters() {
   var from   = document.getElementById('pk-from').value;
   var to     = document.getElementById('pk-to').value;
   var search = (document.getElementById('pk-search').value||'').trim().toLowerCase();
+  // Sync tab UI với select (khi filter select thay đổi từ ngoài)
+  document.querySelectorAll('.pk-tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-pk-tab') === loai); });
   _pkList = _pkAllList.filter(function(r) {
     if (loai && r.loai !== loai) return false;
     if (from && r.ngay_iso && r.ngay_iso < from) return false;
@@ -12208,10 +12322,34 @@ function renderPhieuKhoStats() {
     + _kstat({ label:'Phiếu Xuất', value:xuat.length, icon:'⬆', color:'blue',  sub:totX.toLocaleString('vi-VN')+' đ' });
 }
 
+function _pkTabSwitch(loai) {
+  // Sync với select pk-loai và trigger filter
+  var sel = document.getElementById('pk-loai');
+  if (sel && sel.value !== loai) { sel.value = loai; }
+  document.querySelectorAll('.pk-tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-pk-tab') === loai); });
+  if (typeof _pkApplyFilters === 'function') _pkApplyFilters();
+}
+
+function _pkUpdateTabCounts() {
+  var all = (typeof _pkAllList !== 'undefined' && _pkAllList) ? _pkAllList : [];
+  var nhap = 0, xuat = 0;
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].loai === 'NHẬP') nhap++;
+    else if (all[i].loai === 'XUẤT') xuat++;
+  }
+  var elAll = document.getElementById('pk-tabcount-all');
+  var elN = document.getElementById('pk-tabcount-nhap');
+  var elX = document.getElementById('pk-tabcount-xuat');
+  if (elAll) elAll.textContent = all.length;
+  if (elN)   elN.textContent   = nhap;
+  if (elX)   elX.textContent   = xuat;
+}
+
 function renderPhieuKhoList() {
   var tbody = document.getElementById('pk-list-rows');
   var foot = document.getElementById('pk-pagefoot');
   document.getElementById('pk-count').textContent = _pkList.length + ' phiếu';
+  _pkUpdateTabCounts();
   if (!_pkList.length) {
     tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">Chưa có phiếu nào</div><div class="empty-state-sub">Bấm <b>Nhập</b> hoặc <b>Xuất</b> để tạo phiếu mới.</div></div></td></tr>';
     if (foot) foot.style.display = 'none';
