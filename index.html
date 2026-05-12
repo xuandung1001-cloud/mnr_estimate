@@ -5051,7 +5051,8 @@ async function onReviseInput(val, estDate) {
         rt: r.repair_type, len: r.length, wid: r.width, uni: r.unit, qty: r.quantity
       };
     });
-    const trk = state.tracking.find(t => (t.container_no||'').toUpperCase() === val);
+    // Bỏ qua các record Repaired/Rejected (vòng đời cũ) — chỉ lấy tracking đang active
+    const trk = state.tracking.find(t => (t.container_no||'').toUpperCase() === val && !['Repaired','Rejected'].includes(t.approval_status));
     _revTrkTotal = trk ? (parseFloat(trk.total_approved) || 0) : 0;
     const tbody = document.getElementById('rev-rows');
     tbody.innerHTML = '';
