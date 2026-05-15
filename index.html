@@ -7296,6 +7296,22 @@ async function exportContList(type) {
     HDR.forEach(function(h){ xml += C(h,'h'); });
     xml += '</Row>\n';
 
+    // Cột Approval Date hiển thị 1 giá trị (merge down). Nếu container có nhiều
+    // hạng mục approve ở các đợt khác nhau → lấy ngày mới nhất làm đại diện.
+    var mergedDate = '';
+    if (type === 'app') {
+      var maxKey = '';
+      valid.forEach(function(r){
+        var s = String(r.approval_date||'').trim(); if (!s) return;
+        var key = '', m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) key = m[3] + m[2].padStart(2,'0') + m[1].padStart(2,'0');
+        else if (s.indexOf('T') > 0) key = s.split('T')[0].replace(/-/g,'');
+        if (key && key > maxKey) { maxKey = key; mergedDate = fmtD(s); }
+      });
+    } else {
+      mergedDate = fmtD((valid[0].estimate_datetime||'').toString().split(' ')[0]);
+    }
+
     var tQ=0, tLH=0, tLab=0, tMat=0, tTot=0;
     var n = valid.length;
 
@@ -7330,12 +7346,12 @@ async function exportContList(type) {
           xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="Number">'+esc(seq)+'</Data></Cell>';
           xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(contNo)+'</Data></Cell>';
           xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="d"><Data ss:Type="String">'+esc(size)+'</Data></Cell>';
-          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="dt"><Data ss:Type="String">'+esc(date)+'</Data></Cell>';
+          xml += '<Cell ss:MergeDown="'+md+'" ss:StyleID="dt"><Data ss:Type="String">'+esc(mergedDate)+'</Data></Cell>';
         } else {
           xml += C(seq,   'd','Number');
           xml += C(contNo,'d');
           xml += C(size,  'd');
-          xml += '<Cell ss:StyleID="dt"><Data ss:Type="String">'+esc(date)+'</Data></Cell>';
+          xml += '<Cell ss:StyleID="dt"><Data ss:Type="String">'+esc(mergedDate)+'</Data></Cell>';
         }
         xml += C(repSeq,'d','Number');
       } else {
